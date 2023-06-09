@@ -7,14 +7,21 @@ namespace Tiktoken.Utilities;
 /// </summary>
 public static class BytePairEncoding
 {
-    private static IReadOnlyCollection<T> BytePairMerge<T>(byte[] piece, IReadOnlyDictionary<byte[], int> ranks, Func<Range, T> f)
+    private static byte[] GetSlice(this byte[] bytes, int from, int to)
+    {
+        return bytes.Skip(from).Take(to - from).ToArray();
+    }
+    
+    private static IReadOnlyCollection<T> BytePairMerge<T>(byte[] piece, IReadOnlyDictionary<byte[], int> ranks, Func<int, int, T> f)
     {
         var parts = Enumerable.Range(0, piece.Length + 1).Select(i => (i, int.MaxValue)).ToList();
         int? GetRank(int startIdx, int skip = 0)
         {
             if (startIdx + skip + 2 < parts.Count)
             {
-                var slice = piece[parts[startIdx].Item1..parts[startIdx + skip + 2].Item1];
+                var from = parts[startIdx].i;
+                var to = parts[startIdx + skip + 2].i;
+                var slice = piece.GetSlice(from, to);
                 if (ranks.TryGetValue(slice, out var rank))
                 {
                     return rank;
@@ -59,7 +66,7 @@ public static class BytePairEncoding
         var outList = new List<T>(parts.Count - 1);
         for (int i = 0; i < parts.Count - 1; i++)
         {
-            outList.Add(f(parts[i].Item1..parts[i + 1].Item1));
+            outList.Add(f(parts[i].i, parts[i + 1].i));
         }
         return outList;
     }
@@ -79,7 +86,7 @@ public static class BytePairEncoding
         {
             return new List<int> { ranks[piece] };
         }
-        return BytePairMerge(piece, ranks, p => ranks[piece[p.Start..p.End]]);
+        return BytePairMerge(piece, ranks, (from, to) => ranks[piece.GetSlice(from, to)]);
     }
 
     /// <summary>
@@ -97,7 +104,7 @@ public static class BytePairEncoding
         {
             return new List<byte[]> { piece };
         }
-        return BytePairMerge(piece, ranks, p => piece[p.Start..p.End]);
+        return BytePairMerge(piece, ranks, (from, to) => piece.GetSlice(from, to));
     }
 
 

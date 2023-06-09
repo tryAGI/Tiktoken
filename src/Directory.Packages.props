@@ -6,10 +6,8 @@
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.1.1" />
     <PackageVersion Include="FluentAssertions" Version="6.11.0" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.3.2" />
-    <PackageVersion Include="IndexRange" Version="1.0.2" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.0.4" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.0.4" />
-    <PackageVersion Include="TA.System.Runtime.CompilerServices.RuntimeHelpers.GetSubArray" Version="1.0.1" />
   </ItemGroup>
 </Project>
