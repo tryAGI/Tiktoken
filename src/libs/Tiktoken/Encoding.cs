@@ -11,19 +11,13 @@ namespace Tiktoken;
 public class Encoding
 {
     /// <summary>
-    /// You can set this item before EncodingForModel to specify the location for storing and downloading the bpe file. If not set, it defaults to the AppContext.BaseDirectory\bpe directory.
-    /// </summary>
-    public static string PbeFileDirectory { get; set; } = Path.Combine(AppContext.BaseDirectory, "bpe");
-
-    /// <summary>
     /// get encoding with modelName
     /// </summary>
     /// <param name="modelName">gpt-3.5-turbo</param>
     /// <returns></returns>
     public static Encoding ForModel(string modelName)
     {
-        EncodingManager.Instance.PbeFileDirectory = PbeFileDirectory;
-        var setting = EncodingManager.Instance.GetEncodingSetting(modelName);
+        var setting = EncodingManager.GetEncodingSettingsForModel(modelName);
         return new Encoding(setting);
     }
 
@@ -34,8 +28,8 @@ public class Encoding
     /// <returns></returns>
     public static Encoding Get(string encodingName)
     {
-        EncodingManager.Instance.PbeFileDirectory = PbeFileDirectory;
-        var setting = EncodingManager.Instance.GetEncodingSetting(encodingName);
+        var setting = EncodingManager.GetEncoding(encodingName);
+        
         return new Encoding(setting);
     }
 

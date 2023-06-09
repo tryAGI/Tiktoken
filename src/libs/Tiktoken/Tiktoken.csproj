@@ -13,6 +13,10 @@
         <Using Remove="System.Net.Http" />
     </ItemGroup>
 
+    <ItemGroup Label="Resources">
+        <EmbeddedResource Include="Encodings/*.*" />
+    </ItemGroup>
+
     <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.1'">
       <PackageReference Include="System.ValueTuple" />
     </ItemGroup>

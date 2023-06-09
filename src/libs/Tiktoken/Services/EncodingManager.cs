@@ -1,30 +1,24 @@
 ﻿using System.Globalization;
-using System.Net;
-using System.Text;
+using System.Reflection;
 using Tiktoken.Models;
 using Tiktoken.Utilities;
 
 namespace Tiktoken.Services;
 
-internal sealed class EncodingManager
+internal static class EncodingManager
 {
-    private static readonly Lazy<EncodingManager> _instance = new(() => new EncodingManager());
-
-    public static EncodingManager Instance => _instance.Value;
-
-    public string PbeFileDirectory { get; set; } = Path.Combine(AppContext.BaseDirectory, "bpe");
-
     const string EndOfText = "<|endoftext|>";
     const string FimPrefix = "<|fim_prefix|>";
     const string FimMiddle = "<|fim_middle|>";
     const string FimSuffix = "<|fim_suffix|>";
     const string EndOfPrompt = "<|endofprompt|>";
 
-    static Dictionary<string, string> _modelToEncoding = new Dictionary<string, string>()
+    private static Dictionary<string, string> ModelToEncoding { get; } = new()
     {
         // chat
         { "gpt-4", "cl100k_base" },
         { "gpt-3.5-turbo", "cl100k_base" },
+        { "gpt-35-turbo", "cl100k_base" }, // Azure deployment name
         // text
         { "text-davinci-003", "p50k_base" },
         { "text-davinci-002", "p50k_base" },
@@ -60,194 +54,144 @@ internal sealed class EncodingManager
         { "code-search-babbage-code-001", "r50k_base" },
         { "code-search-ada-code-001", "r50k_base" },
         // open source
-        { "gpt2", "gpt2" }
+        { "gpt2", "gpt2" },
     };
-    EncodingManager()
-    {
-
-    }
 
     /// <summary>
     /// Get encoding setting with model name.
     /// </summary>
-    /// <param name="modelOrEncodingName">gpt-4 gpt-3.5-turbo ...</param>
+    /// <param name="modelName">gpt-4 gpt-3.5-turbo ...</param>
     /// <returns></returns>
-    public EncodingSettingModel GetEncodingSetting(string modelOrEncodingName)
+    public static EncodingSettingModel GetEncodingSettingsForModel(string modelName)
     {
-        var encodingName = _modelToEncoding
-            .FirstOrDefault(a => a.Key.StartsWith(modelOrEncodingName, StringComparison.Ordinal))
-            .Value;
-
-        if (string.IsNullOrEmpty(encodingName))
-        {
-            if (_modelToEncoding.Any(a => a.Value == modelOrEncodingName))
-            {
-                //modelOrEncodingName is encoding name
-                encodingName = modelOrEncodingName;
-            }
-        }
+        var encodingName = ModelToEncoding
+            .FirstOrDefault(a => a.Key.StartsWith(modelName, StringComparison.Ordinal)).Value ??
+            throw new InvalidOperationException($"Model name {modelName} is not supported.");
 
         return GetEncoding(encodingName);
     }
-
 
     /// <summary>
     /// Get encoding setting with encoding name.
     /// </summary>
     /// <param name="encodingName">cl100k_base p50k_base ...</param>
     /// <returns></returns>
-    public EncodingSettingModel GetEncoding(string encodingName)
+    internal static EncodingSettingModel GetEncoding(string encodingName)
     {
-        if (!string.IsNullOrEmpty(encodingName))
+        if (string.IsNullOrEmpty(encodingName))
         {
-            switch (encodingName)
-            {
-                case "gpt2":
-                {
-                    //TODO
-                    throw new NotImplementedException();
-                }
-                case "r50k_base":
-                {
-                    //TODO
-                    throw new NotImplementedException(); ;
-                }
-                case "p50k_base":
-                {
-                    return p50k_base();
-                }
-                case "p50k_edit":
-                {
-                    //TODO
-                    throw new NotImplementedException();
-                }
-                case "cl100k_base":
-                {
-                    return cl100k_base();
-                }
-                default:
-                    throw new NotImplementedException();
-            }
+            throw new ArgumentException("encodingName is null or empty", nameof(encodingName));
+        }
 
-        }
-        else
+        return encodingName switch
         {
-            throw new NotImplementedException("Unsupported model");
-        }
+            "gpt2" => throw new NotImplementedException("Unsupported encoding"),
+            "r50k_base" => r50k_base(),
+            "p50k_base" => p50k_base(),
+            "p50k_edit" => p50k_edit(),
+            "cl100k_base" => cl100k_base(),
+            _ => throw new NotImplementedException("Unsupported encoding"),
+        };
     }
 
-    private static Dictionary<byte[], int> LoadTikTokenBpeFromLocal(string tikTokenBpeFile)
+    private static Dictionary<byte[], int> Load(string name)
     {
-        var contents = File.ReadAllLines(tikTokenBpeFile, System.Text.Encoding.UTF8);
-        var bpeDict = new Dictionary<byte[], int>(contents.Length, new ByteArrayComparer());
-
-        foreach (var line in contents.Where(l => !string.IsNullOrWhiteSpace(l)))
-        {
-            var tokens = line.Split();
-            var tokenBytes = Convert.FromBase64String(tokens[0]);
-            var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
-            bpeDict.Add(tokenBytes, rank);
-        }
-
-        return bpeDict;
-    }
-
-    private Dictionary<byte[], int> LoadTikTokenBpe(string tikTokenBpeFile)
-    {
-        string localFilePath;
-        if (tikTokenBpeFile.StartsWith("http", StringComparison.Ordinal))
-        {
-            var fileName = Path.GetFileName(tikTokenBpeFile);
-            var saveDir = PbeFileDirectory; //Path.Combine(AppContext.BaseDirectory, "bpe");
-            if (!Directory.Exists(saveDir))
-            {
-                Directory.CreateDirectory(saveDir);
-            }
-            localFilePath = Path.Combine(saveDir, fileName);
-            if (!File.Exists(localFilePath))
-            {
-                using (var client = new WebClient())
-                {
-                    //client.DownloadFile(tikTokenBpeFile, localFilePath);
-                    var data = client.DownloadData(tikTokenBpeFile);
-                    File.WriteAllBytes(localFilePath, data); 
-                }
-            }
-        }
-        else
-        {
-            localFilePath = tikTokenBpeFile;
-        }
-
         var bpeDict = new Dictionary<byte[], int>(new ByteArrayComparer());
 
-        try
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourcePath = assembly
+            .GetManifestResourceNames()
+            .Single(str => str.EndsWith(name, StringComparison.OrdinalIgnoreCase));
+
+        using var stream =
+            assembly.GetManifestResourceStream(resourcePath) ??
+            throw new InvalidOperationException("Resource not found.");
+        using var reader = new StreamReader(stream);
+        
+        while (reader.ReadLine() is { } line)
         {
-            var lines = File.ReadAllLines(localFilePath, System.Text.Encoding.UTF8);
-            foreach (var line in lines)
+            if (string.IsNullOrWhiteSpace(line))
             {
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-
-                var tokens = line.Split(' ');
-                if (tokens.Length != 2)
-                {
-                    throw new FormatException($"Invalid file format: {localFilePath}");
-                }
-
-                var tokenBytes = Convert.FromBase64String(tokens[0]);
-                var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
-                bpeDict[tokenBytes] = rank;
+                continue;
             }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to load TikTokenBpe from {localFilePath}: {ex.Message}", ex);
+
+            var tokens = line.Split(' ');
+            if (tokens.Length != 2)
+            {
+                throw new FormatException($"Invalid file format: {name}");
+            }
+
+            var tokenBytes = Convert.FromBase64String(tokens[0]);
+            var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
+            bpeDict[tokenBytes] = rank;
         }
 
         return bpeDict;
     }
 
-
-    private EncodingSettingModel cl100k_base()
+    private static EncodingSettingModel r50k_base()
     {
-        //When using the mod for the first time, the pbe file will be downloaded over the network.
-        var mergeableRanks = LoadTikTokenBpe("https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken");
-        var specialTokens = new Dictionary<string, int>{
-            { EndOfText, 100257},
-            { FimPrefix, 100258},
-            { FimMiddle, 100259},
-            { FimSuffix, 100260},
-            { EndOfPrompt, 100276}
-        };
-
         return new EncodingSettingModel()
         {
-            Name = "cl100k_base",
-            PatStr = @"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+",
-            MergeableRanks = mergeableRanks,
-            SpecialTokens = specialTokens
+            Name = "p50k_base",
+            ExplicitNVocab = 50257,
+            PatStr = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
+            MergeableRanks = Load("r50k_base.tiktoken"),
+            SpecialTokens = new Dictionary<string, int>
+            {
+                [EndOfText] = 50256,
+            },
         };
     }
 
-
-    private EncodingSettingModel p50k_base()
+    private static EncodingSettingModel p50k_base()
     {
-        //When using the mod for the first time, the pbe file will be downloaded over the network.
-        var mergeableRanks = LoadTikTokenBpe("https://openaipublic.blob.core.windows.net/encodings/p50k_base.tiktoken");
-        var specialTokens = new Dictionary<string, int>{
-            { EndOfText, 50256}
-        };
-
-        return new EncodingSettingModel()
+        return new EncodingSettingModel
         {
             Name = "p50k_base",
             ExplicitNVocab = 50281,
             PatStr = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
-            MergeableRanks = mergeableRanks,
-            SpecialTokens = specialTokens
+            MergeableRanks = Load("p50k_base.tiktoken"),
+            SpecialTokens = new Dictionary<string, int>
+            {
+                [EndOfText] = 50256,
+            },
+        };
+    }
+
+    private static EncodingSettingModel p50k_edit()
+    {
+        return new EncodingSettingModel
+        {
+            Name = "p50k_edit",
+            ExplicitNVocab = 50281,
+            PatStr = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
+            MergeableRanks = Load("p50k_base.tiktoken"),
+            SpecialTokens = new Dictionary<string, int>
+            {
+                [EndOfText] = 50256,
+                [FimPrefix] = 50281,
+                [FimMiddle] = 50282,
+                [FimSuffix] = 50283,
+            },
+        };
+    }
+    
+    private static EncodingSettingModel cl100k_base()
+    {
+        return new EncodingSettingModel
+        {
+            Name = "cl100k_base",
+            PatStr = @"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+",
+            MergeableRanks = Load("cl100k_base.tiktoken"),
+            SpecialTokens = new Dictionary<string, int>
+            {
+                [EndOfText] = 100257,
+                [FimPrefix] = 100258,
+                [FimMiddle] = 100259,
+                [FimSuffix] = 100260,
+                [EndOfPrompt] = 100276,
+            },
         };
     }
 }
