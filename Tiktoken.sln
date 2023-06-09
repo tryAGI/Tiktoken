@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}"
+	ProjectSection(SolutionItems) = preProject
+		src\libs\Directory.Build.props = src\libs\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken", "src\libs\Tiktoken\Tiktoken.csproj", "{722606E4-DB7E-42DE-9627-A70459ABED8A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BC3A0A95-4B22-4523-A1C5-94699F586D1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.UnitTests", "src\tests\Tiktoken.UnitTests\Tiktoken.UnitTests.csproj", "{DD0E1D72-6861-41E8-9737-E5875550B39D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{D567FA24-122C-4D52-A06D-B2FF47758DFB}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Packages.props = src\Directory.Packages.props
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\ISSUE_TEMPLATE\bug-report.yaml = .github\ISSUE_TEMPLATE\bug-report.yaml
+		.github\ISSUE_TEMPLATE\enhancement.md = .github\ISSUE_TEMPLATE\enhancement.md
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{722606E4-DB7E-42DE-9627-A70459ABED8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{722606E4-DB7E-42DE-9627-A70459ABED8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{722606E4-DB7E-42DE-9627-A70459ABED8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{722606E4-DB7E-42DE-9627-A70459ABED8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EF81BF74-F71E-426D-9B4C-AA334116CB77}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{722606E4-DB7E-42DE-9627-A70459ABED8A} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{DD0E1D72-6861-41E8-9737-E5875550B39D} = {BC3A0A95-4B22-4523-A1C5-94699F586D1B}
+	EndGlobalSection
+EndGlobal
