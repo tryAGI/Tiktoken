@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Tiktoken.Models;
 using Tiktoken.Services;
 
@@ -33,19 +32,7 @@ public class Encoding
         return new Encoding(setting);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="tokens"></param>
-    /// <returns></returns>
-    public static Regex SpecialTokenRegex(HashSet<string> tokens)
-    {
-        var inner = string.Join("|", tokens.Select(Regex.Escape));
-        return new Regex($"({inner})");
-    }
-
     private readonly CoreBpe _corePbe;
-
     private readonly EncodingSettingModel _setting;
 
     /// <summary>
@@ -109,17 +96,7 @@ public class Encoding
             ? new HashSet<string>(SpecialTokensSet().Except(allowedSpecialSet))
             : new HashSet<string>((IEnumerable<string>)disallowedSpecial);
 
-        if (disallowedSpecialSet.Count > 0)
-        {
-            var specialTokenRegex = SpecialTokenRegex(disallowedSpecialSet);
-            var match = specialTokenRegex.Match(text);
-            if (match.Success)
-            {
-                throw new InvalidOperationException(match.Value);
-            }
-        }
-
-        return _corePbe.EncodeNative(text, allowedSpecialSet);
+        return _corePbe.EncodeNative(text, allowedSpecialSet, disallowedSpecialSet);
     }
 
     /// <summary>
