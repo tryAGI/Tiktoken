@@ -7,52 +7,59 @@ namespace Tiktoken;
 /// <summary>
 /// 
 /// </summary>
-public class CoreBPE
+public class CoreBpe
 {
-    private Dictionary<string, int> _specialTokensEncoder { get; set; }
+    private IReadOnlyDictionary<string, int> SpecialTokensEncoder { get; set; }
 
     // TODO private max_token_value ??
-    private Dictionary<byte[], int> _encoder { get; set; }
+    private IReadOnlyDictionary<byte[], int> Encoder { get; set; }
 
-    private Regex _specialRegex { get; set; }
+    private Regex SpecialRegex { get; set; }
+    private Regex Regex { get; set; }
 
-    private Regex _regex { get; set; }
-
-    private Dictionary<int, byte[]> _decoder { get; set; }
-
-
-    private Dictionary<int, string> _specialTokensDecoder { get; set; }
+    private IReadOnlyDictionary<int, byte[]> Decoder { get; set; }
+    private IReadOnlyDictionary<int, string> SpecialTokensDecoder { get; set; }
+    
     /// <summary>
     /// 
     /// </summary>
     /// <param name="encoder"></param>
     /// <param name="specialTokensEncoder"></param>
     /// <param name="pattern"></param>
-    public CoreBPE(Dictionary<byte[], int> encoder, Dictionary<string, int> specialTokensEncoder, string pattern)
+    public CoreBpe(IReadOnlyDictionary<byte[], int> encoder, IReadOnlyDictionary<string, int> specialTokensEncoder, string pattern)
     {
-        _encoder = encoder;
-        _regex = new Regex(pattern);
-        _specialRegex = new Regex(string.Join("|", specialTokensEncoder.Keys.Select(s => Regex.Escape(s))));
-        _specialTokensEncoder = specialTokensEncoder;
+        specialTokensEncoder = specialTokensEncoder ?? throw new ArgumentNullException(nameof(specialTokensEncoder));
+        
+        Encoder = encoder;
+        Regex = new Regex(pattern);
+        SpecialRegex = new Regex(string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)));
+        SpecialTokensEncoder = specialTokensEncoder;
 
-        _decoder = _encoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+        Decoder = Encoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
-        if (_encoder.Count != _decoder.Count)
+        if (Encoder.Count != Decoder.Count)
         {
             throw new ArgumentException("Encoder and decoder sizes don't match");
         }
 
-        _specialTokensDecoder = specialTokensEncoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+        SpecialTokensDecoder = specialTokensEncoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 
-        var sortedTokenBytes = _encoder.Keys.ToList();
+        //var sortedTokenBytes = Encoder.Keys.ToList();
     }
 
-
-
-    public (List<int>, int) EncodeNative(string text, HashSet<string> allowedSpecial)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="allowedSpecial"></param>
+    /// <returns></returns>
+    public (IReadOnlyCollection<int>, int) EncodeNative(string text, HashSet<string> allowedSpecial)
     {
-        Regex specialRegex = _specialRegex;
-        Regex regex = _regex;
+        text = text ?? throw new ArgumentNullException(nameof(text));
+        allowedSpecial = allowedSpecial ?? throw new ArgumentNullException(nameof(allowedSpecial));
+        
+        Regex specialRegex = SpecialRegex;
+        Regex regex = Regex;
         var ret = new List<int>();
 
         int start = 0;
@@ -72,14 +79,14 @@ public class CoreBPE
 
             foreach (Match mat in regex.Matches(text.Substring(start, end - start)))
             {
-                var piece = Encoding.UTF8.GetBytes(mat.Value);
-                if (_encoder.TryGetValue(piece, out int token))
+                var piece = System.Text.Encoding.UTF8.GetBytes(mat.Value);
+                if (Encoder.TryGetValue(piece, out int token))
                 {
                     lastPieceTokenLen = 1;
                     ret.Add(token);
                     continue;
                 }
-                var tokens = BytePairEncoding.BytePairEncode(piece, _encoder);
+                var tokens = BytePairEncoding.BytePairEncode(piece, Encoder);
                 lastPieceTokenLen = tokens.Count;
                 ret.AddRange(tokens);
             }
@@ -87,7 +94,7 @@ public class CoreBPE
             if (nextSpecial.Success)
             {
                 var piece = nextSpecial.Value;
-                var token = _specialTokensEncoder[piece];
+                var token = SpecialTokensEncoder[piece];
                 ret.Add(token);
                 start = nextSpecial.Index + nextSpecial.Length;
                 lastPieceTokenLen = 0;
@@ -101,23 +108,28 @@ public class CoreBPE
         return (ret, lastPieceTokenLen);
     }
 
-
-
-    public byte[] DecodeNative(int[] tokens)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="tokens"></param>
+    /// <returns></returns>
+    public byte[] DecodeNative(IReadOnlyCollection<int> tokens)
     {
-        var ret = new List<byte>(tokens.Length * 2);
+        tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+        
+        var ret = new List<byte>(tokens.Count * 2);
         foreach (var token in tokens)
         {
-            byte[] tokenBytes = { };
-            if (_decoder.TryGetValue(token, out var value))
+            byte[] tokenBytes = Array.Empty<byte>();
+            if (Decoder.TryGetValue(token, out var value))
             {
                 tokenBytes = value;
             } 
             else
             {
-                if (_specialTokensDecoder.TryGetValue(token, out var valueS))
+                if (SpecialTokensDecoder.TryGetValue(token, out var valueS))
                 {
-                    tokenBytes = UTF8Encoding.UTF8.GetBytes(valueS);
+                    tokenBytes = System.Text.Encoding.UTF8.GetBytes(valueS);
                 }
             }
 

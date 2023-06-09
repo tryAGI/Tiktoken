@@ -5,9 +5,9 @@ namespace Tiktoken.Utilities;
 /// <summary>
 /// 
 /// </summary>
-public class BytePairEncoding
+public static class BytePairEncoding
 {
-    static List<T> BytePairMerge<T>(byte[] piece, Dictionary<byte[], int> ranks, Func<Range, T> f)
+    private static IReadOnlyCollection<T> BytePairMerge<T>(byte[] piece, IReadOnlyDictionary<byte[], int> ranks, Func<Range, T> f)
     {
         var parts = Enumerable.Range(0, piece.Length + 1).Select(i => (i, int.MaxValue)).ToList();
         int? GetRank(int startIdx, int skip = 0)
@@ -64,8 +64,17 @@ public class BytePairEncoding
         return outList;
     }
 
-    public static List<int> BytePairEncode(byte[] piece, Dictionary<byte[], int> ranks)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="ranks"></param>
+    /// <returns></returns>
+    public static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
     {
+        piece = piece ?? throw new ArgumentNullException(nameof(piece));
+        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
+        
         if (piece.Length == 1)
         {
             return new List<int> { ranks[piece] };
@@ -73,8 +82,17 @@ public class BytePairEncoding
         return BytePairMerge(piece, ranks, p => ranks[piece[p.Start..p.End]]);
     }
 
-    public static List<byte[]> BytePairSplit(byte[] piece, Dictionary<byte[], int> ranks)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="ranks"></param>
+    /// <returns></returns>
+    public static IReadOnlyCollection<byte[]> BytePairSplit(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
     {
+        piece = piece ?? throw new ArgumentNullException(nameof(piece));
+        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
+
         if (piece.Length == 1)
         {
             return new List<byte[]> { piece };

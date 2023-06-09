@@ -5,7 +5,13 @@
 /// </summary>
 public class ByteArrayComparer : IEqualityComparer<byte[]>
 {
-    public bool Equals(byte[] x, byte[] y)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public bool Equals(byte[]? x, byte[]? y)
     {
         if (x == null || y == null)
         {
@@ -25,6 +31,12 @@ public class ByteArrayComparer : IEqualityComparer<byte[]>
         return true;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
     public int GetHashCode(byte[] obj)
     {
         if (obj == null)
