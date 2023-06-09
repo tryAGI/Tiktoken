@@ -9,12 +9,21 @@ public static class BytePairEncoding
 {
     private static byte[] GetSlice(this byte[] bytes, int from, int to)
     {
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        var span = bytes.AsSpan();
+        return span.Slice(from, to - from).ToArray();
+#else
         return bytes.Skip(from).Take(to - from).ToArray();
+#endif
     }
     
-    private static IReadOnlyCollection<T> BytePairMerge<T>(byte[] piece, IReadOnlyDictionary<byte[], int> ranks, Func<int, int, T> f)
+    private static IReadOnlyCollection<byte[]> BytePairMerge(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
     {
-        var parts = Enumerable.Range(0, piece.Length + 1).Select(i => (i, int.MaxValue)).ToList();
+        var parts = Enumerable
+            .Range(0, piece.Length + 1)
+            .Select(i => (i, int.MaxValue))
+            .ToList();
+        
         int? GetRank(int startIdx, int skip = 0)
         {
             if (startIdx + skip + 2 < parts.Count)
@@ -63,30 +72,16 @@ public static class BytePairEncoding
                 break;
             }
         }
-        var outList = new List<T>(parts.Count - 1);
-        for (int i = 0; i < parts.Count - 1; i++)
+        var outList = new List<byte[]>(parts.Count - 1);
+        for (var i = 0; i < parts.Count - 1; i++)
         {
-            outList.Add(f(parts[i].i, parts[i + 1].i));
+            var from = parts[i].i;
+            var to = parts[i + 1].i;
+            
+            outList.Add(piece.GetSlice(from, to));
         }
-        return outList;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="piece"></param>
-    /// <param name="ranks"></param>
-    /// <returns></returns>
-    public static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
-    {
-        piece = piece ?? throw new ArgumentNullException(nameof(piece));
-        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
         
-        if (piece.Length == 1)
-        {
-            return new List<int> { ranks[piece] };
-        }
-        return BytePairMerge(piece, ranks, (from, to) => ranks[piece.GetSlice(from, to)]);
+        return outList;
     }
 
     /// <summary>
@@ -104,8 +99,23 @@ public static class BytePairEncoding
         {
             return new List<byte[]> { piece };
         }
-        return BytePairMerge(piece, ranks, (from, to) => piece.GetSlice(from, to));
+        
+        return BytePairMerge(piece, ranks);
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="ranks"></param>
+    /// <returns></returns>
+    public static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+    {
+        piece = piece ?? throw new ArgumentNullException(nameof(piece));
+        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
+        
+        return BytePairSplit(piece, ranks)
+            .Select(value => ranks[value])
+            .ToArray();
+    }
 }
