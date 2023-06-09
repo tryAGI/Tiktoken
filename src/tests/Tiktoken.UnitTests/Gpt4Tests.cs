@@ -6,19 +6,21 @@ public class Gpt4Tests
     [TestMethod]
     public void HelloWorld()
     {
-        var tikToken = Encoding.Get("cl100k_base");
-        var tokens = tikToken.Encode("hello world");
+        var encoding = Encoding.Get("cl100k_base");
+        var tokens = encoding.Encode("hello world");
         tokens.Should().BeEquivalentTo(new[] { 15339, 1917 });
         
-        var text = tikToken.Decode(tokens);
+        var text = encoding.Decode(tokens);
         text.Should().Be("hello world");
+
+        encoding.CountTokens(text).Should().Be(2);
     }
     
     [TestMethod]
     public void Special()
     {
-        var tikToken = Encoding.Get("cl100k_base");
-        var tokens = tikToken.Encode("hello <|endoftext|>", allowedSpecial: "all");
+        var encoding = Encoding.Get("cl100k_base");
+        var tokens = encoding.Encode("hello <|endoftext|>", allowedSpecial: "all");
         
         tokens.Should().BeEquivalentTo(new[] { 15339, 220, 100257 });
     }
@@ -26,8 +28,8 @@ public class Gpt4Tests
     [TestMethod]
     public void Chinese()
     {
-        var tikToken = Encoding.Get("cl100k_base");
-        var tokens = tikToken.Encode("我很抱歉，我不能提供任何非法或不道德的建议。快速赚钱是不容易的，需要耐心、刻苦努力和经验。如果您想增加收入，请考虑增加工作时间、寻找其他业务机会、学习新技能或提高自己的价值等方法。请记住，通过合法而道德的方式来获得收入，才是长期稳定的解决方案。");
+        var encoding = Encoding.Get("cl100k_base");
+        var tokens = encoding.Encode("我很抱歉，我不能提供任何非法或不道德的建议。快速赚钱是不容易的，需要耐心、刻苦努力和经验。如果您想增加收入，请考虑增加工作时间、寻找其他业务机会、学习新技能或提高自己的价值等方法。请记住，通过合法而道德的方式来获得收入，才是长期稳定的解决方案。");
 
         tokens.Should().HaveCount(135);
     }

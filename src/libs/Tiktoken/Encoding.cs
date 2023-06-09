@@ -77,6 +77,16 @@ public class Encoding
     }
 
     /// <summary>
+    /// TODO: optimize
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public int CountTokens(string text)
+    {
+        return Encode(text).Count;
+    }
+    
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="text"></param>
