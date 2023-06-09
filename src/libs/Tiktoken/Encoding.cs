@@ -83,7 +83,7 @@ public class Encoding
     /// <returns></returns>
     public int CountTokens(string text)
     {
-        return Encode(text).Count;
+        return Encode(text, allowedSpecial: "all").Count;
     }
     
     /// <summary>
