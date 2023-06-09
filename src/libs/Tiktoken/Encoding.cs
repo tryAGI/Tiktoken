@@ -84,7 +84,10 @@ public class Encoding
     /// <param name="disallowedSpecial"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public IReadOnlyCollection<int> Encode(string text, object? allowedSpecial = null, object? disallowedSpecial = null)
+    public IReadOnlyCollection<int> Encode(
+        string text,
+        object? allowedSpecial = null,
+        object? disallowedSpecial = null)
     {
         allowedSpecial ??= new HashSet<string>();
         disallowedSpecial ??= "all";

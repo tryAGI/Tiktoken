@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Tiktoken.Utilities;
 
 namespace Tiktoken;
@@ -31,8 +30,8 @@ public class CoreBpe
         specialTokensEncoder = specialTokensEncoder ?? throw new ArgumentNullException(nameof(specialTokensEncoder));
         
         Encoder = encoder;
-        Regex = new Regex(pattern);
-        SpecialRegex = new Regex(string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)));
+        Regex = new Regex(pattern, RegexOptions.Compiled);
+        SpecialRegex = new Regex(string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)), RegexOptions.Compiled);
         SpecialTokensEncoder = specialTokensEncoder;
 
         Decoder = Encoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
@@ -42,9 +41,10 @@ public class CoreBpe
             throw new ArgumentException("Encoder and decoder sizes don't match");
         }
 
-        SpecialTokensDecoder = specialTokensEncoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-
-        //var sortedTokenBytes = Encoder.Keys.ToList();
+        SpecialTokensDecoder = specialTokensEncoder
+            .ToDictionary(
+                static x => x.Value,
+                static x => x.Key);
     }
 
     /// <summary>
@@ -58,28 +58,26 @@ public class CoreBpe
         text = text ?? throw new ArgumentNullException(nameof(text));
         allowedSpecial = allowedSpecial ?? throw new ArgumentNullException(nameof(allowedSpecial));
         
-        Regex specialRegex = SpecialRegex;
-        Regex regex = Regex;
         var ret = new List<int>();
 
-        int start = 0;
-        int lastPieceTokenLen = 0;
+        var start = 0;
+        var lastPieceTokenLen = 0;
         while (true)
         {
             Match nextSpecial;
-            int startFind = start;
+            var startFind = start;
             while (true)
             {
-                nextSpecial = specialRegex.Match(text, startFind);
+                nextSpecial = SpecialRegex.Match(text, startFind);
                 if (!nextSpecial.Success) break;
                 if (allowedSpecial.Contains(text.Substring(nextSpecial.Index, nextSpecial.Length))) break;
                 startFind = nextSpecial.Index + 1;
             }
-            int end = nextSpecial.Success ? nextSpecial.Index : text.Length;
+            var end = nextSpecial.Success ? nextSpecial.Index : text.Length;
 
-            foreach (Match mat in regex.Matches(text.Substring(start, end - start)))
+            foreach (Match match in Regex.Matches(text.Substring(start, end - start)))
             {
-                var piece = System.Text.Encoding.UTF8.GetBytes(mat.Value);
+                var piece = System.Text.Encoding.UTF8.GetBytes(match.Value);
                 if (Encoder.TryGetValue(piece, out int token))
                 {
                     lastPieceTokenLen = 1;
