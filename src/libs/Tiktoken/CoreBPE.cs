@@ -25,22 +25,23 @@ public class CoreBpe
     /// <param name="encoder"></param>
     /// <param name="specialTokensEncoder"></param>
     /// <param name="pattern"></param>
-    public CoreBpe(IReadOnlyDictionary<byte[], int> encoder, IReadOnlyDictionary<string, int> specialTokensEncoder, string pattern)
+    public CoreBpe(
+        IReadOnlyDictionary<byte[], int> encoder,
+        IReadOnlyDictionary<string, int> specialTokensEncoder,
+        string pattern)
     {
         specialTokensEncoder = specialTokensEncoder ?? throw new ArgumentNullException(nameof(specialTokensEncoder));
         
         Encoder = encoder;
+        SpecialTokensEncoder = specialTokensEncoder;
+        
         Regex = new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = new Regex(string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)), RegexOptions.Compiled);
-        SpecialTokensEncoder = specialTokensEncoder;
 
-        Decoder = Encoder.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-
-        if (Encoder.Count != Decoder.Count)
-        {
-            throw new ArgumentException("Encoder and decoder sizes don't match");
-        }
-
+        Decoder = Encoder
+            .ToDictionary(
+                static x => x.Value,
+                static x => x.Key);
         SpecialTokensDecoder = specialTokensEncoder
             .ToDictionary(
                 static x => x.Value,
@@ -73,10 +74,16 @@ public class CoreBpe
                 startFind = nextSpecial.Index + 1;
             }
             var end = nextSpecial.Success ? nextSpecial.Index : text.Length;
-
+#if NET7_0_OR_GREATER
+            foreach (var match in Regex.EnumerateMatches(text.AsSpan()[start..end]))
+            {
+                var matchValue = text.AsSpan().Slice(match.Index, match.Length).ToArray();
+#else
             foreach (Match match in Regex.Matches(text.Substring(start, end - start)))
             {
-                var piece = System.Text.Encoding.UTF8.GetBytes(match.Value);
+                var matchValue = match.Value;
+#endif
+                var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
                 if (Encoder.TryGetValue(piece, out int token))
                 {
                     ret.Add(token);
