@@ -28,6 +28,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{D567FA24-1
 		.github\FUNDING.yml = .github\FUNDING.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{15EDB083-E0AC-4CDC-98EC-A67EFE143C29}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Benchmarks", "src\benchmarks\Tiktoken.Benchmarks\Tiktoken.Benchmarks.csproj", "{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +46,10 @@ Global
 		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD0E1D72-6861-41E8-9737-E5875550B39D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,5 +60,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{722606E4-DB7E-42DE-9627-A70459ABED8A} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 		{DD0E1D72-6861-41E8-9737-E5875550B39D} = {BC3A0A95-4B22-4523-A1C5-94699F586D1B}
+		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E} = {15EDB083-E0AC-4CDC-98EC-A67EFE143C29}
 	EndGlobalSection
 EndGlobal

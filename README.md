@@ -30,91 +30,29 @@ Below are the file download links:
 [p50k_base.tiktoken](https://openaipublic.blob.core.windows.net/encodings/p50k_base.tiktoken)
 [cl100k_base.tiktoken](https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken)
 
-## Efficiency Comparison
+## Benchmarks
+You can view the reports for each version [here](benchmarks)
 
-I noticed that some users would like to get a comparison of efficiency. Here, I use SharpToken as the basic comparison, with the encoder cl100k_base, on the .Net 6.0 in Debug mode.
-* TiktokenSharp Version: 1.0.5 
-* SharpToken Version: 1.0.28
+<!--BENCHMARKS_START-->
+``` ini
 
-### CPU
+BenchmarkDotNet=v0.13.5, OS=macOS Ventura 13.3.1 (a) (22E772610a) [Darwin 22.4.0]
+Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
+.NET SDK=7.0.203
+  [Host]     : .NET 7.0.5 (7.0.523.17405), Arm64 RyuJIT AdvSIMD
+  Job-IGIIQY : .NET 7.0.5 (7.0.523.17405), Arm64 RyuJIT AdvSIMD DEBUG
 
-<details> 
-<summary>Code：</summary>
+BuildConfiguration=Debug  
 
-```csharp
-const string kLongText = "King Lear, one of Shakespeare's darkest and most savage plays, tells the story of the foolish and Job-like Lear, who divides his kingdom, as he does his affections, according to vanity and whim. Lear’s failure as a father engulfs himself and his world in turmoil and tragedy.";
-
-static async Task SpeedTiktokenSharp()
-{
-    TikToken tikToken = TikToken.GetEncoding("cl100k_base");
-    Stopwatch stopwatch = new Stopwatch();
-    stopwatch.Start();
-
-    for (int i = 0; i < 10000; i++) 
-    {
-        var encoded = tikToken.Encode(kLongText);
-        var decoded = tikToken.Decode(encoded);
-    }
-
-    stopwatch.Stop();
-    TimeSpan timespan = stopwatch.Elapsed;
-    double milliseconds = timespan.TotalMilliseconds;
-    Console.WriteLine($"SpeedTiktokenSharp = {milliseconds} ms");
-}
-
-static async Task SpeedSharpToken()
-{
-    var encoding = GptEncoding.GetEncoding("cl100k_base");
-
-    Stopwatch stopwatch = new Stopwatch();
-    stopwatch.Start();   
-
-    for (int i = 0; i < 10000; i++) 
-    {
-        var encoded = encoding.Encode(kLongText);
-        var decoded = encoding.Decode(encoded);
-    }
-
-    stopwatch.Stop();
-    TimeSpan timespan = stopwatch.Elapsed;
-    double milliseconds = timespan.TotalMilliseconds;
-    Console.WriteLine($"SpeedSharpToken = {milliseconds} ms");
-
-}
 ```
-  
-</details>
-TiktokenSharp is approximately 57% faster than SharpToken.
+|              Method |                Data |      Mean |     Error |    StdDev | Ratio | RatioSD |   Gen0 |   Gen1 | Allocated | Alloc Ratio |
+|-------------------- |-------------------- |----------:|----------:|----------:|------:|--------:|-------:|-------:|----------:|------------:|
+|   **SharpTokenV1_0_28** |       **Hello, World!** |  **3.334 μs** | **0.0497 μs** | **0.0465 μs** |  **1.00** |    **0.00** | **0.6752** | **0.0038** |   **4.14 KB** |        **1.00** |
+| TiktokenSharpV1_0_5 |       Hello, World! |  6.640 μs | 0.0173 μs | 0.0162 μs |  1.99 |    0.03 | 2.1820 | 0.0458 |  13.41 KB |        3.24 |
+|            Tiktoken |       Hello, World! |  8.957 μs | 0.0392 μs | 0.0327 μs |  2.68 |    0.04 | 2.1820 | 0.0458 |  13.41 KB |        3.24 |
+|                     |                     |           |           |           |       |         |        |        |           |             |
+|   **SharpTokenV1_0_28** | **King(...)edy. [275]** | **62.740 μs** | **0.2538 μs** | **0.2119 μs** |  **1.00** |    **0.00** | **8.5449** | **0.4883** |  **52.89 KB** |        **1.00** |
+| TiktokenSharpV1_0_5 | King(...)edy. [275] | 21.973 μs | 0.1803 μs | 0.1599 μs |  0.35 |    0.00 | 5.0964 | 0.3052 |  31.34 KB |        0.59 |
+|            Tiktoken | King(...)edy. [275] | 23.805 μs | 0.0975 μs | 0.0814 μs |  0.38 |    0.00 | 5.7678 | 0.3357 |  35.38 KB |        0.67 |
 
-* Speed`TiktokenSharp` = 570.1206 ms
-* Speed`SharpToken` = 1312.8812 ms
-
-### Memory
-<details> <summary>Image：</summary>
-  
-![20230509125926](https://user-images.githubusercontent.com/4475018/236998921-d380899e-9b66-43c9-af66-f02bf8c2c6e5.png)
-![20230509130021](https://user-images.githubusercontent.com/4475018/236998944-eb1d1cf6-65b4-4669-9160-a8fc74e0d4c9.png)
-  
-</details>
-
-TiktokenSharp has approximately 26% less memory usage than SharpToken.
-
-
-## Update
-
-### 1.0.5 20230508
-* New support for .Net Standard 2.0 has been added, making TiktokenSharp usable in the .Net Framework.
-
-### 1.0.4 20230424
-* Add method TikToken.GetEncoding(encodingName).
-
-### 1.0.3 20230321
-* **GetEncodingSetting** now supports the model of **gpt-4** and also allows for encoding names to be directly passed in.
-
-### 1.0.2 20230317
-* add method **TikToken.PBEFileDirectory** to allow for custom storage directory of bpe files. the path needs to be set before **TikToken.EncodingForModel()**.
-
-### 1.0.1 20230313
-* p50k_base encoding algorithm that supports the text-davinci-003 model.
-
-
+<!--BENCHMARKS_END-->
