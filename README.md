@@ -1,27 +1,25 @@
 # Tiktoken
 
+[![Nuget package](https://img.shields.io/nuget/vpre/Tiktoken)](https://www.nuget.org/packages/Tiktoken/)
+[![dotnet](https://github.com/tryAGI/Tiktoken/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/tryAGI/Tiktoken/actions/workflows/dotnet.yml)
+[![License: MIT](https://img.shields.io/github/license/tryAGI/Tiktoken)](https://github.com/tryAGI/Tiktoken/blob/main/LICENSE.txt)
+[![Discord](https://img.shields.io/discord/1115206893015662663?label=Discord&logo=discord&logoColor=white&color=d82679)](https://discord.gg/Ca2xhfBf3v)
+
 Due to the lack of a C# version of `cl100k_base` encoding (gpt-3.5-turbo), I have implemented a basic solution with encoding and decoding methods based on the official Rust implementation.
 
 Currently, `cl100k_base` `p50k_base` has been implemented. Other encodings will be added in future submissions. If you encounter any issues or have questions, please feel free to submit them on the `lssues`."
 
-If you want to use the ChatGPT C# library that integrates this repository and implements context-based conversation, please visit [ChatGPTSharp](https://github.com/aiqinxuancai/ChatGPTSharp).
-
-## Getting Started
-
-Tiktoken is available as [NuGet package](https://www.nuget.org/packages/Tiktoken/).
-
+### Usage
 ```csharp
 using Tiktoken;
 
-//use model name
-TikToken tikToken = TikToken.EncodingForModel("gpt-3.5-turbo");
-var i = tikToken.Encode("hello world"); //[15339, 1917]
-var d = tikToken.Decode(i); //hello world
+var encoding = Encoding.ForModel("gpt-3.5-turbo");
+var tokens = encoding.Encode("hello world"); // [15339, 1917]
+var text = encoding.Decode(tokens); // hello world
 
-//use encoding name
-TikToken tikToken = TikToken.GetEncoding("cl100k_base");
-var i = tikToken.Encode("hello world"); //[15339, 1917]
-var d = tikToken.Decode(i); //hello world
+var encoding = Encoding.Get("cl100k_base");
+var tokens = encoding.Encode("hello world"); // [15339, 1917]
+var text = encoding.Decode(tokens); // hello world
 ```
 
 **When using a new encoder for the first time, the required tiktoken files for the encoder will be downloaded from the internet. This may take some time.** Once the download is successful, subsequent uses will not require downloading again. You can set `TikToken.PBEFileDirectory` before using the encoder to modify the storage path of the downloaded tiktoken files, or you can pre-download the files to avoid network issues causing download failures.
