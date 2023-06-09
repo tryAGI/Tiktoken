@@ -5,6 +5,10 @@
 [![License: MIT](https://img.shields.io/github/license/tryAGI/Tiktoken)](https://github.com/tryAGI/Tiktoken/blob/main/LICENSE.txt)
 [![Discord](https://img.shields.io/discord/1115206893015662663?label=Discord&logo=discord&logoColor=white&color=d82679)](https://discord.gg/Ca2xhfBf3v)
 
+This implementation aims for maximum performance, especially in the token count operation.  
+There's also a benchmark console app here for easy tracking of this.  
+We will be happy to accept any PR.  
+
 ### Implemented encodings
 - `cl100k_base`
 - `r50k_base`
