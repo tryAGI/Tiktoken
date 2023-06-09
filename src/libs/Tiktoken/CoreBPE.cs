@@ -53,7 +53,7 @@ public class CoreBpe
     /// <param name="text"></param>
     /// <param name="allowedSpecial"></param>
     /// <returns></returns>
-    public (IReadOnlyCollection<int>, int) EncodeNative(string text, HashSet<string> allowedSpecial)
+    public IReadOnlyCollection<int> EncodeNative(string text, HashSet<string> allowedSpecial)
     {
         text = text ?? throw new ArgumentNullException(nameof(text));
         allowedSpecial = allowedSpecial ?? throw new ArgumentNullException(nameof(allowedSpecial));
@@ -61,7 +61,6 @@ public class CoreBpe
         var ret = new List<int>();
 
         var start = 0;
-        var lastPieceTokenLen = 0;
         while (true)
         {
             Match nextSpecial;
@@ -80,12 +79,10 @@ public class CoreBpe
                 var piece = System.Text.Encoding.UTF8.GetBytes(match.Value);
                 if (Encoder.TryGetValue(piece, out int token))
                 {
-                    lastPieceTokenLen = 1;
                     ret.Add(token);
                     continue;
                 }
                 var tokens = BytePairEncoding.BytePairEncode(piece, Encoder);
-                lastPieceTokenLen = tokens.Count;
                 ret.AddRange(tokens);
             }
 
@@ -95,7 +92,6 @@ public class CoreBpe
                 var token = SpecialTokensEncoder[piece];
                 ret.Add(token);
                 start = nextSpecial.Index + nextSpecial.Length;
-                lastPieceTokenLen = 0;
             }
             else
             {
@@ -103,7 +99,7 @@ public class CoreBpe
             }
         }
 
-        return (ret, lastPieceTokenLen);
+        return ret;
     }
 
     /// <summary>

@@ -119,7 +119,7 @@ public class Encoding
             }
         }
 
-        return _corePbe.EncodeNative(text, allowedSpecialSet).Item1;
+        return _corePbe.EncodeNative(text, allowedSpecialSet);
     }
 
     /// <summary>
