@@ -1,12 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>net4.6.1;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
     </PropertyGroup>
-
+    
     <PropertyGroup Label="NuGet">
         <Description>This project implements token calculation for OpenAI's gpt-3.5-turbo model, specifically using `cl100k_base` encoding.</Description>
         <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
     </PropertyGroup>
+
+    <ItemGroup Label="Usings">
+        <Using Remove="System.Net.Http" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.1'">
+      <PackageReference Include="System.ValueTuple" />
+    </ItemGroup>
 
 </Project>
