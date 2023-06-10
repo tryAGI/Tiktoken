@@ -46,23 +46,9 @@ public static class BytePairEncoding
             .Select(i => (Index: i, Rank: int.MaxValue))
             .ToList();
         
-        int? GetRank(int startIdx, int skip = 0)
-        {
-            if (startIdx + skip + 2 < parts.Count)
-            {
-                var from = parts[startIdx].Index;
-                var to = parts[startIdx + skip + 2].Index;
-                var slice = piece.GetSlice(from, to);
-                if (ranks.TryGetValue(slice, out var rank))
-                {
-                    return rank;
-                }
-            }
-            return null;
-        }
         for (int i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i);
+            var rank = GetRank(i, parts, piece, ranks);
             if (rank != null)
             {
                 Debug.Assert(rank.Value != int.MaxValue);
@@ -76,10 +62,10 @@ public static class BytePairEncoding
                 break;
             }
 
-            parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, 1) ?? int.MaxValue);
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, 1) ?? int.MaxValue);
             }
             parts.RemoveAt(i + 1);
         }
@@ -106,24 +92,10 @@ public static class BytePairEncoding
             .Range(0, piece.Length + 1)
             .Select(i => (Index: i, Rank: int.MaxValue))
             .ToList();
-        
-        int? GetRank(int startIdx, int skip = 0)
-        {
-            if (startIdx + skip + 2 < parts.Count)
-            {
-                var from = parts[startIdx].Index;
-                var to = parts[startIdx + skip + 2].Index;
-                var slice = piece.GetSlice(from, to);
-                if (ranks.TryGetValue(slice, out var rank))
-                {
-                    return rank;
-                }
-            }
-            return null;
-        }
+
         for (int i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i);
+            var rank = GetRank(i, parts, piece, ranks);
             if (rank != null)
             {
                 Debug.Assert(rank.Value != int.MaxValue);
@@ -137,14 +109,39 @@ public static class BytePairEncoding
                 break;
             }
             
-            parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, 1) ?? int.MaxValue);
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, 1) ?? int.MaxValue);
             }
             parts.RemoveAt(i + 1);
         }
         
         return parts.Count - 1;
+    }
+
+    private static int? GetRank(
+        int startIdx,
+        IReadOnlyList<(int Index, int Rank)> parts,
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        ReadOnlyMemory<byte> piece,
+#else
+        byte[] piece,
+#endif
+        IReadOnlyDictionary<byte[], int> ranks,
+        int skip = 0)
+    {
+        if (startIdx + skip + 2 < parts.Count)
+        {
+            var from = parts[startIdx].Index;
+            var to = parts[startIdx + skip + 2].Index;
+            var slice = piece.GetSlice(from, to);
+            if (ranks.TryGetValue(slice, out var rank))
+            {
+                return rank;
+            }
+        }
+        
+        return null;
     }
 }
