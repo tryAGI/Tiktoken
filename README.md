@@ -27,7 +27,7 @@ var tokens = encoding.Encode("hello world"); // [31373, 995]
 var text = encoding.Decode(tokens); // hello world
 ```
 
-## Benchmarks
+### Benchmarks
 You can view the reports for each version [here](benchmarks)
 
 <!--BENCHMARKS_START-->
@@ -57,3 +57,17 @@ BuildConfiguration=Debug
 |            Tiktoken | King(...)edy. [275] |    10,511.8 ns |     27.65 ns |     24.51 ns |  0.17 |   1.0986 |   0.0153 |      - |    6904 B |        0.13 |
 
 <!--BENCHMARKS_END-->
+
+### Possible optimizations
+- stackalloc in BytePairEncode
+- BytePairEncode caching
+- Modes - Fast(without special token regex)/Strict
+- SIMD?
+- Parallelism?
+- string as dictionary key?
+
+## Support
+
+Priority place for bugs: https://github.com/tryAGI/LangChain/issues  
+Priority place for ideas and general questions: https://github.com/tryAGI/LangChain/discussions  
+Discord: https://discord.gg/Ca2xhfBf3v  
