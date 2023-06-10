@@ -65,12 +65,15 @@ public class CoreBpe
         disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
         
         var tokens = new List<int>();
+#if NET7_0_OR_GREATER
+        var textSpan = text.AsSpan();
+#endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
 #if NET7_0_OR_GREATER
-        foreach (var match in SpecialRegex.EnumerateMatches(text))
+        foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
         {
-            var value = text.AsSpan().Slice(start: match.Index, length: match.Length).ToString();
+            var value = textSpan.Slice(start: match.Index, length: match.Length).ToString();
 #else
         foreach (Match match in SpecialRegex.Matches(text))
         {
@@ -95,11 +98,11 @@ public class CoreBpe
         foreach (var (specialStart, specialLength) in specialTokens)
         {
 #if NET7_0_OR_GREATER
-            foreach (var match in Regex.EnumerateMatches(text.AsSpan()[start..specialStart]))
+            foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchValue = text.AsSpan().Slice(match.Index, match.Length).ToArray();
+                var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
 #else
-            foreach (Match match in Regex.Matches(text.Substring(start, specialStart - start)))
+            foreach (Match match in Regex.Matches(text[start..specialStart]))
             {
                 var matchValue = match.Value;
 #endif
@@ -118,7 +121,7 @@ public class CoreBpe
                 start = specialStart + specialLength;
                 
 #if NET7_0_OR_GREATER
-                var piece = new string(text.AsSpan().Slice(specialStart, specialLength));
+                var piece = new string(textSpan.Slice(specialStart, specialLength));
 #else
                 var piece = text.Substring(specialStart, specialLength);
 #endif

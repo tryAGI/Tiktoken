@@ -7,17 +7,23 @@ namespace Tiktoken.Utilities;
 /// </summary>
 public static class BytePairEncoding
 {
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+    private static byte[] GetSlice(this ReadOnlyMemory<byte> bytes, int from, int to)
+    {
+        return bytes.Slice(from, to - from).ToArray();
+    }
+#else
     private static byte[] GetSlice(this byte[] bytes, int from, int to)
     {
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-        var span = bytes.AsSpan();
-        return span.Slice(from, to - from).ToArray();
-#else
         return bytes.Skip(from).Take(to - from).ToArray();
-#endif
     }
+#endif
     
-    private static IReadOnlyCollection<byte[]> BytePairSplit(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+    internal static IReadOnlyCollection<int> BytePairEncode(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
+#else
+    internal static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+#endif
     {
         var parts = Enumerable
             .Range(0, piece.Length + 1)
@@ -72,31 +78,16 @@ public static class BytePairEncoding
                 break;
             }
         }
-        var outList = new List<byte[]>(parts.Count - 1);
+        var outList = new List<int>(parts.Count - 1);
         for (var i = 0; i < parts.Count - 1; i++)
         {
             var from = parts[i].Index;
             var to = parts[i + 1].Index;
+            var slice = piece.GetSlice(from, to);
             
-            outList.Add(piece.GetSlice(from, to));
+            outList.Add(ranks[slice]);
         }
         
         return outList;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="piece"></param>
-    /// <param name="ranks"></param>
-    /// <returns></returns>
-    public static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
-    {
-        piece = piece ?? throw new ArgumentNullException(nameof(piece));
-        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
-        
-        return BytePairSplit(piece, ranks)
-            .Select(value => ranks[value])
-            .ToArray();
     }
 }
