@@ -52,6 +52,42 @@ public class CoreBpe
     /// 
     /// </summary>
     /// <param name="text"></param>
+    /// <returns></returns>
+    public int CountTokensNative(string text)
+    {
+        text = text ?? throw new ArgumentNullException(nameof(text));
+        
+        var tokens = 0;
+#if NET7_0_OR_GREATER
+        var textSpan = text.AsSpan();
+#endif
+
+#if NET7_0_OR_GREATER
+        foreach (var match in Regex.EnumerateMatches(textSpan))
+        {
+            var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
+#else
+        foreach (Match match in Regex.Matches(text))
+        {
+            var matchValue = match.Value;
+#endif
+            var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+            if (Encoder.ContainsKey(piece))
+            {
+                tokens++;
+                continue;
+            }
+            
+            tokens += BytePairEncoding.BytePairEncodeCountTokens(piece, Encoder);
+        }
+
+        return tokens;
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
     /// <param name="allowedSpecial"></param>
     /// <param name="disallowedSpecial"></param>
     /// <returns></returns>
@@ -107,7 +143,7 @@ public class CoreBpe
                 var matchValue = match.Value;
 #endif
                 var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
-                if (Encoder.TryGetValue(piece, out int token))
+                if (Encoder.TryGetValue(piece, out var token))
                 {
                     tokens.Add(token);
                     continue;

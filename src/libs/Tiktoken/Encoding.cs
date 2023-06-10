@@ -58,13 +58,13 @@ public class Encoding
     }
 
     /// <summary>
-    /// TODO: optimize
+    /// Counts tokens in fast mode. Does not take into account special tokens.
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
     public int CountTokens(string text)
     {
-        return EncodeWithAllAllowedSpecial(text).Count;
+        return _corePbe.CountTokensNative(text);
     }
     
     /// <summary>
