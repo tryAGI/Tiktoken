@@ -48,7 +48,7 @@ public static class BytePairEncoding
         
         for (int i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i, parts, piece, ranks);
+            var rank = GetRank(i, parts, piece, ranks, length: 2);
             if (rank != null)
             {
                 Debug.Assert(rank.Value != int.MaxValue);
@@ -62,10 +62,10 @@ public static class BytePairEncoding
                 break;
             }
 
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, 1) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3) ?? int.MaxValue);
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, 1) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3) ?? int.MaxValue);
             }
             parts.RemoveAt(i + 1);
         }
@@ -95,7 +95,7 @@ public static class BytePairEncoding
 
         for (int i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i, parts, piece, ranks);
+            var rank = GetRank(i, parts, piece, ranks, length: 2);
             if (rank != null)
             {
                 Debug.Assert(rank.Value != int.MaxValue);
@@ -109,10 +109,10 @@ public static class BytePairEncoding
                 break;
             }
             
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, 1) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3) ?? int.MaxValue);
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, 1) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3) ?? int.MaxValue);
             }
             parts.RemoveAt(i + 1);
         }
@@ -129,12 +129,12 @@ public static class BytePairEncoding
         byte[] piece,
 #endif
         IReadOnlyDictionary<byte[], int> ranks,
-        int skip = 0)
+        int length)
     {
-        if (startIdx + skip + 2 < parts.Count)
+        if (startIdx + length < parts.Count)
         {
             var from = parts[startIdx].Index;
-            var to = parts[startIdx + skip + 2].Index;
+            var to = parts[startIdx + length].Index;
             var slice = piece.GetSlice(from, to);
             if (ranks.TryGetValue(slice, out var rank))
             {
