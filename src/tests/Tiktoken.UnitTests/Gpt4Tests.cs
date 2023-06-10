@@ -20,7 +20,7 @@ public class Gpt4Tests
     public void Special()
     {
         var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.Encode(Strings.Special, allowedSpecial: "all");
+        var tokens = encoding.EncodeWithAllAllowedSpecial(Strings.Special);
         
         tokens.Should().BeEquivalentTo(new[] { 15339, 220, 100257 });
     }

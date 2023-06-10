@@ -37,7 +37,7 @@ public class Encoding
     }
 
     private readonly CoreBpe _corePbe;
-    private readonly EncodingSettingModel _setting;
+    private readonly HashSet<string> _specialTokensSet;
 
     /// <summary>
     /// 
@@ -54,16 +54,7 @@ public class Encoding
         }
 
         _corePbe = new CoreBpe(setting.MergeableRanks, setting.SpecialTokens, setting.Pattern);
-        _setting = setting;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    public HashSet<string> SpecialTokensSet()
-    {
-        return new HashSet<string>(_setting.SpecialTokens.Keys);
+        _specialTokensSet = new HashSet<string>(setting.SpecialTokens.Keys);
     }
 
     /// <summary>
@@ -73,7 +64,46 @@ public class Encoding
     /// <returns></returns>
     public int CountTokens(string text)
     {
-        return Encode(text, allowedSpecial: "all").Count;
+        return EncodeWithAllAllowedSpecial(text).Count;
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> EncodeWithAllAllowedSpecial(string text)
+    {
+        return _corePbe.EncodeNative(
+            text,
+            allowedSpecial: _specialTokensSet,
+            disallowedSpecial: new HashSet<string>());
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> EncodeWithAllDisallowedSpecial(string text)
+    {
+        return _corePbe.EncodeNative(
+            text,
+            allowedSpecial: new HashSet<string>(),
+            disallowedSpecial: _specialTokensSet);
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> Encode(string text)
+    {
+        return EncodeWithAllDisallowedSpecial(text);
     }
     
     /// <summary>
@@ -81,25 +111,37 @@ public class Encoding
     /// </summary>
     /// <param name="text"></param>
     /// <param name="allowedSpecial"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> EncodeWithAllowedSpecial(
+        string text,
+        IReadOnlyCollection<string> allowedSpecial)
+    {
+        allowedSpecial = allowedSpecial ?? throw new ArgumentNullException(nameof(allowedSpecial));
+        
+        return _corePbe.EncodeNative(
+            text,
+            allowedSpecial: new HashSet<string>(allowedSpecial),
+            disallowedSpecial: new HashSet<string>(_specialTokensSet.Except(allowedSpecial)));
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
     /// <param name="disallowedSpecial"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public IReadOnlyCollection<int> Encode(
+    public IReadOnlyCollection<int> EncodeWithDisallowedSpecial(
         string text,
-        object? allowedSpecial = null,
-        object? disallowedSpecial = null)
+        IReadOnlyCollection<string> disallowedSpecial)
     {
-        allowedSpecial ??= new HashSet<string>();
-        disallowedSpecial ??= "all";
-
-        var allowedSpecialSet = allowedSpecial.Equals("all")
-            ? SpecialTokensSet()
-            : new HashSet<string>((IEnumerable<string>)allowedSpecial);
-        var disallowedSpecialSet = disallowedSpecial.Equals("all")
-            ? new HashSet<string>(SpecialTokensSet().Except(allowedSpecialSet))
-            : new HashSet<string>((IEnumerable<string>)disallowedSpecial);
-
-        return _corePbe.EncodeNative(text, allowedSpecialSet, disallowedSpecialSet);
+        disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
+        
+        return _corePbe.EncodeNative(
+            text,
+            allowedSpecial: new HashSet<string>(_specialTokensSet.Except(disallowedSpecial)),
+            disallowedSpecial: new HashSet<string>(disallowedSpecial));
     }
 
     /// <summary>

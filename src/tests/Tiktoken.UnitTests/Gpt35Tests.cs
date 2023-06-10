@@ -18,7 +18,7 @@ public class Gpt35Tests
     public void Special()
     {
         var encoding = Encoding.ForModel("gpt-3.5-turbo");
-        var tokens = encoding.Encode(Strings.Special, allowedSpecial: "all");
+        var tokens = encoding.EncodeWithAllAllowedSpecial(Strings.Special);
         
         tokens.Should().BeEquivalentTo(new[] { 15339, 220, 100257 });
     }

@@ -18,7 +18,7 @@ public class TextDavinciTests
     public void Special()
     {
         var encoding = Encoding.ForModel("text-davinci-003");
-        var tokens = encoding.Encode(Strings.Special, allowedSpecial: "all");
+        var tokens = encoding.EncodeWithAllAllowedSpecial(Strings.Special);
         
         tokens.Should().BeEquivalentTo(new[] { 31373, 220, 50256 });
     }
