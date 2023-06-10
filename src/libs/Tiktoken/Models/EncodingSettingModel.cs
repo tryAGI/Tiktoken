@@ -8,12 +8,12 @@ public class EncodingSettingModel
     /// <summary>
     /// 
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     /// <summary>
     /// regex
     /// </summary>
-    public string PatStr { get; set; } = string.Empty;
+    public required string Pattern { get; set; }
 
     /// <summary>
     /// 
@@ -23,16 +23,11 @@ public class EncodingSettingModel
     /// <summary>
     /// tiktoken file
     /// </summary>
-    public IReadOnlyDictionary<byte[], int> MergeableRanks { get; set; } = new Dictionary<byte[], int>();
+    public required IReadOnlyDictionary<byte[], int> MergeableRanks { get; set; } = new Dictionary<byte[], int>();
 
     /// <summary>
     /// 
     /// </summary>
     public IReadOnlyDictionary<string, int> SpecialTokens { get; set; } = new Dictionary<string, int>();
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public int MaxTokenValue => Math.Max(MergeableRanks.Values.Max(), SpecialTokens.Values.Max());
 
 }

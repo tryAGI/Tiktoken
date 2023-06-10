@@ -10,6 +10,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.0.4" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.0.4" />
+    <PackageVersion Include="PolySharp" Version="1.13.2" />
     <PackageVersion Include="SharpToken" Version="1.0.28" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
     <PackageVersion Include="TiktokenSharp" Version="1.0.5" />

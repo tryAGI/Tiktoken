@@ -14,11 +14,18 @@
     </ItemGroup>
 
     <ItemGroup Label="Resources">
-        <EmbeddedResource Include="Encodings/*.*" />
+        <EmbeddedResource Include="Encodings/*.tiktoken" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.1'">
       <PackageReference Include="System.ValueTuple" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PolySharp">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 
 </Project>

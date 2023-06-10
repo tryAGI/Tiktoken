@@ -10,24 +10,28 @@ namespace Tiktoken;
 public class Encoding
 {
     /// <summary>
-    /// get encoding with modelName
+    /// Returns encoding by model name.
     /// </summary>
     /// <param name="modelName">gpt-3.5-turbo</param>
     /// <returns></returns>
     public static Encoding ForModel(string modelName)
     {
-        var setting = EncodingManager.GetEncodingSettingsForModel(modelName);
-        return new Encoding(setting);
+        return Get(Helpers.GetNameByModel(modelName));
     }
 
     /// <summary>
-    /// get encoding with encoding name
+    /// Returns encoding by name.
     /// </summary>
     /// <param name="encodingName">cl100k_base</param>
     /// <returns></returns>
     public static Encoding Get(string encodingName)
     {
-        var setting = EncodingManager.GetEncoding(encodingName);
+        if (string.IsNullOrEmpty(encodingName))
+        {
+            throw new ArgumentException("encodingName is null or empty", nameof(encodingName));
+        }
+
+        var setting = EncodingManager.Get(encodingName);
         
         return new Encoding(setting);
     }
@@ -46,11 +50,10 @@ public class Encoding
         if (setting.ExplicitNVocab != null)
         {
             Debug.Assert(setting.SpecialTokens.Count + setting.MergeableRanks.Count == setting.ExplicitNVocab);
-            Debug.Assert(setting.MaxTokenValue == setting.ExplicitNVocab - 1);
+            Debug.Assert(Math.Max(setting.MergeableRanks.Values.Max(), setting.SpecialTokens.Values.Max()) == setting.ExplicitNVocab - 1);
         }
 
-
-        _corePbe = new CoreBpe(setting.MergeableRanks, setting.SpecialTokens, setting.PatStr);
+        _corePbe = new CoreBpe(setting.MergeableRanks, setting.SpecialTokens, setting.Pattern);
         _setting = setting;
     }
 
