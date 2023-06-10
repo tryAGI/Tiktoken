@@ -17,7 +17,7 @@ public static class BytePairEncoding
 #endif
     }
     
-    private static IReadOnlyCollection<byte[]> BytePairMerge(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+    private static IReadOnlyCollection<byte[]> BytePairSplit(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var parts = Enumerable
             .Range(0, piece.Length + 1)
@@ -82,25 +82,6 @@ public static class BytePairEncoding
         }
         
         return outList;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="piece"></param>
-    /// <param name="ranks"></param>
-    /// <returns></returns>
-    public static IReadOnlyCollection<byte[]> BytePairSplit(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
-    {
-        piece = piece ?? throw new ArgumentNullException(nameof(piece));
-        ranks = ranks ?? throw new ArgumentNullException(nameof(ranks));
-
-        if (piece.Length == 1)
-        {
-            return new List<byte[]> { piece };
-        }
-        
-        return BytePairMerge(piece, ranks);
     }
 
     /// <summary>
