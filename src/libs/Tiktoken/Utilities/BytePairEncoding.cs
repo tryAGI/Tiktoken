@@ -19,6 +19,22 @@ public static class BytePairEncoding
     }
 #endif
     
+    private static bool TryFindMinRank(IReadOnlyList<(int Index, int Rank)> parts, out int result)
+    {
+        result = 0;
+        var minRank = int.MaxValue;
+        for (var i = 0; i < parts.Count - 1; i++)
+        {
+            if (parts[i].Rank < minRank)
+            {
+                minRank = parts[i].Rank;
+                result = i;
+            }
+        }
+        
+        return minRank != int.MaxValue;
+    }
+    
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
     internal static IReadOnlyCollection<int> BytePairEncode(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
 #else
@@ -55,28 +71,17 @@ public static class BytePairEncoding
         }
         while (parts.Count > 1)
         {
-            var minRank = (Rank: int.MaxValue, Index: 0);
-            for (int i = 0; i < parts.Count - 1; i++)
-            {
-                if (parts[i].Rank < minRank.Rank)
-                {
-                    minRank = (parts[i].Rank, i);
-                }
-            }
-            if (minRank.Rank != int.MaxValue)
-            {
-                int i = minRank.Index;
-                parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
-                if (i > 0)
-                {
-                    parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
-                }
-                parts.RemoveAt(i + 1);
-            }
-            else
+            if (!TryFindMinRank(parts, out var i))
             {
                 break;
             }
+
+            parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
+            if (i > 0)
+            {
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
+            }
+            parts.RemoveAt(i + 1);
         }
         var outList = new List<int>(parts.Count - 1);
         for (var i = 0; i < parts.Count - 1; i++)
@@ -127,28 +132,17 @@ public static class BytePairEncoding
         }
         while (parts.Count > 1)
         {
-            var minRank = (Rank: int.MaxValue, Index: 0);
-            for (int i = 0; i < parts.Count - 1; i++)
-            {
-                if (parts[i].Rank < minRank.Rank)
-                {
-                    minRank = (parts[i].Rank, i);
-                }
-            }
-            if (minRank.Rank != int.MaxValue)
-            {
-                int i = minRank.Index;
-                parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
-                if (i > 0)
-                {
-                    parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
-                }
-                parts.RemoveAt(i + 1);
-            }
-            else
+            if (!TryFindMinRank(parts, out var i))
             {
                 break;
             }
+            
+            parts[i] = (parts[i].Index, GetRank(i, 1) ?? int.MaxValue);
+            if (i > 0)
+            {
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, 1) ?? int.MaxValue);
+            }
+            parts.RemoveAt(i + 1);
         }
         
         return parts.Count - 1;
