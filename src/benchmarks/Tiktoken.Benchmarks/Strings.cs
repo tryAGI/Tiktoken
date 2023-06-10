@@ -1,22 +1,10 @@
-using BenchmarkDotNet.Attributes;
-using SharpToken;
-using TiktokenSharp;
-
 namespace Tiktoken.Benchmarks;
 
-// ReSharper disable UnassignedField.Global
-[MemoryDiagnoser]
-[MarkdownExporterAttribute.GitHub]
-public class EncodeBenchmarks
+public static class Strings
 {
-    private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding("cl100k_base");
-    private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("cl100k_base");
-    private readonly Encoding _tiktoken = Encoding.Get("cl100k_base");
-    
-    [Params(
-        "Hello, World!",
-        @"King Lear, one of Shakespeare's darkest and most savage plays, tells the story of the foolish and Job-like Lear, who divides his kingdom, as he does his affections, according to vanity and whim. Lear’s failure as a father engulfs himself and his world in turmoil and tragedy.",
-        @"1. Introduction
+    public const string HelloWorld = @"Hello, World!";
+    public const string KingLear = @"King Lear, one of Shakespeare's darkest and most savage plays, tells the story of the foolish and Job-like Lear, who divides his kingdom, as he does his affections, according to vanity and whim. Lear’s failure as a father engulfs himself and his world in turmoil and tragedy.";
+    public const string Bitcoin = @"1. Introduction
 Commerce on the Internet has come to rely almost exclusively on financial institutions serving as
 trusted third parties to process electronic payments. While the system works well enough for
 most transactions, it still suffers from the inherent weaknesses of the trust based model.
@@ -372,15 +360,5 @@ on Computer and Communications Security, pages 28-35, April 1997.
 http://www.hashcash.org/papers/hashcash.pdf, 2002.
 [7] R.C. Merkle, ""Protocols for public key cryptosystems,"" In Proc. 1980 Symposium on Security and
 Privacy, IEEE Computer Society, pages 122-133, April 1980.
-[8] W. Feller, ""An introduction to probability theory and its applications,"" 1957.")]
-    public string Data = string.Empty;
-    
-    [Benchmark(Baseline = true)]
-    public List<int> SharpTokenV1_0_28() => _sharpToken.Encode(Data);
-    
-    [Benchmark]
-    public List<int> TiktokenSharpV1_0_5() => _tiktokenSharp.Encode(Data);
-    
-    [Benchmark]
-    public IReadOnlyCollection<int> Tiktoken() => _tiktoken.Encode(Data);
+[8] W. Feller, ""An introduction to probability theory and its applications,"" 1957.";
 }
