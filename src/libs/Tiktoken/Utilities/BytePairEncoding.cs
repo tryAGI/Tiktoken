@@ -1,5 +1,7 @@
 ﻿#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 using Bytes = System.ReadOnlyMemory<byte>;
+#else
+using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
 #endif
 
 namespace Tiktoken.Utilities;
@@ -9,17 +11,23 @@ namespace Tiktoken.Utilities;
 /// </summary>
 public static class BytePairEncoding
 {
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
     private static byte[] GetSlice(this Bytes bytes, int from, int to)
     {
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         return bytes[from..to].ToArray();
-    }
 #else
-    private static byte[] GetSlice(this byte[] bytes, int from, int to)
-    {
         return bytes.Skip(from).Take(to - from).ToArray();
-    }
 #endif
+    }
+    
+    private static int GetLength(this Bytes bytes)
+    {
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        return bytes.Length;
+#else
+        return bytes.Count;
+#endif
+    }
     
     private static unsafe bool TryFindMinRank(int* partsRanks, int count, out int result)
     {
@@ -36,14 +44,32 @@ public static class BytePairEncoding
         
         return minRank != int.MaxValue;
     }
-    
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-    internal static unsafe IReadOnlyCollection<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
-#else
-    internal static unsafe IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
-#endif
+
+    private static unsafe int GetRank(
+        int startIdx,
+        int* partsIndexes,
+        int count,
+        Bytes piece,
+        IReadOnlyDictionary<byte[], int> ranks,
+        int length)
     {
-        var partsLength = piece.Length + 1;
+        if (startIdx + length < count)
+        {
+            var from = partsIndexes[startIdx];
+            var to = partsIndexes[startIdx + length];
+            var slice = piece.GetSlice(from, to);
+            if (ranks.TryGetValue(slice, out var rank))
+            {
+                return rank;
+            }
+        }
+        
+        return int.MaxValue;
+    }
+    
+    internal static unsafe IReadOnlyCollection<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    {
+        var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];
         var partsRanks = stackalloc int [partsLength];
         for (var i = 0; i < partsLength; i++)
@@ -89,13 +115,9 @@ public static class BytePairEncoding
         return outList;
     }
     
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
     internal static unsafe int BytePairEncodeCountTokens(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
-#else
-    internal static unsafe int BytePairEncodeCountTokens(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
-#endif
     {
-        var partsLength = piece.Length + 1;
+        var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];
         var partsRanks = stackalloc int [partsLength];
         for (var i = 0; i < partsLength; i++)
@@ -130,31 +152,5 @@ public static class BytePairEncoding
         }
         
         return count;
-    }
-
-    private static unsafe int GetRank(
-        int startIdx,
-        int* partsIndexes,
-        int count,
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-        Bytes piece,
-#else
-        byte[] piece,
-#endif
-        IReadOnlyDictionary<byte[], int> ranks,
-        int length)
-    {
-        if (startIdx + length < count)
-        {
-            var from = partsIndexes[startIdx];
-            var to = partsIndexes[startIdx + length];
-            var slice = piece.GetSlice(from, to);
-            if (ranks.TryGetValue(slice, out var rank))
-            {
-                return rank;
-            }
-        }
-        
-        return int.MaxValue;
     }
 }
