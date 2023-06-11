@@ -17,11 +17,11 @@ public static class BytePairEncoding
     }
 #endif
     
-    private static bool TryFindMinRank(IReadOnlyList<(int Index, int Rank)> parts, out int result)
+    private static bool TryFindMinRank(IReadOnlyList<(int Index, int Rank)> parts, int count, out int result)
     {
         result = 0;
         var minRank = int.MaxValue;
-        for (var i = 0; i < parts.Count - 1; i++)
+        for (var i = 0; i < count; i++)
         {
             if (parts[i].Rank < minRank)
             {
@@ -45,25 +45,30 @@ public static class BytePairEncoding
             .ToList();
         for (var i = 0; i < parts.Count - 2; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 2));
+            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Count, piece, ranks, length: 2));
         }
-        
-        while (parts.Count > 1)
+
+        var count = parts.Count - 1;
+        while (true)
         {
-            if (!TryFindMinRank(parts, out var i))
+            if (!TryFindMinRank(parts, count, out var i))
             {
                 break;
             }
 
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3));
+            parts[i] = (parts[i].Index, GetRank(i, parts, count + 1, piece, ranks, length: 3));
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3));
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, count + 1, piece, ranks, length: 3));
             }
-            parts.RemoveAt(i + 1);
+            for (var j = i + 1; j < count; j++)
+            {
+                parts[j] = parts[j + 1];
+            }
+            count--;
         }
-        var outList = new List<int>(parts.Count - 1);
-        for (var i = 0; i < parts.Count - 1; i++)
+        var outList = new List<int>(count);
+        for (var i = 0; i < count; i++)
         {
             var from = parts[i].Index;
             var to = parts[i + 1].Index;
@@ -87,30 +92,36 @@ public static class BytePairEncoding
             .ToList();
         for (var i = 0; i < parts.Count - 2; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 2));
+            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Count, piece, ranks, length: 2));
         }
         
-        while (parts.Count > 1)
+        var count = parts.Count - 1;
+        while (true)
         {
-            if (!TryFindMinRank(parts, out var i))
+            if (!TryFindMinRank(parts, count, out var i))
             {
                 break;
             }
             
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3));
+            parts[i] = (parts[i].Index, GetRank(i, parts, count + 1, piece, ranks, length: 3));
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3));
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, count + 1, piece, ranks, length: 3));
             }
-            parts.RemoveAt(i + 1);
+            for (var j = i + 1; j < count; j++)
+            {
+                parts[j] = parts[j + 1];
+            }
+            count--;
         }
         
-        return parts.Count - 1;
+        return count;
     }
 
     private static int GetRank(
         int startIdx,
         IReadOnlyList<(int Index, int Rank)> parts,
+        int count,
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         ReadOnlyMemory<byte> piece,
 #else
@@ -119,7 +130,7 @@ public static class BytePairEncoding
         IReadOnlyDictionary<byte[], int> ranks,
         int length)
     {
-        if (startIdx + length < parts.Count)
+        if (startIdx + length < count)
         {
             var from = parts[startIdx].Index;
             var to = parts[startIdx + length].Index;
