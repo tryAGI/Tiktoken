@@ -23,6 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="Tiktoken.UnitTests" />
       <PackageReference Include="PolySharp">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

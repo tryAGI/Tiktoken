@@ -1,3 +1,5 @@
+using Tiktoken.Services;
+
 namespace Tiktoken.UnitTests;
 
 [TestClass]
@@ -58,5 +60,31 @@ public class Gpt4Tests
 
         tokens.Should().HaveCount(4603);
         encoding.CountTokens(text).Should().Be(4603);
+    }
+    
+    [TestMethod]
+    public void ConvertChinese()
+    {
+        var test = Strings.Chinese.Substring(0, 1);
+        var testBytes = System.Text.Encoding.UTF8.GetBytes(test);
+        testBytes.Should().HaveCount(3);
+
+        var dictionary = EncodingManager.Get("cl100k_base").MergeableRanks;
+        dictionary.ContainsKey(testBytes).Should().BeTrue();
+        dictionary.TryGetValue("Hello"u8.ToArray(), out var helloResult).Should().BeTrue();
+        helloResult.Should().Be(9906);
+        
+        var dictionaryNew = EncodingManager.Get("cl100k_base").MergeableRanks
+            .ToDictionary(
+                x => new string(x.Key.Select(y => (char) y).ToArray()),
+                x => x.Value);
+        dictionaryNew.TryGetValue("Hello", out var newHelloResult).Should().BeTrue();
+        newHelloResult.Should().Be(9906);
+        
+        var newBytes = System.Text.Encoding.Unicode.GetBytes(test);
+        newBytes.Should().HaveCount(2);
+
+        var newTest = new string(System.Text.Encoding.UTF8.GetBytes(test).Select(y => (char) y).ToArray());
+        dictionaryNew.ContainsKey(newTest).Should().BeTrue();
     }
 }

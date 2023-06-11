@@ -3,7 +3,7 @@
     <Import Project="..\Directory.Build.props" />
 
     <PropertyGroup Label="Signing">
-        <SignAssembly>true</SignAssembly>
+        <SignAssembly>false</SignAssembly>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)../key.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
