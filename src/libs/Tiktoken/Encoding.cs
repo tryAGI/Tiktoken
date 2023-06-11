@@ -38,6 +38,16 @@ public class Encoding
 
     private readonly CoreBpe _corePbe;
     private readonly HashSet<string> _specialTokensSet;
+    
+    /// <summary>
+    /// Enable cache for fast encoding.
+    /// Default: true.
+    /// </summary>
+    public bool EnableCache
+    {
+        get => _corePbe.EnableCache;
+        set => _corePbe.EnableCache = value;
+    }
 
     /// <summary>
     /// 

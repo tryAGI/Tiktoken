@@ -10,13 +10,20 @@ public class CoreBpe
 {
     private IReadOnlyDictionary<string, int> SpecialTokensEncoder { get; set; }
     private IReadOnlyDictionary<byte[], int> Encoder { get; set; }
+    private IReadOnlyDictionary<string, int> FastEncoder { get; set; }
+
+    internal bool EnableCache { get; set; } = true;
+    private IDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } =
+        new Dictionary<string, IReadOnlyCollection<int>>();
+    private IDictionary<string, int> FastCacheCounts { get; set; } =
+        new Dictionary<string, int>();
 
     private Regex SpecialRegex { get; set; }
     private Regex Regex { get; set; }
 
     private IReadOnlyDictionary<int, byte[]> Decoder { get; set; }
     private IReadOnlyDictionary<int, string> SpecialTokensDecoder { get; set; }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -33,6 +40,10 @@ public class CoreBpe
         pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
         
         Encoder = encoder;
+        FastEncoder = Encoder
+            .ToDictionary(
+                static x => new string(x.Key.Select(y => (char) y).ToArray()),
+                static x => x.Value);
         SpecialTokensEncoder = specialTokensEncoder;
         
         Regex = new Regex(pattern, RegexOptions.Compiled);
@@ -66,11 +77,24 @@ public class CoreBpe
         foreach (var match in Regex.EnumerateMatches(textSpan))
         {
             var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
+            var fastKey = new string(textSpan.Slice(match.Index, match.Length));
 #else
         foreach (Match match in Regex.Matches(text))
         {
             var matchValue = match.Value;
+            var fastKey = matchValue;
 #endif
+            if (FastEncoder.ContainsKey(fastKey))
+            {
+                tokens++;
+                continue;
+            }
+            if (EnableCache && FastCacheCounts.TryGetValue(fastKey, out var fastNumberOfTokens))
+            {
+                tokens += fastNumberOfTokens;
+                continue;
+            }
+
             var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
             if (Encoder.ContainsKey(piece))
             {
@@ -78,7 +102,13 @@ public class CoreBpe
                 continue;
             }
             
-            tokens += BytePairEncoding.BytePairEncodeCountTokens(piece, Encoder);
+            var numberOfTokens = BytePairEncoding.BytePairEncodeCountTokens(piece, Encoder);
+            tokens += numberOfTokens;
+
+            if (EnableCache)
+            {
+                FastCacheCounts[fastKey] = numberOfTokens;
+            }
         }
 
         return tokens;
@@ -137,19 +167,38 @@ public class CoreBpe
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
                 var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
+                var fastKey = new string(textSpan.Slice(match.Index, match.Length));
 #else
             foreach (Match match in Regex.Matches(text[start..specialStart]))
             {
                 var matchValue = match.Value;
+                var fastKey = matchValue;
 #endif
+                if (FastEncoder.TryGetValue(fastKey, out var fastToken))
+                {
+                    tokens.Add(fastToken);
+                    continue;
+                }
+                if (EnableCache && FastCache.TryGetValue(fastKey, out var fastTokens))
+                {
+                    tokens.AddRange(fastTokens);
+                    continue;
+                }
+                
                 var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
                 if (Encoder.TryGetValue(piece, out var token))
                 {
                     tokens.Add(token);
                     continue;
                 }
+                
                 var pair = BytePairEncoding.BytePairEncode(piece, Encoder);
                 tokens.AddRange(pair);
+
+                if (EnableCache)
+                {
+                    FastCache[fastKey] = pair;
+                }
             }
 
             if (specialLength != 0)
