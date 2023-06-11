@@ -42,13 +42,13 @@ public static class BytePairEncoding
         var parts = Enumerable
             .Range(0, piece.Length + 1)
             .Select(i => (Index: i, Rank: int.MaxValue))
-            .ToList();
-        for (var i = 0; i < parts.Count - 2; i++)
+            .ToArray();
+        for (var i = 0; i < parts.Length - 2; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Count, piece, ranks, length: 2));
+            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Length, piece, ranks, length: 2));
         }
 
-        var count = parts.Count - 1;
+        var count = parts.Length - 1;
         while (true)
         {
             if (!TryFindMinRank(parts, count, out var i))
@@ -89,13 +89,13 @@ public static class BytePairEncoding
         var parts = Enumerable
             .Range(0, piece.Length + 1)
             .Select(i => (Index: i, Rank: int.MaxValue))
-            .ToList();
-        for (var i = 0; i < parts.Count - 2; i++)
+            .ToArray();
+        for (var i = 0; i < parts.Length - 2; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Count, piece, ranks, length: 2));
+            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Length, piece, ranks, length: 2));
         }
         
-        var count = parts.Count - 1;
+        var count = parts.Length - 1;
         while (true)
         {
             if (!TryFindMinRank(parts, count, out var i))
