@@ -37,36 +37,36 @@ BenchmarkDotNet=v0.13.5, OS=macOS Ventura 13.3.1 (a) (22E772610a) [Darwin 22.4.0
 Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
 .NET SDK=7.0.203
   [Host]     : .NET 7.0.5 (7.0.523.17405), Arm64 RyuJIT AdvSIMD
-  Job-TPZBNU : .NET 7.0.5 (7.0.523.17405), Arm64 RyuJIT AdvSIMD DEBUG
+  Job-FQVSUN : .NET 7.0.5 (7.0.523.17405), Arm64 RyuJIT AdvSIMD DEBUG
 
 BuildConfiguration=Debug  
 
 ```
 |                     Method |  Categories |                Data |           Mean | Ratio |     Gen0 |     Gen1 |   Gen2 | Allocated | Alloc Ratio |
 |--------------------------- |------------ |-------------------- |---------------:|------:|---------:|---------:|-------:|----------:|------------:|
-|         **SharpTokenV1_0_28_** | **CountTokens** | **1. (...)57. [19866]** | **5,235,908.1 ns** |  **1.00** | **601.5625** | **289.0625** |      **-** | **3805771 B** |        **1.00** |
-|       TiktokenSharpV1_0_5_ | CountTokens | 1. (...)57. [19866] | 1,547,061.7 ns |  0.30 | 250.0000 | 125.0000 |      - | 1571154 B |        0.41 |
-|                  Tiktoken_ | CountTokens | 1. (...)57. [19866] |   822,031.5 ns |  0.16 |  66.4063 |        - |      - |  419817 B |        0.11 |
+|         **SharpTokenV1_0_28_** | **CountTokens** | **1. (...)57. [19866]** | **5,274,472.1 ns** |  **1.00** | **609.3750** | **273.4375** | **7.8125** | **3805787 B** |        **1.00** |
+|       TiktokenSharpV1_0_5_ | CountTokens | 1. (...)57. [19866] | 1,523,632.2 ns |  0.29 | 250.0000 | 125.0000 |      - | 1571154 B |        0.41 |
+|                  Tiktoken_ | CountTokens | 1. (...)57. [19866] |   734,470.2 ns |  0.14 |  61.5234 |        - |      - |  387017 B |        0.10 |
 |                            |             |                     |                |       |          |          |        |           |             |
-|         **SharpTokenV1_0_28_** | **CountTokens** |       **Hello, World!** |     **3,267.7 ns** |  **1.00** |   **0.6752** |        **-** |      **-** |    **4240 B** |        **1.00** |
-|       TiktokenSharpV1_0_5_ | CountTokens |       Hello, World! |     6,585.6 ns |  2.02 |   2.1820 |   0.0381 |      - |   13728 B |        3.24 |
-|                  Tiktoken_ | CountTokens |       Hello, World! |       440.1 ns |  0.13 |   0.0429 |        - |      - |     272 B |        0.06 |
+|         **SharpTokenV1_0_28_** | **CountTokens** |       **Hello, World!** |     **3,243.4 ns** |  **1.00** |   **0.6752** |        **-** |      **-** |    **4240 B** |        **1.00** |
+|       TiktokenSharpV1_0_5_ | CountTokens |       Hello, World! |     6,620.5 ns |  2.04 |   2.1820 |   0.0381 |      - |   13728 B |        3.24 |
+|                  Tiktoken_ | CountTokens |       Hello, World! |       435.8 ns |  0.13 |   0.0429 |        - |      - |     272 B |        0.06 |
 |                            |             |                     |                |       |          |          |        |           |             |
-|         **SharpTokenV1_0_28_** | **CountTokens** | **King(...)edy. [275]** |    **62,516.4 ns** |  **1.00** |   **8.5449** |   **0.3662** |      **-** |   **54160 B** |        **1.00** |
-|       TiktokenSharpV1_0_5_ | CountTokens | King(...)edy. [275] |    21,796.0 ns |  0.35 |   5.0964 |   0.2136 |      - |   32096 B |        0.59 |
-|                  Tiktoken_ | CountTokens | King(...)edy. [275] |     9,673.3 ns |  0.15 |   0.8850 |        - |      - |    5584 B |        0.10 |
+|         **SharpTokenV1_0_28_** | **CountTokens** | **King(...)edy. [275]** |    **62,185.4 ns** |  **1.00** |   **8.5449** |   **0.3662** |      **-** |   **54160 B** |        **1.00** |
+|       TiktokenSharpV1_0_5_ | CountTokens | King(...)edy. [275] |    21,633.9 ns |  0.35 |   5.0964 |   0.2136 |      - |   32096 B |        0.59 |
+|                  Tiktoken_ | CountTokens | King(...)edy. [275] |     8,570.0 ns |  0.14 |   0.8087 |        - |      - |    5128 B |        0.09 |
 |                            |             |                     |                |       |          |          |        |           |             |
-|   **SharpTokenV1_0_28_Encode** |      **Encode** | **1. (...)57. [19866]** | **5,598,664.3 ns** |  **1.00** | **601.5625** | **296.8750** |      **-** | **3805769 B** |        **1.00** |
-| TiktokenSharpV1_0_5_Encode |      Encode | 1. (...)57. [19866] | 1,684,623.8 ns |  0.30 | 253.9063 | 128.9063 | 3.9063 | 1571158 B |        0.41 |
-|            Tiktoken_Encode |      Encode | 1. (...)57. [19866] |   863,306.6 ns |  0.15 |  80.0781 |  32.2266 |      - |  506425 B |        0.13 |
+|   **SharpTokenV1_0_28_Encode** |      **Encode** | **1. (...)57. [19866]** | **5,001,057.0 ns** |  **1.00** | **601.5625** | **296.8750** |      **-** | **3805769 B** |        **1.00** |
+| TiktokenSharpV1_0_5_Encode |      Encode | 1. (...)57. [19866] | 1,657,914.8 ns |  0.33 | 253.9063 | 128.9063 | 3.9063 | 1571158 B |        0.41 |
+|            Tiktoken_Encode |      Encode | 1. (...)57. [19866] |   769,015.9 ns |  0.15 |  75.1953 |  37.1094 |      - |  473625 B |        0.12 |
 |                            |             |                     |                |       |          |          |        |           |             |
-|   **SharpTokenV1_0_28_Encode** |      **Encode** |       **Hello, World!** |     **3,314.8 ns** |  **1.00** |   **0.6752** |   **0.0038** |      **-** |    **4240 B** |        **1.00** |
-| TiktokenSharpV1_0_5_Encode |      Encode |       Hello, World! |     6,709.1 ns |  2.03 |   2.1820 |   0.0458 |      - |   13728 B |        3.24 |
-|            Tiktoken_Encode |      Encode |       Hello, World! |       536.8 ns |  0.16 |   0.1144 |        - |      - |     720 B |        0.17 |
+|   **SharpTokenV1_0_28_Encode** |      **Encode** |       **Hello, World!** |     **3,258.5 ns** |  **1.00** |   **0.6752** |   **0.0038** |      **-** |    **4240 B** |        **1.00** |
+| TiktokenSharpV1_0_5_Encode |      Encode |       Hello, World! |     6,670.4 ns |  2.05 |   2.1820 |   0.0458 |      - |   13728 B |        3.24 |
+|            Tiktoken_Encode |      Encode |       Hello, World! |       536.6 ns |  0.16 |   0.1144 |        - |      - |     720 B |        0.17 |
 |                            |             |                     |                |       |          |          |        |           |             |
-|   **SharpTokenV1_0_28_Encode** |      **Encode** | **King(...)edy. [275]** |    **62,433.2 ns** |  **1.00** |   **8.5449** |   **0.4883** |      **-** |   **54160 B** |        **1.00** |
-| TiktokenSharpV1_0_5_Encode |      Encode | King(...)edy. [275] |    21,861.3 ns |  0.35 |   5.0964 |   0.3052 |      - |   32096 B |        0.59 |
-|            Tiktoken_Encode |      Encode | King(...)edy. [275] |    10,308.4 ns |  0.17 |   1.0986 |   0.0153 |      - |    6904 B |        0.13 |
+|   **SharpTokenV1_0_28_Encode** |      **Encode** | **King(...)edy. [275]** |    **62,531.4 ns** |  **1.00** |   **8.5449** |   **0.4883** |      **-** |   **54160 B** |        **1.00** |
+| TiktokenSharpV1_0_5_Encode |      Encode | King(...)edy. [275] |    26,823.9 ns |  0.43 |   5.0964 |   0.3052 |      - |   32096 B |        0.59 |
+|            Tiktoken_Encode |      Encode | King(...)edy. [275] |     9,253.4 ns |  0.15 |   1.0223 |   0.0153 |      - |    6448 B |        0.12 |
 
 <!--BENCHMARKS_END-->
 

@@ -67,10 +67,12 @@ public static class BytePairEncoding
         return int.MaxValue;
     }
     
-    internal static unsafe IReadOnlyCollection<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    private static unsafe int FindParts(
+        Bytes piece,
+        int* partsIndexes,
+        IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
-        var partsIndexes = stackalloc int [partsLength];
         var partsRanks = stackalloc int [partsLength];
         for (var i = 0; i < partsLength; i++)
         {
@@ -81,7 +83,7 @@ public static class BytePairEncoding
         {
             partsRanks[i] = GetRank(i, partsIndexes, partsLength, piece, ranks, length: 2);
         }
-
+        
         var count = partsLength - 1;
         while (true)
         {
@@ -89,7 +91,7 @@ public static class BytePairEncoding
             {
                 break;
             }
-
+            
             partsRanks[i] = GetRank(i, partsIndexes, count + 1, piece, ranks, length: 3);
             if (i > 0)
             {
@@ -102,6 +104,16 @@ public static class BytePairEncoding
             }
             count--;
         }
+        
+        return count;
+    }
+    
+    internal static unsafe IReadOnlyCollection<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    {
+        var partsLength = piece.GetLength() + 1;
+        var partsIndexes = stackalloc int [partsLength];
+        var count = FindParts(piece, partsIndexes, ranks);
+        
         var outList = new List<int>(count);
         for (var i = 0; i < count; i++)
         {
@@ -119,37 +131,7 @@ public static class BytePairEncoding
     {
         var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];
-        var partsRanks = stackalloc int [partsLength];
-        for (var i = 0; i < partsLength; i++)
-        {
-            partsIndexes[i] = i;
-            partsRanks[i] = int.MaxValue;
-        }
-        for (var i = 0; i < partsLength - 2; i++)
-        {
-            partsRanks[i] = GetRank(i, partsIndexes, partsLength, piece, ranks, length: 2);
-        }
-        
-        var count = partsLength - 1;
-        while (true)
-        {
-            if (!TryFindMinRank(partsRanks, count, out var i))
-            {
-                break;
-            }
-            
-            partsRanks[i] = GetRank(i, partsIndexes, count + 1, piece, ranks, length: 3);
-            if (i > 0)
-            {
-                partsRanks[i - 1] = GetRank(i - 1, partsIndexes, count + 1, piece, ranks, length: 3);
-            }
-            for (var j = i + 1; j < count; j++)
-            {
-                partsIndexes[j] = partsIndexes[j + 1];
-                partsRanks[j] = partsRanks[j + 1];
-            }
-            count--;
-        }
+        var count = FindParts(piece, partsIndexes, ranks);
         
         return count;
     }
