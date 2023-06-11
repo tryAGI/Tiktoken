@@ -17,7 +17,7 @@ public static class BytePairEncoding
     }
 #endif
     
-    private static bool TryFindMinRank(IReadOnlyList<(int Index, int Rank)> parts, int count, out int result)
+    private static unsafe bool TryFindMinRank((int Index, int Rank)* parts, int count, out int result)
     {
         result = 0;
         var minRank = int.MaxValue;
@@ -34,21 +34,23 @@ public static class BytePairEncoding
     }
     
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-    internal static IReadOnlyCollection<int> BytePairEncode(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe IReadOnlyCollection<int> BytePairEncode(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
 #else
-    internal static IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe IReadOnlyCollection<int> BytePairEncode(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
 #endif
     {
-        var parts = Enumerable
-            .Range(0, piece.Length + 1)
-            .Select(i => (Index: i, Rank: int.MaxValue))
-            .ToArray();
-        for (var i = 0; i < parts.Length - 2; i++)
+        var partsLength = piece.Length + 1;
+        var parts = stackalloc (int Index, int Rank)[partsLength];
+        for (var i = 0; i < partsLength; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Length, piece, ranks, length: 2));
+            parts[i] = (i, int.MaxValue);
+        }
+        for (var i = 0; i < partsLength - 2; i++)
+        {
+            parts[i] = (parts[i].Index, GetRank(i, parts, partsLength, piece, ranks, length: 2));
         }
 
-        var count = parts.Length - 1;
+        var count = partsLength - 1;
         while (true)
         {
             if (!TryFindMinRank(parts, count, out var i))
@@ -81,21 +83,23 @@ public static class BytePairEncoding
     }
     
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-    internal static int BytePairEncodeCountTokens(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe int BytePairEncodeCountTokens(ReadOnlyMemory<byte> piece, IReadOnlyDictionary<byte[], int> ranks)
 #else
-    internal static int BytePairEncodeCountTokens(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe int BytePairEncodeCountTokens(byte[] piece, IReadOnlyDictionary<byte[], int> ranks)
 #endif
     {
-        var parts = Enumerable
-            .Range(0, piece.Length + 1)
-            .Select(i => (Index: i, Rank: int.MaxValue))
-            .ToArray();
-        for (var i = 0; i < parts.Length - 2; i++)
+        var partsLength = piece.Length + 1;
+        var parts = stackalloc (int Index, int Rank)[partsLength];
+        for (var i = 0; i < partsLength; i++)
         {
-            parts[i] = (parts[i].Index, GetRank(i, parts, parts.Length, piece, ranks, length: 2));
+            parts[i] = (i, int.MaxValue);
+        }
+        for (var i = 0; i < partsLength - 2; i++)
+        {
+            parts[i] = (parts[i].Index, GetRank(i, parts, partsLength, piece, ranks, length: 2));
         }
         
-        var count = parts.Length - 1;
+        var count = partsLength - 1;
         while (true)
         {
             if (!TryFindMinRank(parts, count, out var i))
@@ -118,9 +122,9 @@ public static class BytePairEncoding
         return count;
     }
 
-    private static int GetRank(
+    private static unsafe int GetRank(
         int startIdx,
-        IReadOnlyList<(int Index, int Rank)> parts,
+        (int Index, int Rank)* parts,
         int count,
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         ReadOnlyMemory<byte> piece,
