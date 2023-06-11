@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Tiktoken.Utilities;
+﻿namespace Tiktoken.Utilities;
 
 /// <summary>
 /// 
@@ -10,7 +8,7 @@ public static class BytePairEncoding
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
     private static byte[] GetSlice(this ReadOnlyMemory<byte> bytes, int from, int to)
     {
-        return bytes.Slice(from, to - from).ToArray();
+        return bytes[from..to].ToArray();
     }
 #else
     private static byte[] GetSlice(this byte[] bytes, int from, int to)
@@ -45,16 +43,11 @@ public static class BytePairEncoding
             .Range(0, piece.Length + 1)
             .Select(i => (Index: i, Rank: int.MaxValue))
             .ToList();
-        
-        for (int i = 0; i < parts.Count - 2; i++)
+        for (var i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i, parts, piece, ranks, length: 2);
-            if (rank != null)
-            {
-                Debug.Assert(rank.Value != int.MaxValue);
-                parts[i] = (parts[i].Index, rank.Value);
-            }
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 2));
         }
+        
         while (parts.Count > 1)
         {
             if (!TryFindMinRank(parts, out var i))
@@ -62,10 +55,10 @@ public static class BytePairEncoding
                 break;
             }
 
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3));
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3));
             }
             parts.RemoveAt(i + 1);
         }
@@ -92,16 +85,11 @@ public static class BytePairEncoding
             .Range(0, piece.Length + 1)
             .Select(i => (Index: i, Rank: int.MaxValue))
             .ToList();
-
-        for (int i = 0; i < parts.Count - 2; i++)
+        for (var i = 0; i < parts.Count - 2; i++)
         {
-            var rank = GetRank(i, parts, piece, ranks, length: 2);
-            if (rank != null)
-            {
-                Debug.Assert(rank.Value != int.MaxValue);
-                parts[i] = (parts[i].Index, rank.Value);
-            }
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 2));
         }
+        
         while (parts.Count > 1)
         {
             if (!TryFindMinRank(parts, out var i))
@@ -109,10 +97,10 @@ public static class BytePairEncoding
                 break;
             }
             
-            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3) ?? int.MaxValue);
+            parts[i] = (parts[i].Index, GetRank(i, parts, piece, ranks, length: 3));
             if (i > 0)
             {
-                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3) ?? int.MaxValue);
+                parts[i - 1] = (parts[i - 1].Index, GetRank(i - 1, parts, piece, ranks, length: 3));
             }
             parts.RemoveAt(i + 1);
         }
@@ -120,7 +108,7 @@ public static class BytePairEncoding
         return parts.Count - 1;
     }
 
-    private static int? GetRank(
+    private static int GetRank(
         int startIdx,
         IReadOnlyList<(int Index, int Rank)> parts,
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
@@ -142,6 +130,6 @@ public static class BytePairEncoding
             }
         }
         
-        return null;
+        return int.MaxValue;
     }
 }
