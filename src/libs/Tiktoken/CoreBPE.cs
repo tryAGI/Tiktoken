@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Tiktoken.Utilities;
 
 namespace Tiktoken;
@@ -14,9 +15,9 @@ public class CoreBpe
 
     internal bool EnableCache { get; set; } = true;
     private IDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } =
-        new Dictionary<string, IReadOnlyCollection<int>>();
+        new ConcurrentDictionary<string, IReadOnlyCollection<int>>();
     private IDictionary<string, int> FastCacheCounts { get; set; } =
-        new Dictionary<string, int>();
+        new ConcurrentDictionary<string, int>();
 
     private Regex SpecialRegex { get; set; }
     private Regex Regex { get; set; }
