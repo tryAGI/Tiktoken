@@ -57,7 +57,7 @@ internal static class Helpers
     public static string GetNameByModel(string modelName)
     {
         return ModelToEncoding
-            .FirstOrDefault(a => a.Key.StartsWith(modelName, StringComparison.Ordinal)).Value ??
+            .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value ??
             throw new ArgumentException($"Model name {modelName} is not supported.");
     }
 }
