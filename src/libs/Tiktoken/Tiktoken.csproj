@@ -6,7 +6,7 @@
     </PropertyGroup>
     
     <PropertyGroup Label="NuGet">
-        <Description>This project implements token calculation for OpenAI's gpt-3.5-turbo model, specifically using `cl100k_base` encoding.</Description>
+        <Description>The fastest tokenizer for GPT-3.5 and GPT-4 inspired by Tiktoken.</Description>
         <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
     </PropertyGroup>
 
