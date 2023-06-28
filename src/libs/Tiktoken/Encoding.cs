@@ -83,6 +83,33 @@ public class Encoding
     /// <param name="text"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> Encode(string text)
+    {
+        return EncodeWithAllDisallowedSpecial(text);
+    }
+    
+    /// <summary>
+    /// Returns tokens from the parsing/processing stage as a list of strings.
+    /// This would enhance visibility over the tokenization process, facilitate token manipulation,
+    /// and could serve as a useful tool for educational purposes.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<string> Explore(string text)
+    {
+        return _corePbe.Explore(
+            text,
+            allowedSpecial: _specialTokensSet,
+            disallowedSpecial: new HashSet<string>());
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public IReadOnlyCollection<int> EncodeWithAllAllowedSpecial(string text)
     {
         return _corePbe.EncodeNative(
@@ -103,17 +130,6 @@ public class Encoding
             text,
             allowedSpecial: new HashSet<string>(),
             disallowedSpecial: _specialTokensSet);
-    }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="text"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    public IReadOnlyCollection<int> Encode(string text)
-    {
-        return EncodeWithAllDisallowedSpecial(text);
     }
     
     /// <summary>

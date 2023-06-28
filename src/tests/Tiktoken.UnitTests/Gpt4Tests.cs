@@ -16,6 +16,9 @@ public class Gpt4Tests
         text.Should().Be(Strings.HelloWorld);
 
         encoding.CountTokens(text).Should().Be(2);
+        
+        encoding.Explore(text).Should().BeEquivalentTo(new[] { "hello", " world" });
+        encoding.Explore(text).Should().HaveCount(2);
     }
     
     [TestMethod]
@@ -27,6 +30,7 @@ public class Gpt4Tests
         
         tokens.Should().BeEquivalentTo(new[] { 15339, 220, 100257 });
         encoding.CountTokens(text).Should().Be(7);
+        encoding.Explore(text).Should().HaveCount(3);
     }
     
     [TestMethod]
@@ -38,6 +42,7 @@ public class Gpt4Tests
 
         tokens.Should().HaveCount(135);
         encoding.CountTokens(text).Should().Be(135);
+        encoding.Explore(text).Should().HaveCount(135);
     }
     
     [TestMethod]
@@ -49,6 +54,7 @@ public class Gpt4Tests
 
         tokens.Should().HaveCount(60);
         encoding.CountTokens(text).Should().Be(60);
+        encoding.Explore(text).Should().HaveCount(60);
     }
     
     [TestMethod]
@@ -60,6 +66,7 @@ public class Gpt4Tests
 
         tokens.Should().HaveCount(4603);
         encoding.CountTokens(text).Should().Be(4603);
+        encoding.Explore(text).Should().HaveCount(4603);
     }
     
     [TestMethod]
