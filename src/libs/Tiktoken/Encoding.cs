@@ -89,7 +89,7 @@ public class Encoding
     }
     
     /// <summary>
-    /// Returns tokens from the parsing/processing stage as a list of strings.
+    /// Returns tokens from the processing stage as a list of strings.
     /// This would enhance visibility over the tokenization process, facilitate token manipulation,
     /// and could serve as a useful tool for educational purposes.
     /// </summary>

@@ -21,6 +21,7 @@ var encoding = Tiktoken.Encoding.ForModel("gpt-4");
 var tokens = encoding.Encode("hello world"); // [15339, 1917]
 var text = encoding.Decode(tokens); // hello world
 var numberOfTokens = encoding.CountTokens(text); // 2
+var stringTokens = encoding.Explore(text); // ["hello", " world"]
 
 var encoding = Tiktoken.Encoding.Get("p50k_base");
 var tokens = encoding.Encode("hello world"); // [31373, 995]
