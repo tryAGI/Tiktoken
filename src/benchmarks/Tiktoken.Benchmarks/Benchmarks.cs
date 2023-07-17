@@ -30,11 +30,11 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Encode")]
-    public List<int> SharpTokenV1_0_28_Encode() => _sharpToken.Encode(Data);
+    public List<int> SharpTokenV1_2_2_Encode() => _sharpToken.Encode(Data);
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
-    public List<int> TiktokenSharpV1_0_5_Encode() => _tiktokenSharp.Encode(Data);
+    public List<int> TiktokenSharpV1_0_6_Encode() => _tiktokenSharp.Encode(Data);
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
@@ -47,11 +47,11 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("CountTokens")]
-    public int SharpTokenV1_0_28_() => _sharpToken.Encode(Data).Count;
+    public int SharpTokenV1_2_2_() => _sharpToken.Encode(Data).Count;
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
-    public int TiktokenSharpV1_0_5_() => _tiktokenSharp.Encode(Data).Count;
+    public int TiktokenSharpV1_0_6_() => _tiktokenSharp.Encode(Data).Count;
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
