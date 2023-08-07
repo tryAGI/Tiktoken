@@ -3,7 +3,7 @@ using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Tiktoken.Benchmarks;
 
-var summary = BenchmarkRunner.Run<Benchmarks>(new DebugBuildConfig());
+var summary = BenchmarkRunner.Run<Benchmarks>();
 var markdownPath = Directory.EnumerateFiles(summary.ResultsDirectoryPath, "*.md").First();
 var markdown = File.ReadAllText(markdownPath);
 var repositoryFolder = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "..");
