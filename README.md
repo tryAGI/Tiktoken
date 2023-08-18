@@ -76,12 +76,6 @@ Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
 
 <!--BENCHMARKS_END-->
 
-### Possible optimizations
-- Modes - Fast(without special token regex)/Strict
-- SIMD?
-- Parallelism?
-- string as dictionary key?
-
 ## Support
 
 Priority place for bugs: https://github.com/tryAGI/LangChain/issues  
