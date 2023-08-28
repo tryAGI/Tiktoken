@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Tiktoken.Benchmarks;
 
