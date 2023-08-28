@@ -3,8 +3,50 @@ using Tiktoken.Services;
 namespace Tiktoken.UnitTests;
 
 [TestClass]
-public class Gpt4Tests
+public partial class Tests
 {
+    // private static IEnumerable<object[]> TestData => ReadTestPlans(H.Resources.TestPlans_txt).Select(static x => new object[] { x });
+    //
+    // [TestMethod]
+    // [DynamicData(nameof(TestData))]
+    // public void VariousCases(Tuple<string, string, List<int>> resource)
+    // {
+    //     var (encodingName, textToEncode, expectedEncoded) = resource;
+    //
+    //     var encoding = Encoding.Get(encodingName);
+    //     var encoded = encoding.Encode(textToEncode);
+    //     var decodedText = encoding.Decode(encoded);
+    //
+    //     encoded.Should().BeEquivalentTo(expectedEncoded);
+    //     decodedText.Should().Be(textToEncode);
+    // }
+    
+    private static IEnumerable<object[]> CustomTestData => ReadTestPlans(H.Resources.Custom_txt).Select(static x => new object[] { x });
+    
+    [TestMethod]
+    [DynamicData(nameof(CustomTestData))]
+    public void Custom(Tuple<string, string, List<int>> resource)
+    {
+        var (encodingName, textToEncode, expectedEncoded) = resource;
+
+        var encoding = Encoding.Get(encodingName);
+        var encoded = encoding.Encode(textToEncode);
+        var decodedText = encoding.Decode(encoded);
+
+        Console.WriteLine(string.Join(", ", encoded));
+        encoded.Should().BeEquivalentTo(expectedEncoded);
+        decodedText.Should().Be(textToEncode);
+    }
+    
+    [TestMethod]
+    public void Special()
+    {
+        var encoding = Encoding.Get("p50k_base");
+        var tokens = encoding.EncodeWithAllAllowedSpecial(Strings.Special);
+        
+        tokens.Should().BeEquivalentTo(new[] { 31373, 220, 50256 });
+    }
+    
     [TestMethod]
     public void HelloWorld()
     {
@@ -22,7 +64,7 @@ public class Gpt4Tests
     }
     
     [TestMethod]
-    public void Special()
+    public void Special_Gpt4()
     {
         const string text = Strings.Special;
         var encoding = Encoding.Get("cl100k_base");
