@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Tiktoken.UnitTests;
 
-public partial class Tests
+public partial class Tests : VerifyBase
 {
     internal static IEnumerable<Tuple<string, string, List<int>>> ReadTestPlans(H.Resource resource)
     {

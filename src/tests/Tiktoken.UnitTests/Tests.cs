@@ -21,94 +21,76 @@ public partial class Tests
     //     decodedText.Should().Be(textToEncode);
     // }
     
-    private static IEnumerable<object[]> CustomTestData => ReadTestPlans(H.Resources.Custom_txt).Select(static x => new object[] { x });
-    
-    [TestMethod]
-    [DynamicData(nameof(CustomTestData))]
-    public void Custom(Tuple<string, string, List<int>> resource)
+    public Task BaseTest(string encodingName, string text, bool special = false)
     {
-        var (encodingName, textToEncode, expectedEncoded) = resource;
-
         var encoding = Encoding.Get(encodingName);
-        var encoded = encoding.Encode(textToEncode);
+        var encoded = special
+            ? encoding.EncodeWithAllAllowedSpecial(text)
+            : encoding.Encode(text);
         var decodedText = encoding.Decode(encoded);
+        var words = encoding.Explore(text);
 
-        Console.WriteLine(string.Join(", ", encoded));
-        encoded.Should().BeEquivalentTo(expectedEncoded);
-        decodedText.Should().Be(textToEncode);
-    }
-    
-    [TestMethod]
-    public void Special()
-    {
-        var encoding = Encoding.Get("p50k_base");
-        var tokens = encoding.EncodeWithAllAllowedSpecial(Strings.Special);
-        
-        tokens.Should().BeEquivalentTo(new[] { 31373, 220, 50256 });
-    }
-    
-    [TestMethod]
-    public void HelloWorld()
-    {
-        var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.Encode(Strings.HelloWorld);
-        tokens.Should().BeEquivalentTo(new[] { 15339, 1917 });
-        
-        var text = encoding.Decode(tokens);
-        text.Should().Be(Strings.HelloWorld);
+        if (!special)
+        {
+            encoding.CountTokens(text).Should().Be(encoded.Count);
+        }
+        words.Count.Should().Be(encoded.Count);
+        decodedText.Should().Be(text);
 
-        encoding.CountTokens(text).Should().Be(2);
-        
-        encoding.Explore(text).Should().BeEquivalentTo(new[] { "hello", " world" });
-        encoding.Explore(text).Should().HaveCount(2);
+        return Verify((words, encoded))
+            .UseDirectory("Snapshots")
+            //.AutoVerify()
+            .UseTextForParameters(encodingName);
     }
     
     [TestMethod]
-    public void Special_Gpt4()
+    [DataRow(Encodings.Cl100KBase)]
+    [DataRow(Encodings.P50KBase)]
+    [DataRow(Encodings.P50KEdit)]
+    [DataRow(Encodings.R50KBase)]
+    public Task HelloWorld(string encodingName)
     {
-        const string text = Strings.Special;
-        var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.EncodeWithAllAllowedSpecial(text);
-        
-        tokens.Should().BeEquivalentTo(new[] { 15339, 220, 100257 });
-        encoding.CountTokens(text).Should().Be(7);
-        encoding.Explore(text).Should().HaveCount(3);
+        return BaseTest(encodingName, Strings.HelloWorld);
     }
     
     [TestMethod]
-    public void Chinese()
+    [DataRow(Encodings.Cl100KBase)]
+    [DataRow(Encodings.P50KBase)]
+    [DataRow(Encodings.P50KEdit)]
+    [DataRow(Encodings.R50KBase)]
+    public Task Special(string encodingName)
     {
-        const string text = Strings.Chinese;
-        var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.Encode(text);
-
-        tokens.Should().HaveCount(135);
-        encoding.CountTokens(text).Should().Be(135);
-        encoding.Explore(text).Should().HaveCount(135);
+        return BaseTest(encodingName, Strings.Special, special: true);
     }
     
     [TestMethod]
-    public void KingLear()
+    [DataRow(Encodings.Cl100KBase)]
+    [DataRow(Encodings.P50KBase)]
+    [DataRow(Encodings.P50KEdit)]
+    [DataRow(Encodings.R50KBase)]
+    public Task Chinese(string encodingName)
     {
-        const string text = Strings.KingLear;
-        var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.Encode(text);
-
-        tokens.Should().HaveCount(60);
-        encoding.CountTokens(text).Should().Be(60);
-        encoding.Explore(text).Should().HaveCount(60);
+        return BaseTest(encodingName, Strings.Chinese);
     }
     
     [TestMethod]
-    public void Bitcoin()
+    [DataRow(Encodings.Cl100KBase)]
+    [DataRow(Encodings.P50KBase)]
+    [DataRow(Encodings.P50KEdit)]
+    [DataRow(Encodings.R50KBase)]
+    public Task KingLear(string encodingName)
     {
-        const string text = Strings.Bitcoin;
-        var encoding = Encoding.Get("cl100k_base");
-        var tokens = encoding.Encode(text);
-
-        tokens.Should().HaveCount(4603);
-        encoding.CountTokens(text).Should().Be(4603);
-        encoding.Explore(text).Should().HaveCount(4603);
+        return BaseTest(encodingName, Strings.KingLear);
+    }
+    
+    [TestMethod]
+    [DataRow(Encodings.Cl100KBase)]
+    [DataRow(Encodings.P50KBase)]
+    [DataRow(Encodings.P50KEdit)]
+    [DataRow(Encodings.R50KBase)]
+    public Task Bitcoin(string encodingName)
+    {
+        return BaseTest(encodingName, Strings.Bitcoin);
     }
     
     [TestMethod]
@@ -118,12 +100,12 @@ public partial class Tests
         var testBytes = System.Text.Encoding.UTF8.GetBytes(test);
         testBytes.Should().HaveCount(3);
 
-        var dictionary = EncodingManager.Get("cl100k_base").MergeableRanks;
+        var dictionary = EncodingManager.Get(Encodings.Cl100KBase).MergeableRanks;
         dictionary.ContainsKey(testBytes).Should().BeTrue();
         dictionary.TryGetValue("Hello"u8.ToArray(), out var helloResult).Should().BeTrue();
         helloResult.Should().Be(9906);
         
-        var dictionaryNew = EncodingManager.Get("cl100k_base").MergeableRanks
+        var dictionaryNew = EncodingManager.Get(Encodings.Cl100KBase).MergeableRanks
             .ToDictionary(
                 x => new string(x.Key.Select(y => (char) y).ToArray()),
                 x => x.Value);
