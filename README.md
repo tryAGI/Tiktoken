@@ -23,7 +23,7 @@ var text = encoding.Decode(tokens); // hello world
 var numberOfTokens = encoding.CountTokens(text); // 2
 var stringTokens = encoding.Explore(text); // ["hello", " world"]
 
-var encoding = Tiktoken.Encoding.Get("p50k_base");
+var encoding = Tiktoken.Encoding.Get(Encodings.P50KBase);
 var tokens = encoding.Encode("hello world"); // [31373, 995]
 var text = encoding.Decode(tokens); // hello world
 ```

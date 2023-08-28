@@ -23,16 +23,16 @@ internal static class EncodingManager
     internal static EncodingSettingModel Get(string encodingName) => encodingName switch
     {
         "gpt2" => throw new NotImplementedException("Unsupported encoding"),
-        "r50k_base" => r50k_base,
-        "p50k_base" => p50k_base,
-        "p50k_edit" => p50k_edit,
-        "cl100k_base" => cl100k_base,
+        Encodings.R50KBase => r50k_base,
+        Encodings.P50KBase => p50k_base,
+        Encodings.P50KEdit => p50k_edit,
+        Encodings.Cl100KBase => cl100k_base,
         _ => throw new NotImplementedException("Unsupported encoding"),
     };
 
     private static EncodingSettingModel r50k_base => new()
     {
-        Name = "p50k_base",
+        Name = Encodings.R50KBase,
         ExplicitNVocab = 50257,
         Pattern = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
         MergeableRanks = Load("r50k_base.tiktoken"),
@@ -44,7 +44,7 @@ internal static class EncodingManager
 
     private static EncodingSettingModel p50k_base => new()
     {
-        Name = "p50k_base",
+        Name = Encodings.P50KBase,
         ExplicitNVocab = 50281,
         Pattern = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
         MergeableRanks = Load("p50k_base.tiktoken"),
@@ -56,7 +56,7 @@ internal static class EncodingManager
 
     private static EncodingSettingModel p50k_edit => new()
     {
-        Name = "p50k_edit",
+        Name = Encodings.P50KEdit,
         ExplicitNVocab = 50281,
         Pattern = @"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
         MergeableRanks = Load("p50k_base.tiktoken"),
@@ -71,7 +71,7 @@ internal static class EncodingManager
     
     private static EncodingSettingModel cl100k_base => new()
     {
-        Name = "cl100k_base",
+        Name = Encodings.Cl100KBase,
         Pattern = @"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+",
         MergeableRanks = Load("cl100k_base.tiktoken"),
         SpecialTokens = new Dictionary<string, int>

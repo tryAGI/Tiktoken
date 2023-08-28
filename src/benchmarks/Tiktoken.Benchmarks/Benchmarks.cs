@@ -14,9 +14,9 @@ namespace Tiktoken.Benchmarks;
 [HideColumns("Error", "StdDev", "StdDev", "RatioSD")]
 public class Benchmarks
 {
-    private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding("cl100k_base");
-    private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("cl100k_base");
-    private readonly Encoding _tiktoken = Encoding.Get("cl100k_base");
+    private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding(Encodings.Cl100KBase);
+    private readonly TikToken _tiktokenSharp = TikToken.GetEncoding(Encodings.Cl100KBase);
+    private readonly Encoding _tiktoken = Encoding.Get(Encodings.Cl100KBase);
     private ITokenizer? _tokenizerLib;
     
     [Params(Strings.HelloWorld, Strings.KingLear, Strings.Bitcoin)]
