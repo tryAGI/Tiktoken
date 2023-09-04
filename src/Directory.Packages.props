@@ -16,6 +16,6 @@
     <PackageVersion Include="SharpToken" Version="1.2.8" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
     <PackageVersion Include="TiktokenSharp" Version="1.0.6" />
-    <PackageVersion Include="Verify.MSTest" Version="20.8.2" />
+    <PackageVersion Include="Verify.MSTest" Version="21.0.0" />
   </ItemGroup>
 </Project>
