@@ -49,6 +49,18 @@ internal static class Helpers
     };
 
     /// <summary>
+    /// Returns encoding name by model name or null.
+    /// </summary>
+    /// <param name="modelName">gpt-4 gpt-3.5-turbo ...</param>
+    /// <exception cref="ArgumentException"></exception>
+    /// <returns></returns>
+    public static string? TryGetNameByModel(string modelName)
+    {
+        return ModelToEncoding
+            .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value;
+    }
+
+    /// <summary>
     /// Returns encoding name by model name or throws exception.
     /// </summary>
     /// <param name="modelName">gpt-4 gpt-3.5-turbo ...</param>
@@ -56,8 +68,7 @@ internal static class Helpers
     /// <returns></returns>
     public static string GetNameByModel(string modelName)
     {
-        return ModelToEncoding
-            .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value ??
-            throw new ArgumentException($"Model name {modelName} is not supported.");
+        return TryGetNameByModel(modelName) ??
+               throw new ArgumentException($"Model name {modelName} is not supported.");
     }
 }

@@ -18,6 +18,20 @@ public class Encoding
     {
         return Get(Helpers.GetNameByModel(modelName));
     }
+    
+    /// <summary>
+    /// Returns encoding by model name or null.
+    /// </summary>
+    /// <param name="modelName">gpt-3.5-turbo</param>
+    /// <returns></returns>
+    public static Encoding? TryForModel(string modelName)
+    {
+        var encodingName = Helpers.TryGetNameByModel(modelName);
+        
+        return encodingName == null
+            ? null
+            : Get(encodingName);
+    }
 
     /// <summary>
     /// Returns encoding by name.
