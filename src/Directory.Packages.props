@@ -9,13 +9,13 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.3.3" />
     <PackageVersion Include="H.Resources.Generator" Version="1.5.1" />
     <PackageVersion Include="Microsoft.DeepDev.TokenizerLib" Version="1.3.2" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.1.1" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.1.1" />
     <PackageVersion Include="PolySharp" Version="1.13.2" />
     <PackageVersion Include="SharpToken" Version="1.2.12" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
     <PackageVersion Include="TiktokenSharp" Version="1.0.7" />
-    <PackageVersion Include="Verify.MSTest" Version="22.1.4" />
+    <PackageVersion Include="Verify.MSTest" Version="22.2.0" />
   </ItemGroup>
 </Project>
