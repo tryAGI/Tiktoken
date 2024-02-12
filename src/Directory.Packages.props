@@ -15,7 +15,7 @@
     <PackageVersion Include="PolySharp" Version="1.13.2" />
     <PackageVersion Include="SharpToken" Version="1.2.14" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
-    <PackageVersion Include="TiktokenSharp" Version="1.0.8" />
+    <PackageVersion Include="TiktokenSharp" Version="1.0.9" />
     <PackageVersion Include="Verify.MSTest" Version="22.6.0" />
   </ItemGroup>
 </Project>
