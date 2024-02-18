@@ -52,6 +52,7 @@ public class Encoding
 
     private readonly CoreBpe _corePbe;
     private readonly HashSet<string> _specialTokensSet;
+    private static readonly HashSet<string> emptyHashSet = new HashSet<string>();
     
     /// <summary>
     /// Enable cache for fast encoding.
@@ -115,7 +116,24 @@ public class Encoding
         return _corePbe.Explore(
             text,
             allowedSpecial: _specialTokensSet,
-            disallowedSpecial: new HashSet<string>());
+            disallowedSpecial: emptyHashSet);
+    }
+    
+    /// <summary>
+    /// Returns tokens from the processing stage as a list of strings.
+    /// This would enhance visibility over the tokenization process, facilitate token manipulation,
+    /// and could serve as a useful tool for educational purposes.
+    /// Unlike <see cref="Explore"/> this method returns token in a printable manner, in which each token is encoded as one more tokens.
+    /// For example, <see cref="Encodings.Cl100KBase"/> can encode 🤚🏾 (Raised Back of Hand: Dark Skin Tone) with as much as 6 tokens.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public IReadOnlyCollection<UtfToken> ExploreUtfSafe(string text)
+    {
+        return _corePbe.ExploreUtfSafe(
+            text,
+            allowedSpecial: _specialTokensSet,
+            disallowedSpecial: emptyHashSet);
     }
     
     /// <summary>
@@ -129,7 +147,7 @@ public class Encoding
         return _corePbe.EncodeNative(
             text,
             allowedSpecial: _specialTokensSet,
-            disallowedSpecial: new HashSet<string>());
+            disallowedSpecial: emptyHashSet);
     }
     
     /// <summary>
@@ -142,7 +160,7 @@ public class Encoding
     {
         return _corePbe.EncodeNative(
             text,
-            allowedSpecial: new HashSet<string>(),
+            allowedSpecial: emptyHashSet,
             disallowedSpecial: _specialTokensSet);
     }
     

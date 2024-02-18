@@ -6,6 +6,7 @@ public static class Strings
     public const string Special = "hello <|endoftext|>";
     public const string Chinese = "我很抱歉，我不能提供任何非法或不道德的建议。快速赚钱是不容易的，需要耐心、刻苦努力和经验。如果您想增加收入，请考虑增加工作时间、寻找其他业务机会、学习新技能或提高自己的价值等方法。请记住，通过合法而道德的方式来获得收入，才是长期稳定的解决方案。";
     public const string KingLear = "King Lear, one of Shakespeare's darkest and most savage plays, tells the story of the foolish and Job-like Lear, who divides his kingdom, as he does his affections, according to vanity and whim. Lear’s failure as a father engulfs himself and his world in turmoil and tragedy.";
+    public const string EploreUtfBoundary = " řeknu";
     public const string Bitcoin = @"1. Introduction
 Commerce on the Internet has come to rely almost exclusively on financial institutions serving as
 trusted third parties to process electronic payments. While the system works well enough for

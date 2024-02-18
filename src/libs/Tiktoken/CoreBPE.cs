@@ -1,6 +1,10 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 using System.Text.RegularExpressions;
 using Tiktoken.Utilities;
+#if NET8_0_OR_GREATER
+using System.Text.Unicode;
+#endif
 
 namespace Tiktoken;
 
@@ -312,6 +316,192 @@ public class CoreBpe
         return values;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="allowedSpecial"></param>
+    /// <param name="disallowedSpecial"></param>
+    /// <returns></returns>
+    public IReadOnlyCollection<UtfToken> ExploreUtfSafe(
+        string text,
+        HashSet<string> allowedSpecial,
+        HashSet<string> disallowedSpecial)
+    {
+        text = text ?? throw new ArgumentNullException(nameof(text));
+        allowedSpecial = allowedSpecial ?? throw new ArgumentNullException(nameof(allowedSpecial));
+        disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
+        
+        var values = new List<UtfToken>();
+#if NET7_0_OR_GREATER
+        var textSpan = text.AsSpan();
+#endif
+        var specialTokens = new List<(int Index, int Length)>(capacity: 32);
+        
+        int accuCount = 1;
+        bool highSurrogate = false;
+        int surrogateCount = 0;
+        string highSurrogatePair = string.Empty;
+
+#if NET7_0_OR_GREATER
+        foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
+        {
+            var value = textSpan.Slice(start: match.Index, length: match.Length).ToString();
+#else
+        foreach (Match match in SpecialRegex.Matches(text))
+        {
+            var value = match.Value;
+#endif
+            if (disallowedSpecial.Contains(value))
+            {
+                throw new InvalidOperationException(value);
+            }
+            if (allowedSpecial.Contains(value))
+            {
+                if (highSurrogate)
+                {
+                    values.Add(new UtfToken(highSurrogatePair, surrogateCount));
+                    surrogateCount = 0;
+                    highSurrogate = false;
+                }
+                
+                specialTokens.Add((match.Index, match.Length));
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid special token sets");
+            }
+        }
+        specialTokens.Add((Index: text.Length, Length: 0));
+
+        List<byte> accumulatedBytes = [];
+        
+        #if !NET8_0_OR_GREATER
+        var encoding = new UTF8Encoding(false, true);
+        #endif
+        
+        var start = 0;
+        foreach (var (specialStart, specialLength) in specialTokens)
+        {
+#if NET7_0_OR_GREATER
+            foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
+            {
+                var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
+                var fastKey = new string(textSpan.Slice(match.Index, match.Length));
+#else
+            foreach (Match match in Regex.Matches(text[start..specialStart]))
+            {
+                var matchValue = match.Value;
+                var fastKey = matchValue;
+#endif
+
+                var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+                if (Encoder.ContainsKey(piece))
+                {
+                    if (highSurrogate)
+                    {
+                        values.Add(new UtfToken(highSurrogatePair, surrogateCount));
+                        surrogateCount = 0;
+                        highSurrogate = false;
+                    }
+                    
+                    values.Add(new UtfToken(fastKey, 1));
+                    continue;
+                }
+                
+                var pair = BytePairEncoding.BytePairExplore(piece, Encoder);
+                
+                accumulatedBytes.Clear();
+
+                for (int i = 0; i < pair.Count; i++)
+                {
+                    byte[] currentPair = pair[i];
+                    accumulatedBytes.AddRange(currentPair);
+                    byte[] accuArr = [.. accumulatedBytes];
+
+                    #if NET8_0_OR_GREATER
+                    bool isValid = Utf8.IsValid(accuArr);
+                    #else
+                    bool isValid = true;
+
+                    try
+                    {
+                        var _ = encoding.GetString(accuArr);
+                    }
+                    catch (ArgumentException)
+                    {
+                        isValid = false;
+                    }
+                    #endif
+                    
+                    if (isValid)
+                    {
+                        string value = System.Text.Encoding.UTF8.GetString(accuArr);
+
+                        if (highSurrogate)
+                        {
+                            string possiblePair = $"{highSurrogatePair}{value}";
+                            
+                            if (char.IsSurrogatePair(possiblePair, 0))
+                            {
+                                values.Add(new UtfToken($"{highSurrogatePair}{value}", accuCount + surrogateCount));    
+                            }
+                            else
+                            {
+                                values.Add(new UtfToken(highSurrogatePair, accuCount));    
+                                values.Add(new UtfToken(value, surrogateCount));    
+                            }
+                            
+                            highSurrogate = false;
+                            highSurrogatePair = string.Empty;
+                        }
+                        else
+                        {
+                            if (char.IsHighSurrogate(value[0]))
+                            {
+                                highSurrogate = true;
+                                highSurrogatePair = value;
+                                surrogateCount = accuCount;
+                            }
+                            else
+                            {
+                                values.Add(new UtfToken(value, accuCount));
+                            }   
+                        }
+                        
+                        accumulatedBytes.Clear();
+                        accuCount = 1;   
+                    }
+                    else
+                    {
+                        accuCount++;
+                    }
+                }
+
+                if (accumulatedBytes.Count > 0)
+                {
+                    var value = System.Text.Encoding.UTF8.GetString([.. accumulatedBytes]);
+                    values.Add(new UtfToken(value, accuCount));
+                    accumulatedBytes.Clear();
+                }
+            }
+
+            if (specialLength != 0)
+            {
+                start = specialStart + specialLength;
+                
+#if NET7_0_OR_GREATER
+                var piece = new string(textSpan.Slice(specialStart, specialLength));
+#else
+                var piece = text.Substring(specialStart, specialLength);
+#endif
+                values.Add(new UtfToken(piece, 1));
+            }
+        }
+
+        return values;
+    }
+            
     /// <summary>
     /// 
     /// </summary>
