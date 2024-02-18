@@ -39,15 +39,8 @@ public class ByteArrayComparer : IEqualityComparer<byte[]>
     /// <exception cref="ArgumentNullException"></exception>
     public int GetHashCode(byte[] obj)
     {
-        if (obj == null)
-        {
-            throw new ArgumentNullException(nameof(obj));
-        }
-        int hash = 17;
-        foreach (byte b in obj)
-        {
-            hash = hash * 31 + b;
-        }
-        return hash;
+        obj = obj ?? throw new ArgumentNullException(nameof(obj));
+
+        return obj.Aggregate(17, (current, b) => current * 31 + b);
     }
 }

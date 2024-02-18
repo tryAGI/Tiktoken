@@ -15,19 +15,19 @@ public class CoreBpe
 {
     private IReadOnlyDictionary<string, int> SpecialTokensEncoder { get; set; }
     private IReadOnlyDictionary<byte[], int> Encoder { get; set; }
-    private IReadOnlyDictionary<string, int> FastEncoder { get; set; }
+    private Dictionary<string, int> FastEncoder { get; set; }
 
     internal bool EnableCache { get; set; } = true;
-    private IDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } =
+    private ConcurrentDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } =
         new ConcurrentDictionary<string, IReadOnlyCollection<int>>();
-    private IDictionary<string, int> FastCacheCounts { get; set; } =
+    private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } =
         new ConcurrentDictionary<string, int>();
 
     private Regex SpecialRegex { get; set; }
     private Regex Regex { get; set; }
 
-    private IReadOnlyDictionary<int, byte[]> Decoder { get; set; }
-    private IReadOnlyDictionary<int, string> SpecialTokensDecoder { get; set; }
+    private Dictionary<int, byte[]> Decoder { get; set; }
+    private Dictionary<int, string> SpecialTokensDecoder { get; set; }
 
     /// <summary>
     /// 
