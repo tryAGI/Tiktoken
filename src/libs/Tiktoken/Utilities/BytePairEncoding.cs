@@ -108,7 +108,7 @@ public static class BytePairEncoding
         return count;
     }
     
-    internal static unsafe IReadOnlyCollection<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe List<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];
@@ -127,7 +127,7 @@ public static class BytePairEncoding
         return outList;
     }
     
-    internal static unsafe IReadOnlyCollection<byte[]> BytePairExplore(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe List<byte[]> BytePairExplore(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];

@@ -118,4 +118,72 @@ public partial class Tests
         var newTest = new string(System.Text.Encoding.UTF8.GetBytes(test).Select(y => (char) y).ToArray());
         dictionaryNew.ContainsKey(newTest).Should().BeTrue();
     }
+    
+    [TestMethod]
+    public void ExploreUtfSafe()
+    {
+        var text = Strings.HelloWorld;
+        IReadOnlyCollection<string> tokens = Encoding.ForModel("gpt-4").Explore(text);
+        List<string> expected = new List<string> { "hello", " world" };
+        int i = 0;
+
+        tokens.Count.Should().Be(expected.Count);
+        
+        foreach (string token in tokens)
+        {
+            token.Should().Be(expected[i]);
+            i++;
+        }
+    }
+    
+    [TestMethod]
+    public void ExploreUtfBoundary()
+    {
+        var text = Strings.EploreUtfBoundary;
+        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        List<string> expected = new List<string> { " ř", "ek", "nu" };
+        int i = 0;
+
+        tokens.Count.Should().Be(expected.Count);
+        
+        foreach (UtfToken token in tokens)
+        {
+            token.Token.Should().Be(expected[i]);
+            i++;
+        }
+    }
+    
+    [TestMethod]
+    public void ExploreUtfBoundaryEmojiSurrogate()
+    {
+        var text = "\ud83e\udd1a\ud83c\udffe";
+        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        List<string> expected = new List<string> { "🤚🏾" };
+        int i = 0;
+
+        tokens.Count.Should().Be(expected.Count);
+        
+        foreach (UtfToken token in tokens)
+        {
+            token.Token.Should().Be(expected[i]);
+            i++;
+        }
+    }
+    
+    [TestMethod]
+    public void ExploreUtfBoundaryEmoji()
+    {
+        var text = "\ud83e\udd1ař";
+        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        List<string> expected = new List<string> { "\ud83e\udd1a", "ř" };
+        int i = 0;
+
+        tokens.Count.Should().Be(expected.Count);
+        
+        foreach (UtfToken token in tokens)
+        {
+            token.Token.Should().Be(expected[i]);
+            i++;
+        }
+    }
 }
