@@ -30,7 +30,7 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Encode")]
-    public List<int> SharpTokenV1_2_16_Encode() => _sharpToken.Encode(Data);
+    public List<int> SharpTokenV2_0_1_Encode() => _sharpToken.Encode(Data);
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
@@ -47,7 +47,7 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("CountTokens")]
-    public int SharpTokenV1_2_16_() => _sharpToken.Encode(Data).Count;
+    public int SharpTokenV2_0_1_() => _sharpToken.Encode(Data).Count;
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
