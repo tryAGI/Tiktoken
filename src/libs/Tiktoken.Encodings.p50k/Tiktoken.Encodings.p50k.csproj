@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net4.6.1;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+        <RootNamespace>Tiktoken.Encodings</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup Label="Resources">
+        <EmbeddedResource Include="*.tiktoken" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Tiktoken.Encodings.Abstractions\Tiktoken.Encodings.Abstractions.csproj" />
+    </ItemGroup>
+
+</Project>

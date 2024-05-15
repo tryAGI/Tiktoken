@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\libs\Tiktoken.Core\Tiktoken.Core.csproj" />
+    <ProjectReference Include="..\..\libs\Tiktoken.Encodings.p50k\Tiktoken.Encodings.p50k.csproj" />
+    <ProjectReference Include="..\..\libs\Tiktoken.Encodings.r50k\Tiktoken.Encodings.r50k.csproj" />
     <ProjectReference Include="..\..\libs\Tiktoken\Tiktoken.csproj" />
   </ItemGroup>
 

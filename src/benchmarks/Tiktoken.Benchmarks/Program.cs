@@ -13,7 +13,7 @@ var newReadme = BenchmarksRegex().Replace(readme, $@"<!--BENCHMARKS_START-->
 <!--BENCHMARKS_END-->");
 File.WriteAllText(readmePath, newReadme);
 
-var version = typeof(Tiktoken.Encoding).Assembly.GetName().Version;
+var version = typeof(Tiktoken.Encoder).Assembly.GetName().Version;
 var benchmarkFolder = Path.Combine(repositoryFolder, "benchmarks");
 Directory.CreateDirectory(benchmarkFolder);
 var benchmarkPath = Path.Combine(benchmarkFolder, $"{version}_encode.md");

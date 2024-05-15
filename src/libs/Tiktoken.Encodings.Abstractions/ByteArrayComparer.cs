@@ -1,4 +1,4 @@
-﻿namespace Tiktoken.Utilities;
+﻿namespace Tiktoken.Encodings;
 
 /// <summary>
 /// 

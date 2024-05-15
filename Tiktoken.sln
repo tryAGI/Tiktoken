@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{3B092566-9
 		src\libs\Directory.Build.props = src\libs\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken", "src\libs\Tiktoken\Tiktoken.csproj", "{722606E4-DB7E-42DE-9627-A70459ABED8A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Core", "src\libs\Tiktoken.Core\Tiktoken.Core.csproj", "{722606E4-DB7E-42DE-9627-A70459ABED8A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BC3A0A95-4B22-4523-A1C5-94699F586D1B}"
 EndProject
@@ -29,6 +29,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Benchmarks", "src\benchmarks\Tiktoken.Benchmarks\Tiktoken.Benchmarks.csproj", "{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken", "src\libs\Tiktoken\Tiktoken.csproj", "{7F1803DA-299D-4839-876D-19B4031C1246}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.cl100k", "src\libs\Tiktoken.Encodings.cl100k\Tiktoken.Encodings.cl100k.csproj", "{937EC883-68C6-4F97-904E-4EC7149FEC72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.p50k", "src\libs\Tiktoken.Encodings.p50k\Tiktoken.Encodings.p50k.csproj", "{96A3E018-461F-4466-9086-8FFBA89DDE35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.o200k", "src\libs\Tiktoken.Encodings.o200k\Tiktoken.Encodings.o200k.csproj", "{40F00E7F-84D7-4886-95F4-DC96BDE90965}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.Abstractions", "src\libs\Tiktoken.Encodings.Abstractions\Tiktoken.Encodings.Abstractions.csproj", "{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.r50k", "src\libs\Tiktoken.Encodings.r50k\Tiktoken.Encodings.r50k.csproj", "{633C9C98-0782-4CFC-9D26-F27E77FA11EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +59,30 @@ Global
 		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F1803DA-299D-4839-876D-19B4031C1246}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F1803DA-299D-4839-876D-19B4031C1246}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F1803DA-299D-4839-876D-19B4031C1246}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F1803DA-299D-4839-876D-19B4031C1246}.Release|Any CPU.Build.0 = Release|Any CPU
+		{937EC883-68C6-4F97-904E-4EC7149FEC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{937EC883-68C6-4F97-904E-4EC7149FEC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{937EC883-68C6-4F97-904E-4EC7149FEC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{937EC883-68C6-4F97-904E-4EC7149FEC72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A3E018-461F-4466-9086-8FFBA89DDE35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A3E018-461F-4466-9086-8FFBA89DDE35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A3E018-461F-4466-9086-8FFBA89DDE35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A3E018-461F-4466-9086-8FFBA89DDE35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40F00E7F-84D7-4886-95F4-DC96BDE90965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40F00E7F-84D7-4886-95F4-DC96BDE90965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40F00E7F-84D7-4886-95F4-DC96BDE90965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40F00E7F-84D7-4886-95F4-DC96BDE90965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,5 +94,11 @@ Global
 		{722606E4-DB7E-42DE-9627-A70459ABED8A} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 		{DD0E1D72-6861-41E8-9737-E5875550B39D} = {BC3A0A95-4B22-4523-A1C5-94699F586D1B}
 		{83457B34-2F66-4566-97A8-EB5CA2FAFC3E} = {15EDB083-E0AC-4CDC-98EC-A67EFE143C29}
+		{7F1803DA-299D-4839-876D-19B4031C1246} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{937EC883-68C6-4F97-904E-4EC7149FEC72} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{96A3E018-461F-4466-9086-8FFBA89DDE35} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{40F00E7F-84D7-4886-95F4-DC96BDE90965} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{633C9C98-0782-4CFC-9D26-F27E77FA11EC} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 	EndGlobalSection
 EndGlobal

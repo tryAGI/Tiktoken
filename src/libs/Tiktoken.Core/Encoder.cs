@@ -1,58 +1,15 @@
-﻿using System.Diagnostics;
-using Tiktoken.Models;
-using Tiktoken.Services;
+﻿using Tiktoken.Encodings;
 
 namespace Tiktoken;
 
 /// <summary>
 /// 
 /// </summary>
-public class Encoding
+public class Encoder
 {
-    /// <summary>
-    /// Returns encoding by model name.
-    /// </summary>
-    /// <param name="modelName">gpt-3.5-turbo</param>
-    /// <returns></returns>
-    public static Encoding ForModel(string modelName)
-    {
-        return Get(Helpers.GetNameByModel(modelName));
-    }
-    
-    /// <summary>
-    /// Returns encoding by model name or null.
-    /// </summary>
-    /// <param name="modelName">gpt-3.5-turbo</param>
-    /// <returns></returns>
-    public static Encoding? TryForModel(string modelName)
-    {
-        var encodingName = Helpers.TryGetNameByModel(modelName);
-        
-        return encodingName == null
-            ? null
-            : Get(encodingName);
-    }
-
-    /// <summary>
-    /// Returns encoding by name.
-    /// </summary>
-    /// <param name="encodingName">cl100k_base</param>
-    /// <returns></returns>
-    public static Encoding Get(string encodingName)
-    {
-        if (string.IsNullOrEmpty(encodingName))
-        {
-            throw new ArgumentException("encodingName is null or empty", nameof(encodingName));
-        }
-
-        var setting = EncodingManager.Get(encodingName);
-        
-        return new Encoding(setting);
-    }
-
     private readonly CoreBpe _corePbe;
     private readonly HashSet<string> _specialTokensSet;
-    private static readonly HashSet<string> emptyHashSet = new HashSet<string>();
+    private static readonly HashSet<string> EmptyHashSet = [];
     
     /// <summary>
     /// Enable cache for fast encoding.
@@ -67,19 +24,13 @@ public class Encoding
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="setting"></param>
-    public Encoding(EncodingSettingModel setting)
+    /// <param name="encoding"></param>
+    public Encoder(Encoding encoding)
     {
-        setting = setting ?? throw new ArgumentNullException(nameof(setting));
+        encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
         
-        if (setting.ExplicitNVocab != null)
-        {
-            Debug.Assert(setting.SpecialTokens.Count + setting.MergeableRanks.Count == setting.ExplicitNVocab);
-            Debug.Assert(Math.Max(setting.MergeableRanks.Values.Max(), setting.SpecialTokens.Values.Max()) == setting.ExplicitNVocab - 1);
-        }
-
-        _corePbe = new CoreBpe(setting.MergeableRanks, setting.SpecialTokens, setting.Pattern);
-        _specialTokensSet = new HashSet<string>(setting.SpecialTokens.Keys);
+        _corePbe = new CoreBpe(encoding.MergeableRanks, encoding.SpecialTokens, encoding.Pattern);
+        _specialTokensSet = [..encoding.SpecialTokens.Keys];
     }
 
     /// <summary>
@@ -116,7 +67,7 @@ public class Encoding
         return _corePbe.Explore(
             text,
             allowedSpecial: _specialTokensSet,
-            disallowedSpecial: emptyHashSet);
+            disallowedSpecial: EmptyHashSet);
     }
     
     /// <summary>
@@ -124,7 +75,7 @@ public class Encoding
     /// This would enhance visibility over the tokenization process, facilitate token manipulation,
     /// and could serve as a useful tool for educational purposes.
     /// Unlike <see cref="Explore"/> this method returns token in a printable manner, in which each token is encoded as one more tokens.
-    /// For example, <see cref="Encodings.Cl100KBase"/> can encode 🤚🏾 (Raised Back of Hand: Dark Skin Tone) with as much as 6 tokens.
+    /// For example, Cl100KBase can encode 🤚🏾 (Raised Back of Hand: Dark Skin Tone) with as much as 6 tokens.
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
@@ -133,7 +84,7 @@ public class Encoding
         return _corePbe.ExploreUtfSafe(
             text,
             allowedSpecial: _specialTokensSet,
-            disallowedSpecial: emptyHashSet);
+            disallowedSpecial: EmptyHashSet);
     }
     
     /// <summary>
@@ -147,7 +98,7 @@ public class Encoding
         return _corePbe.EncodeNative(
             text,
             allowedSpecial: _specialTokensSet,
-            disallowedSpecial: emptyHashSet);
+            disallowedSpecial: EmptyHashSet);
     }
     
     /// <summary>
@@ -160,7 +111,7 @@ public class Encoding
     {
         return _corePbe.EncodeNative(
             text,
-            allowedSpecial: emptyHashSet,
+            allowedSpecial: EmptyHashSet,
             disallowedSpecial: _specialTokensSet);
     }
     
@@ -179,8 +130,8 @@ public class Encoding
         
         return _corePbe.EncodeNative(
             text,
-            allowedSpecial: new HashSet<string>(allowedSpecial),
-            disallowedSpecial: new HashSet<string>(_specialTokensSet.Except(allowedSpecial)));
+            allowedSpecial: [..allowedSpecial],
+            disallowedSpecial: [.._specialTokensSet.Except(allowedSpecial)]);
     }
     
     /// <summary>
@@ -198,8 +149,8 @@ public class Encoding
         
         return _corePbe.EncodeNative(
             text,
-            allowedSpecial: new HashSet<string>(_specialTokensSet.Except(disallowedSpecial)),
-            disallowedSpecial: new HashSet<string>(disallowedSpecial));
+            allowedSpecial: [.._specialTokensSet.Except(disallowedSpecial)],
+            disallowedSpecial: [..disallowedSpecial]);
     }
 
     /// <summary>

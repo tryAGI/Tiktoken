@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
-using Tiktoken.Utilities;
+using Tiktoken.Core;
 #if NET8_0_OR_GREATER
 using System.Text.Unicode;
 #endif
@@ -18,10 +18,8 @@ public class CoreBpe
     private Dictionary<string, int> FastEncoder { get; set; }
 
     internal bool EnableCache { get; set; } = true;
-    private ConcurrentDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } =
-        new ConcurrentDictionary<string, IReadOnlyCollection<int>>();
-    private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } =
-        new ConcurrentDictionary<string, int>();
+    private ConcurrentDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } = new();
+    private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } = new();
 
     private Regex SpecialRegex { get; set; }
     private Regex Regex { get; set; }

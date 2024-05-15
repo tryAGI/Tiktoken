@@ -2,32 +2,12 @@
 
     <PropertyGroup>
         <TargetFrameworks>net4.6.1;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <NoWarn>$(NoWarn);CA1724</NoWarn>
     </PropertyGroup>
-    
-    <PropertyGroup Label="NuGet">
-        <Description>The fastest tokenizer for GPT-3.5 and GPT-4 inspired by Tiktoken.</Description>
-        <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
-    </PropertyGroup>
-
-    <ItemGroup Label="Usings">
-        <Using Remove="System.Net.Http" />
-    </ItemGroup>
-
-    <ItemGroup Label="Resources">
-        <EmbeddedResource Include="Encodings/*.tiktoken" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.1'">
-      <PackageReference Include="System.ValueTuple" />
-    </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="PolySharp">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+      <ProjectReference Include="..\Tiktoken.Core\Tiktoken.Core.csproj" />
+      <ProjectReference Include="..\Tiktoken.Encodings.cl100k\Tiktoken.Encodings.cl100k.csproj" />
+      <ProjectReference Include="..\Tiktoken.Encodings.o200k\Tiktoken.Encodings.o200k.csproj" />
     </ItemGroup>
 
 </Project>

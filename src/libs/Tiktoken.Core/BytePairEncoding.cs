@@ -4,7 +4,7 @@ using Bytes = System.ReadOnlyMemory<byte>;
 using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
 #endif
 
-namespace Tiktoken.Utilities;
+namespace Tiktoken.Core;
 
 /// <summary>
 /// 

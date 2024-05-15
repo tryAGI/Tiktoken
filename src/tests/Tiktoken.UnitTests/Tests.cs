@@ -1,4 +1,4 @@
-using Tiktoken.Services;
+using Tiktoken.Encodings;
 
 namespace Tiktoken.UnitTests;
 
@@ -23,16 +23,25 @@ public partial class Tests
     
     public Task BaseTest(string encodingName, string text, bool special = false)
     {
-        var encoding = Encoding.Get(encodingName);
+        Encoding encoding = encodingName switch
+        {
+            "o200k_base" => new O200KBase(),
+            "cl100k_base" => new Cl100KBase(),
+            "p50k_base" => new P50KBase(),
+            "p50k_edit" => new P50KEdit(),
+            "r50k_base" => new R50KBase(),
+            _ => throw new ArgumentOutOfRangeException(nameof(encodingName))
+        };
+        var encoder = new Encoder(encoding);
         var encoded = special
-            ? encoding.EncodeWithAllAllowedSpecial(text)
-            : encoding.Encode(text);
-        var decodedText = encoding.Decode(encoded);
-        var words = encoding.Explore(text);
+            ? encoder.EncodeWithAllAllowedSpecial(text)
+            : encoder.Encode(text);
+        var decodedText = encoder.Decode(encoded);
+        var words = encoder.Explore(text);
 
         if (!special)
         {
-            encoding.CountTokens(text).Should().Be(encoded.Count);
+            encoder.CountTokens(text).Should().Be(encoded.Count);
         }
         words.Count.Should().Be(encoded.Count);
         decodedText.Should().Be(text);
@@ -44,50 +53,55 @@ public partial class Tests
     }
     
     [TestMethod]
-    [DataRow(Encodings.Cl100KBase)]
-    [DataRow(Encodings.P50KBase)]
-    [DataRow(Encodings.P50KEdit)]
-    [DataRow(Encodings.R50KBase)]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
     public Task HelloWorld(string encodingName)
     {
         return BaseTest(encodingName, Strings.HelloWorld);
     }
     
     [TestMethod]
-    [DataRow(Encodings.Cl100KBase)]
-    [DataRow(Encodings.P50KBase)]
-    [DataRow(Encodings.P50KEdit)]
-    [DataRow(Encodings.R50KBase)]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
     public Task Special(string encodingName)
     {
         return BaseTest(encodingName, Strings.Special, special: true);
     }
     
     [TestMethod]
-    [DataRow(Encodings.Cl100KBase)]
-    [DataRow(Encodings.P50KBase)]
-    [DataRow(Encodings.P50KEdit)]
-    [DataRow(Encodings.R50KBase)]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
     public Task Chinese(string encodingName)
     {
         return BaseTest(encodingName, Strings.Chinese);
     }
     
     [TestMethod]
-    [DataRow(Encodings.Cl100KBase)]
-    [DataRow(Encodings.P50KBase)]
-    [DataRow(Encodings.P50KEdit)]
-    [DataRow(Encodings.R50KBase)]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
     public Task KingLear(string encodingName)
     {
         return BaseTest(encodingName, Strings.KingLear);
     }
     
     [TestMethod]
-    [DataRow(Encodings.Cl100KBase)]
-    [DataRow(Encodings.P50KBase)]
-    [DataRow(Encodings.P50KEdit)]
-    [DataRow(Encodings.R50KBase)]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
     public Task Bitcoin(string encodingName)
     {
         return BaseTest(encodingName, Strings.Bitcoin);
@@ -100,12 +114,12 @@ public partial class Tests
         var testBytes = System.Text.Encoding.UTF8.GetBytes(test);
         testBytes.Should().HaveCount(3);
 
-        var dictionary = EncodingManager.Get(Encodings.Cl100KBase).MergeableRanks;
+        var dictionary = new Cl100KBase().MergeableRanks;
         dictionary.ContainsKey(testBytes).Should().BeTrue();
         dictionary.TryGetValue("Hello"u8.ToArray(), out var helloResult).Should().BeTrue();
         helloResult.Should().Be(9906);
         
-        var dictionaryNew = EncodingManager.Get(Encodings.Cl100KBase).MergeableRanks
+        var dictionaryNew = new Cl100KBase().MergeableRanks
             .ToDictionary(
                 x => new string(x.Key.Select(y => (char) y).ToArray()),
                 x => x.Value);
@@ -123,7 +137,7 @@ public partial class Tests
     public void ExploreUtfSafe()
     {
         var text = Strings.HelloWorld;
-        IReadOnlyCollection<string> tokens = Encoding.ForModel("gpt-4").Explore(text);
+        IReadOnlyCollection<string> tokens = new Encoder(new Cl100KBase()).Explore(text);
         List<string> expected = new List<string> { "hello", " world" };
         int i = 0;
 
@@ -140,7 +154,7 @@ public partial class Tests
     public void ExploreUtfBoundary()
     {
         var text = Strings.EploreUtfBoundary;
-        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        IReadOnlyCollection<UtfToken> tokens = new Encoder(new Cl100KBase()).ExploreUtfSafe(text);
         List<string> expected = new List<string> { " ř", "ek", "nu" };
         int i = 0;
 
@@ -157,7 +171,7 @@ public partial class Tests
     public void ExploreUtfBoundaryEmojiSurrogate()
     {
         var text = "\ud83e\udd1a\ud83c\udffe";
-        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        IReadOnlyCollection<UtfToken> tokens = new Encoder(new Cl100KBase()).ExploreUtfSafe(text);
         List<string> expected = new List<string> { "🤚🏾" };
         int i = 0;
 
@@ -174,7 +188,7 @@ public partial class Tests
     public void ExploreUtfBoundaryEmoji()
     {
         var text = "\ud83e\udd1ař";
-        IReadOnlyCollection<UtfToken> tokens = Encoding.ForModel("gpt-4").ExploreUtfSafe(text);
+        IReadOnlyCollection<UtfToken> tokens = new Encoder(new Cl100KBase()).ExploreUtfSafe(text);
         List<string> expected = new List<string> { "\ud83e\udd1a", "ř" };
         int i = 0;
 
