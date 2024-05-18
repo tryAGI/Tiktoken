@@ -21,8 +21,7 @@ We will be happy to accept any PR.
 using Tiktoken.Encodings;
 using Tiktoken;
 
-var encoding = new O200KBase();
-var encoder = new Encoder(encoding);
+var encoder = Encoders.ForModel("gpt-4o"); // or explicitly new Encoder(new O200KBase())
 var tokens = encoder.Encode("hello world"); // [15339, 1917]
 var text = encoder.Decode(tokens); // hello world
 var numberOfTokens = encoder.CountTokens(text); // 2
