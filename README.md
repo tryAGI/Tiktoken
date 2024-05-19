@@ -18,10 +18,9 @@ We will be happy to accept any PR.
 
 ### Usage
 ```csharp
-using Tiktoken.Encodings;
 using Tiktoken;
 
-var encoder = Encoders.ForModel("gpt-4o"); // or explicitly new Encoder(new O200KBase())
+var encoder = ModelToEncoder.For("gpt-4o"); // or explicitly using new Encoder(new O200KBase())
 var tokens = encoder.Encode("hello world"); // [15339, 1917]
 var text = encoder.Decode(tokens); // hello world
 var numberOfTokens = encoder.CountTokens(text); // 2

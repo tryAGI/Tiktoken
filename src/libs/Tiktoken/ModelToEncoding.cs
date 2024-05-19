@@ -5,33 +5,9 @@ namespace Tiktoken;
 /// <summary>
 /// 
 /// </summary>
-public static class Encoders
+public static class ModelToEncoding
 {
-    /// <summary>
-    /// Returns encoder by model name.
-    /// </summary>
-    /// <param name="modelName">gpt-3.5-turbo</param>
-    /// <returns></returns>
-    public static Encoder ForModel(string modelName)
-    {
-        return new Encoder(GetEncodingByModel(modelName));
-    }
-    
-    /// <summary>
-    /// Returns encoder by model name or null.
-    /// </summary>
-    /// <param name="modelName">gpt-3.5-turbo</param>
-    /// <returns></returns>
-    public static Encoder? TryForModel(string modelName)
-    {
-        var encoding = TryGetEncodingByModel(modelName);
-        
-        return encoding == null
-            ? null
-            : new Encoder(encoding);
-    }
-    
-    private static Dictionary<string, Encoding> ModelToEncoding { get; } = new()
+    private static Dictionary<string, Encoding> Dictionary { get; } = new()
     {
         // chat
         { "gpt-4o", new O200KBase() },
@@ -51,9 +27,9 @@ public static class Encoders
     /// <param name="modelName">gpt-4 gpt-3.5-turbo ...</param>
     /// <exception cref="ArgumentException"></exception>
     /// <returns></returns>
-    public static Encoding? TryGetEncodingByModel(string modelName)
+    public static Encoding? TryFor(string modelName)
     {
-        return ModelToEncoding
+        return Dictionary
             .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value;
     }
 
@@ -63,9 +39,9 @@ public static class Encoders
     /// <param name="modelName">gpt-4 gpt-3.5-turbo ...</param>
     /// <exception cref="ArgumentException"></exception>
     /// <returns></returns>
-    public static Encoding GetEncodingByModel(string modelName)
+    public static Encoding For(string modelName)
     {
-        return TryGetEncodingByModel(modelName) ??
+        return TryFor(modelName) ??
                throw new ArgumentException($"Model name {modelName} is not supported.");
     }
 }
