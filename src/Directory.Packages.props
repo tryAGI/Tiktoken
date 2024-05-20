@@ -19,9 +19,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
-    <PackageVersion Include="SharpToken" Version="2.0.2" />
+    <PackageVersion Include="SharpToken" Version="2.0.3" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
-    <PackageVersion Include="TiktokenSharp" Version="1.1.0" />
+    <PackageVersion Include="TiktokenSharp" Version="1.1.4" />
     <PackageVersion Include="Verify.MSTest" Version="24.2.0" />
   </ItemGroup>
 </Project>
