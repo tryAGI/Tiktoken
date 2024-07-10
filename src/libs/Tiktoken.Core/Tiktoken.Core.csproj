@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net4.6.1;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+        <TargetFrameworks>net4.6.2;netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <NoWarn>$(NoWarn);CA1724</NoWarn>
         <RootNamespace>Tiktoken</RootNamespace>
@@ -20,7 +20,7 @@
         <EmbeddedResource Include="Encodings/*.tiktoken" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.1'">
+    <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.2'">
       <PackageReference Include="System.ValueTuple" />
     </ItemGroup>
 

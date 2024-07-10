@@ -31,8 +31,31 @@ public static class EncodingLoader
             throw new InvalidOperationException("Resource not found.");
         using var reader = new StreamReader(stream);
         
-        var dictionary = new Dictionary<byte[], int>(new ByteArrayComparer());
+        var lines = new List<string>();
         while (reader.ReadLine() is { } line)
+        {
+            lines.Add(line);
+        }
+
+        return LoadEncodingFromLines(lines, name);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="lines"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="FormatException"></exception>
+    public static Dictionary<byte[], int> LoadEncodingFromLines(
+        this IReadOnlyList<string> lines,
+        string name)
+    {
+        lines = lines ?? throw new ArgumentNullException(nameof(lines));
+        
+        var dictionary = new Dictionary<byte[], int>(new ByteArrayComparer());
+        foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line))
             {
