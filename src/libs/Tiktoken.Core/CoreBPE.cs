@@ -33,10 +33,12 @@ public class CoreBpe
     /// <param name="encoder"></param>
     /// <param name="specialTokensEncoder"></param>
     /// <param name="pattern"></param>
+    /// <param name="compiled"></param>
     public CoreBpe(
         IReadOnlyDictionary<byte[], int> encoder,
         IReadOnlyDictionary<string, int> specialTokensEncoder,
-        string pattern)
+        string pattern,
+        bool compiled = true)
     {
         encoder = encoder ?? throw new ArgumentNullException(nameof(encoder));
         specialTokensEncoder = specialTokensEncoder ?? throw new ArgumentNullException(nameof(specialTokensEncoder));
@@ -49,8 +51,8 @@ public class CoreBpe
                 static x => x.Value);
         SpecialTokensEncoder = specialTokensEncoder;
         
-        Regex = new Regex(pattern, RegexOptions.Compiled);
-        SpecialRegex = new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
+        Regex = new Regex(pattern, compiled ? RegexOptions.Compiled : RegexOptions.None);
+        SpecialRegex = new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", compiled ? RegexOptions.Compiled : RegexOptions.None);
 
         Decoder = Encoder
             .ToDictionary(
