@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <PropertyGroup Label="Nuget">
-        <Version>2.0.3</Version>
+        <Version>2.1.0</Version>
         <Description>The fastest tokenizer for GPT-3.5 and GPT-4 inspired by Tiktoken.</Description>
         <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
         <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
@@ -24,11 +24,6 @@
         <None Include="$(MSBuildThisFileDirectory)../../assets/nuget_icon.png" Pack="true" PackagePath="\" Visible="false" />
         <None Include="$(MSBuildThisFileDirectory)../../README.md" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
-
-    <PropertyGroup Label="Local NuGet Packages">
-        <GeneratePackageOnBuild Condition="'$(CI)' != 'true'">true</GeneratePackageOnBuild>
-        <PackageOutputPath Condition="'$(CI)' != 'true'">$(MSBuildThisFileDirectory)../../../LocalPackages</PackageOutputPath>
-    </PropertyGroup>
 
     <ItemGroup Label="Source Link">
         <PackageReference Include="DotNet.ReproducibleBuilds">
