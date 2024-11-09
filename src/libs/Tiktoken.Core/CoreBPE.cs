@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Tiktoken.Core;
@@ -86,12 +87,12 @@ public class CoreBpe
         var tokens = 0;
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
+        Span<byte> pieceBytes = stackalloc byte[128];
 #endif
 
 #if NET7_0_OR_GREATER
         foreach (var match in Regex.EnumerateMatches(textSpan))
         {
-            var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
             var fastKey = new string(textSpan.Slice(match.Index, match.Length));
 #else
         foreach (Match match in Regex.Matches(text))
@@ -110,7 +111,11 @@ public class CoreBpe
                 continue;
             }
 
+#if NET7_0_OR_GREATER
+            var piece = GetUtf8Bytes(textSpan.Slice(match.Index, match.Length), pieceBytes);
+#else
             var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+#endif
             if (Encoder.ContainsKey(piece))
             {
                 tokens++;
@@ -148,6 +153,7 @@ public class CoreBpe
         var tokens = new List<int>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
+        Span<byte> pieceBytes = stackalloc byte[128];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
@@ -181,7 +187,6 @@ public class CoreBpe
 #if NET7_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
                 var fastKey = new string(textSpan.Slice(match.Index, match.Length));
 #else
             foreach (Match match in Regex.Matches(text[start..specialStart]))
@@ -199,8 +204,12 @@ public class CoreBpe
                     tokens.AddRange(fastTokens);
                     continue;
                 }
-                
+
+#if NET7_0_OR_GREATER
+                var piece = GetUtf8Bytes(textSpan.Slice(match.Index, match.Length), pieceBytes);
+#else
                 var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+#endif
                 if (Encoder.TryGetValue(piece, out var token))
                 {
                     tokens.Add(token);
@@ -544,4 +553,20 @@ public class CoreBpe
         }
         return ret.ToArray();
     }
+
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte[] GetUtf8Bytes(ReadOnlySpan<char> text, Span<byte> scratch)
+    {
+        // check if text can be decoded into the buffer; each UTF-16 char can become at most 3 UTF-8 bytes
+        if (text.Length * 3 < scratch.Length)
+        {
+            return scratch[..System.Text.Encoding.UTF8.GetBytes(text, scratch)].ToArray();
+        }
+        else
+        {
+            return System.Text.Encoding.UTF8.GetBytes(text.ToArray());
+        }
+    }
+#endif
 }
