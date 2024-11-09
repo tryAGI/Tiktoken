@@ -30,7 +30,7 @@ public static class EncodingLoader
             assembly.GetManifestResourceStream(resourcePath) ??
             throw new InvalidOperationException("Resource not found.");
         using var reader = new StreamReader(stream);
-        
+
         var lines = new List<string>();
         while (reader.ReadLine() is { } line)
         {
@@ -53,7 +53,11 @@ public static class EncodingLoader
         string name)
     {
         lines = lines ?? throw new ArgumentNullException(nameof(lines));
-        
+
+#if NET7_0_OR_GREATER
+        Span<Range> tokens = stackalloc Range[3];
+        Span<byte> bytes = stackalloc byte[256];
+#endif
         var dictionary = new Dictionary<byte[], int>(new ByteArrayComparer());
         foreach (var line in lines)
         {
@@ -62,14 +66,28 @@ public static class EncodingLoader
                 continue;
             }
 
+#if NET7_0_OR_GREATER
+            var splitCount = line.AsSpan().Split(tokens, ' ');
+            if (splitCount != 2)
+            {
+                throw new FormatException($"Invalid file format: {name}");
+            }
+#else
             var tokens = line.Split(' ');
             if (tokens.Length != 2)
             {
                 throw new FormatException($"Invalid file format: {name}");
             }
+#endif
 
+#if NET7_0_OR_GREATER
+            Convert.TryFromBase64Chars(line.AsSpan(tokens[0]), bytes, out var bytesWritten);
+            var tokenBytes = bytes.Slice(0, bytesWritten).ToArray();
+            var rank = int.Parse(line.AsSpan(tokens[1]), CultureInfo.InvariantCulture);
+#else
             var tokenBytes = Convert.FromBase64String(tokens[0]);
             var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
+#endif
             dictionary[tokenBytes] = rank;
         }
 

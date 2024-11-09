@@ -45,7 +45,19 @@ public class CoreBpe
         Encoder = encoder;
         FastEncoder = Encoder
             .ToDictionary(
-                static x => new string(x.Key.Select(y => (char) y).ToArray()),
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+                static x =>
+                {
+                    Span<char> chars = stackalloc char[x.Key.Length];
+                    for (var i = 0; i < x.Key.Length; i++)
+                    {
+                        chars[i] = (char)x.Key[i];
+                    }
+                    return new string(chars);
+                },
+#else
+                static x => new string(x.Key.Select(static y => (char) y).ToArray()),
+#endif
                 static x => x.Value);
         SpecialTokensEncoder = specialTokensEncoder;
         
