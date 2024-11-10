@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,7 +21,11 @@ public class CoreBpe
 
     internal bool EnableCache { get; set; } = true;
     private ConcurrentDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } = new();
-    private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } = new();
+    private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } = new(
+#if NET9_0_OR_GREATER
+        new AlternateStringComparer()
+#endif
+        );
 
     private Regex SpecialRegex { get; set; }
     private Regex Regex { get; set; }
@@ -59,7 +64,11 @@ public class CoreBpe
 #else
                 static x => new string(x.Key.Select(static y => (char) y).ToArray()),
 #endif
-                static x => x.Value);
+                static x => x.Value
+#if NET9_0_OR_GREATER
+                , new AlternateStringComparer()
+#endif
+                );
         SpecialTokensEncoder = specialTokensEncoder;
         
         Regex = new Regex(pattern, RegexOptions.Compiled);
@@ -89,23 +98,40 @@ public class CoreBpe
         var textSpan = text.AsSpan();
         Span<byte> pieceBytes = stackalloc byte[128];
 #endif
+#if NET9_0_OR_GREATER
+        var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
+        var fastCacheCountLookup = FastCacheCounts.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
 
 #if NET7_0_OR_GREATER
         foreach (var match in Regex.EnumerateMatches(textSpan))
         {
+#if NET9_0_OR_GREATER
+            var fastKey = textSpan.Slice(match.Index, match.Length);
+#else
             var fastKey = new string(textSpan.Slice(match.Index, match.Length));
+#endif
 #else
         foreach (Match match in Regex.Matches(text))
         {
             var matchValue = match.Value;
             var fastKey = matchValue;
 #endif
+
+#if NET9_0_OR_GREATER
+            if (fastEncoderLookup.ContainsKey(fastKey))
+#else
             if (FastEncoder.ContainsKey(fastKey))
+#endif
             {
                 tokens++;
                 continue;
             }
+#if NET9_0_OR_GREATER
+            if (EnableCache && fastCacheCountLookup.TryGetValue(fastKey, out var fastNumberOfTokens))
+#else
             if (EnableCache && FastCacheCounts.TryGetValue(fastKey, out var fastNumberOfTokens))
+#endif
             {
                 tokens += fastNumberOfTokens;
                 continue;
@@ -127,7 +153,11 @@ public class CoreBpe
 
             if (EnableCache)
             {
+#if NET9_0_OR_GREATER
+                fastCacheCountLookup[fastKey] = numberOfTokens;
+#else
                 FastCacheCounts[fastKey] = numberOfTokens;
+#endif
             }
         }
 
@@ -566,6 +596,41 @@ public class CoreBpe
         else
         {
             return System.Text.Encoding.UTF8.GetBytes(text.ToArray());
+        }
+    }
+#endif
+
+#if NET9_0_OR_GREATER
+    private sealed class AlternateStringComparer : IEqualityComparer<string>,
+        IAlternateEqualityComparer<ReadOnlySpan<char>, string>
+    {
+        public string Create(ReadOnlySpan<char> alternate)
+        {
+            return new(alternate);
+        }
+
+        public bool Equals(string? x, string? y)
+        {
+            return string.Equals(x, y, StringComparison.Ordinal);
+        }
+
+        public bool Equals(ReadOnlySpan<char> alternate, string other)
+        {
+            return other?.AsSpan().SequenceEqual(alternate) ?? false;
+        }
+
+        public int GetHashCode([DisallowNull] string str)
+        {
+            return str is null ? 0 : GetHashCode(str.AsSpan());
+        }
+
+        public int GetHashCode(ReadOnlySpan<char> alternate)
+        {
+            // use the djb2 hash function for simplicity: http://www.cse.yorku.ca/~oz/hash.html
+            uint hash = 5381;
+            foreach (var ch in alternate)
+                hash = hash * 33u + ch;
+            return (int)hash;
         }
     }
 #endif
