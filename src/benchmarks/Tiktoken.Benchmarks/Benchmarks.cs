@@ -41,7 +41,7 @@ public class Benchmarks
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
-    public IReadOnlyCollection<int> MicrosoftMLTokenizerV1_0_0_Encode() => _microsoftMlTiktoken.EncodeToIds(Data);
+    public IReadOnlyCollection<int> MicrosoftMLTokenizerV1_0_0_Encode() => _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
@@ -62,7 +62,7 @@ public class Benchmarks
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
-    public int MicrosoftMLTokenizerV1_0_0_() => _microsoftMlTiktoken.CountTokens(Data);
+    public int MicrosoftMLTokenizerV1_0_0_() => _microsoftMlTiktoken.CountTokens(Data.AsSpan());
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
