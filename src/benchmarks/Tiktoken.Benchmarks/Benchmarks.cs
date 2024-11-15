@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Microsoft.DeepDev;
+using Microsoft.ML.Tokenizers;
 using SharpToken;
 using Tiktoken.Encodings;
 using TiktokenSharp;
@@ -18,6 +19,7 @@ public class Benchmarks
     private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding("cl100k_base");
     private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("cl100k_base");
     private readonly Encoder _tiktoken = new(new Cl100KBase());
+    private readonly Tokenizer _microsoftMlTiktoken = TiktokenTokenizer.CreateForModel("gpt-4");
     private ITokenizer? _tokenizerLib;
     
     [Params(Strings.HelloWorld, Strings.KingLear, Strings.Bitcoin)]
@@ -31,11 +33,15 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Encode")]
-    public List<int> SharpTokenV2_0_1_Encode() => _sharpToken.Encode(Data);
+    public List<int> SharpTokenV2_0_3_Encode() => _sharpToken.Encode(Data);
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
-    public List<int> TiktokenSharpV1_0_9_Encode() => _tiktokenSharp.Encode(Data);
+    public List<int> TiktokenSharpV1_1_5_Encode() => _tiktokenSharp.Encode(Data);
+    
+    [Benchmark]
+    [BenchmarkCategory("Encode")]
+    public IReadOnlyCollection<int> MicrosoftMLTokenizerV1_0_0_Encode() => _microsoftMlTiktoken.EncodeToIds(Data);
     
     [Benchmark]
     [BenchmarkCategory("Encode")]
@@ -48,11 +54,15 @@ public class Benchmarks
     
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("CountTokens")]
-    public int SharpTokenV2_0_1_() => _sharpToken.Encode(Data).Count;
+    public int SharpTokenV2_0_3_() => _sharpToken.Encode(Data).Count;
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
-    public int TiktokenSharpV1_0_9_() => _tiktokenSharp.Encode(Data).Count;
+    public int TiktokenSharpV1_1_5_() => _tiktokenSharp.Encode(Data).Count;
+    
+    [Benchmark]
+    [BenchmarkCategory("CountTokens")]
+    public int MicrosoftMLTokenizerV1_0_0_() => _microsoftMlTiktoken.CountTokens(Data);
     
     [Benchmark]
     [BenchmarkCategory("CountTokens")]

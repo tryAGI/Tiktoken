@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <PropertyGroup Label="Nuget">
-        <Version>2.1.1</Version>
+        <Version>2.2.0</Version>
         <Description>The fastest tokenizer for GPT-3.5 and GPT-4 inspired by Tiktoken.</Description>
         <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
         <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
