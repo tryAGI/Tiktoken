@@ -33,6 +33,11 @@ public class Encoding
     /// <summary>
     /// 
     /// </summary>
+    public bool CompiledRegex { get; set; } = true;
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="name"></param>
     /// <param name="patterns"></param>
     /// <param name="mergeableRanks"></param>
