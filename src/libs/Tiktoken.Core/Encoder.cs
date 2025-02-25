@@ -29,7 +29,7 @@ public class Encoder
     {
         encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
         
-        _corePbe = new CoreBpe(encoding.MergeableRanks, encoding.SpecialTokens, encoding.Pattern);
+        _corePbe = new CoreBpe(encoding.MergeableRanks, encoding.SpecialTokens, encoding.Pattern, encoding.CompiledRegex);
         _specialTokensSet = [..encoding.SpecialTokens.Keys];
     }
 

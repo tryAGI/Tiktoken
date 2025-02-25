@@ -30,6 +30,7 @@ public partial class Tests
             "p50k_base" => new P50KBase(),
             "p50k_edit" => new P50KEdit(),
             "r50k_base" => new R50KBase(),
+            _ when encodingName.EndsWith(".tokenizer.json") => Tokenizer.GetEncodingFromJson(new H.Resource(encodingName).AsString()),
             _ => throw new ArgumentOutOfRangeException(nameof(encodingName))
         };
         var encoder = new Encoder(encoding);
@@ -58,6 +59,7 @@ public partial class Tests
     [DataRow("p50k_base")]
     [DataRow("p50k_edit")]
     [DataRow("r50k_base")]
+    [DataRow("gpt2.tokenizer.json")]
     public Task HelloWorld(string encodingName)
     {
         return BaseTest(encodingName, Strings.HelloWorld);
