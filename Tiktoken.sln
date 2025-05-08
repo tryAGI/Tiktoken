@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.Abstract
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.r50k", "src\libs\Tiktoken.Encodings.r50k\Tiktoken.Encodings.r50k.csproj", "{633C9C98-0782-4CFC-9D26-F27E77FA11EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tiktoken.Encodings.Tokenizer", "src\libs\Tiktoken.Encodings.Tokenizer\Tiktoken.Encodings.Tokenizer.csproj", "{1C924F98-52DA-4A18-8FDF-E93D12ABD422}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{633C9C98-0782-4CFC-9D26-F27E77FA11EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C924F98-52DA-4A18-8FDF-E93D12ABD422}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C924F98-52DA-4A18-8FDF-E93D12ABD422}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C924F98-52DA-4A18-8FDF-E93D12ABD422}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C924F98-52DA-4A18-8FDF-E93D12ABD422}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,5 +106,6 @@ Global
 		{40F00E7F-84D7-4886-95F4-DC96BDE90965} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 		{3EDC6F81-2C49-4B8D-9AAC-5B7C40D5A1CF} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 		{633C9C98-0782-4CFC-9D26-F27E77FA11EC} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
+		{1C924F98-52DA-4A18-8FDF-E93D12ABD422} = {3B092566-9A2F-4C00-BFF1-90C0A6BE8C62}
 	EndGlobalSection
 EndGlobal
