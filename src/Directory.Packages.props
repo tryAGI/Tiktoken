@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="BenchmarkDotNet" Version="0.15.5" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.6" />
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.2.39" />
     <PackageVersion Include="FluentAssertions" Version="8.8.0" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
@@ -22,6 +22,6 @@
     <PackageVersion Include="SharpToken" Version="2.0.4" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
     <PackageVersion Include="TiktokenSharp" Version="1.1.8" />
-    <PackageVersion Include="Verify.MSTest" Version="31.4.1" />
+    <PackageVersion Include="Verify.MSTest" Version="31.5.1" />
   </ItemGroup>
 </Project>
