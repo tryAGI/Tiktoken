@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="src/benchmarks/Tiktoken.Benchmarks/Tiktoken.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/libs/">
+    <File Path="src/libs/Directory.Build.props" />
+    <Project Path="src/libs/Tiktoken.Core/Tiktoken.Core.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.Abstractions/Tiktoken.Encodings.Abstractions.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.cl100k/Tiktoken.Encodings.cl100k.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.o200k/Tiktoken.Encodings.o200k.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.p50k/Tiktoken.Encodings.p50k.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.r50k/Tiktoken.Encodings.r50k.csproj" />
+    <Project Path="src/libs/Tiktoken/Tiktoken.csproj" />
+  </Folder>
+  <Folder Name="/misc/">
+    <File Path=".gitattributes" />
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE.txt" />
+    <File Path="README.md" />
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="src/tests/Tiktoken.UnitTests/Tiktoken.UnitTests.csproj" />
+  </Folder>
+</Solution>
