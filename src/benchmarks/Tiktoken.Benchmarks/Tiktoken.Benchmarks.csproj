@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.Bcl.Memory" />
       <ProjectReference Include="..\..\libs\Tiktoken.Core\Tiktoken.Core.csproj" />
       <ProjectReference Include="..\..\libs\Tiktoken\Tiktoken.csproj" />
     </ItemGroup>
