@@ -10,16 +10,16 @@ High-performance .NET port of OpenAI's [tiktoken](https://github.com/openai/tikt
 
 ```bash
 # Build the solution
-dotnet build Tiktoken.sln
+dotnet build Tiktoken.slnx
 
 # Build for release
-dotnet build Tiktoken.sln -c Release
+dotnet build Tiktoken.slnx -c Release
 
 # Run unit tests
 dotnet test src/tests/Tiktoken.UnitTests/Tiktoken.UnitTests.csproj
 
 # Run all tests
-dotnet test Tiktoken.sln
+dotnet test Tiktoken.slnx
 
 # Run benchmarks
 dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks/Tiktoken.Benchmarks.csproj
