@@ -85,59 +85,18 @@ public class CoreBpe
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
     public int CountTokensNative(string text)
     {
         text = text ?? throw new ArgumentNullException(nameof(text));
-        
-        var tokens = 0;
+
 #if NET7_0_OR_GREATER
-        var textSpan = text.AsSpan();
-        Span<byte> pieceBytes = stackalloc byte[128];
-#endif
-#if NET9_0_OR_GREATER
-        var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
-        var fastCacheCountLookup = FastCacheCounts.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-
-#if NET9_0_OR_GREATER
-        foreach (var match in Regex.EnumerateMatches(textSpan))
-        {
-            var fastKey = textSpan.Slice(match.Index, match.Length);
-
-            if (fastEncoderLookup.ContainsKey(fastKey))
-            {
-                tokens++;
-                continue;
-            }
-            if (EnableCache && fastCacheCountLookup.TryGetValue(fastKey, out var fastNumberOfTokens))
-            {
-                tokens += fastNumberOfTokens;
-                continue;
-            }
-
-            var piece = GetUtf8Bytes(fastKey, pieceBytes);
-#elif NET7_0_OR_GREATER
-        foreach (var match in Regex.EnumerateMatches(textSpan))
-        {
-            var fastKey = new string(textSpan.Slice(match.Index, match.Length));
-
-            if (FastEncoder.ContainsKey(fastKey))
-            {
-                tokens++;
-                continue;
-            }
-            if (EnableCache && FastCacheCounts.TryGetValue(fastKey, out var fastNumberOfTokens))
-            {
-                tokens += fastNumberOfTokens;
-                continue;
-            }
-
-            var piece = GetUtf8Bytes(textSpan.Slice(match.Index, match.Length), pieceBytes);
+        return CountTokensNative(text.AsSpan());
 #else
+        var tokens = 0;
         foreach (Match match in Regex.Matches(text))
         {
             var matchValue = match.Value;
@@ -155,6 +114,72 @@ public class CoreBpe
             }
 
             var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+            if (Encoder.ContainsKey(piece))
+            {
+                tokens++;
+                continue;
+            }
+
+            var numberOfTokens = BytePairEncoding.BytePairEncodeCountTokens(piece, Encoder);
+            tokens += numberOfTokens;
+
+            if (EnableCache)
+            {
+                FastCacheCounts[fastKey] = numberOfTokens;
+            }
+        }
+
+        return tokens;
+#endif
+    }
+
+#if NET7_0_OR_GREATER
+    /// <summary>
+    /// Counts tokens using span-based input to avoid string allocation.
+    /// </summary>
+    internal int CountTokensNative(ReadOnlySpan<char> text)
+    {
+        var tokens = 0;
+        Span<byte> pieceBytes = stackalloc byte[128];
+#if NET9_0_OR_GREATER
+        var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
+        var fastCacheCountLookup = FastCacheCounts.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
+
+#if NET9_0_OR_GREATER
+        foreach (var match in Regex.EnumerateMatches(text))
+        {
+            var fastKey = text.Slice(match.Index, match.Length);
+
+            if (fastEncoderLookup.ContainsKey(fastKey))
+            {
+                tokens++;
+                continue;
+            }
+            if (EnableCache && fastCacheCountLookup.TryGetValue(fastKey, out var fastNumberOfTokens))
+            {
+                tokens += fastNumberOfTokens;
+                continue;
+            }
+
+            var piece = GetUtf8Bytes(fastKey, pieceBytes);
+#else
+        foreach (var match in Regex.EnumerateMatches(text))
+        {
+            var fastKey = new string(text.Slice(match.Index, match.Length));
+
+            if (FastEncoder.ContainsKey(fastKey))
+            {
+                tokens++;
+                continue;
+            }
+            if (EnableCache && FastCacheCounts.TryGetValue(fastKey, out var fastNumberOfTokens))
+            {
+                tokens += fastNumberOfTokens;
+                continue;
+            }
+
+            var piece = GetUtf8Bytes(text.Slice(match.Index, match.Length), pieceBytes);
 #endif
             if (Encoder.ContainsKey(piece))
             {
@@ -177,6 +202,7 @@ public class CoreBpe
 
         return tokens;
     }
+#endif
     
     /// <summary>
     /// 

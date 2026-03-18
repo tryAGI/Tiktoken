@@ -42,9 +42,22 @@ public class Encoder
     {
         return _corePbe.CountTokensNative(text);
     }
+
+#if NET7_0_OR_GREATER
+    /// <summary>
+    /// Counts tokens from a span without requiring a string allocation.
+    /// Does not take into account special tokens.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    public int CountTokens(ReadOnlySpan<char> text)
+    {
+        return _corePbe.CountTokensNative(text);
+    }
+#endif
     
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
@@ -53,6 +66,19 @@ public class Encoder
     {
         return EncodeWithAllDisallowedSpecial(text);
     }
+
+#if NET7_0_OR_GREATER
+    /// <summary>
+    /// Encodes text from a span. Avoids caller-side string allocation when text is already a span.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> Encode(ReadOnlySpan<char> text)
+    {
+        return EncodeWithAllDisallowedSpecial(new string(text));
+    }
+#endif
     
     /// <summary>
     /// Returns tokens from the processing stage as a list of strings.

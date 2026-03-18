@@ -128,8 +128,21 @@ public class Benchmarks
     public int Tiktoken_DecodeToUtf8()
     {
         var byteCount = _tiktoken.GetDecodedUtf8ByteCount(_tiktokenEncodedArray);
-        Span<byte> buffer = byteCount <= 1024 ? stackalloc byte[byteCount] : new byte[byteCount];
-        return _tiktoken.DecodeToUtf8(_tiktokenEncodedArray, buffer);
+        if (byteCount <= 1024)
+        {
+            Span<byte> buffer = stackalloc byte[byteCount];
+            return _tiktoken.DecodeToUtf8(_tiktokenEncodedArray, buffer);
+        }
+
+        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            return _tiktoken.DecodeToUtf8(_tiktokenEncodedArray, rented.AsSpan(0, byteCount));
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
     }
 
 
@@ -158,4 +171,22 @@ public class Benchmarks
     [Benchmark]
     [BenchmarkCategory("Decode_o200k")]
     public string Tiktoken_o200k_Decode() => _tiktokenO200K.Decode(_tiktokenO200KEncodedArray);
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("CountTokensSpan")]
+    public int Tiktoken_CountTokens_String() => _tiktoken.CountTokens(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("CountTokensSpan")]
+    public int Tiktoken_CountTokens_Span() => _tiktoken.CountTokens(Data.AsSpan());
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("EncodeSpan")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_String() => _tiktoken.Encode(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("EncodeSpan")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_Span() => _tiktoken.Encode(Data.AsSpan());
 }
