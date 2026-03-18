@@ -33,4 +33,15 @@ public static class TikTokenEncoder
     {
         return ModelToEncoder.TryFor(modelName);
     }
+
+    /// <summary>
+    /// Creates an encoder for the specified encoding name (e.g., "cl100k_base", "o200k_base").
+    /// </summary>
+    /// <param name="encodingName">Encoding name (cl100k_base, o200k_base, p50k_base, p50k_edit, r50k_base).</param>
+    /// <returns>An <see cref="Encoder"/> instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when the encoding name is not supported.</exception>
+    public static Encoder CreateForEncoding(string encodingName)
+    {
+        return new Encoder(ModelToEncoding.ForEncoding(encodingName));
+    }
 }

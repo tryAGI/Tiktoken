@@ -208,6 +208,49 @@ public class Encoder
     }
 
     /// <summary>
+    /// Counts total tokens for a list of chat messages using OpenAI's token counting formula.
+    /// Each message adds <paramref name="tokensPerMessage"/> overhead tokens (default 3).
+    /// If a message has a <see cref="ChatMessage.Name"/>, <paramref name="tokensPerName"/> extra tokens are added (default 1).
+    /// An additional 3 tokens are added at the end for reply priming.
+    /// </summary>
+    /// <remarks>
+    /// Based on the official OpenAI token counting cookbook:
+    /// https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken
+    /// <para>
+    /// The default values (tokensPerMessage=3, tokensPerName=1) are correct for
+    /// gpt-4o, gpt-4, gpt-3.5-turbo, and all newer models.
+    /// </para>
+    /// </remarks>
+    /// <param name="messages">The chat messages to count tokens for.</param>
+    /// <param name="tokensPerMessage">Overhead tokens added per message (default: 3).</param>
+    /// <param name="tokensPerName">Extra tokens when a message has a name (default: 1).</param>
+    /// <returns>The total token count including message overhead and reply priming.</returns>
+    public int CountMessageTokens(
+        IReadOnlyList<ChatMessage> messages,
+        int tokensPerMessage = 3,
+        int tokensPerName = 1)
+    {
+        messages = messages ?? throw new ArgumentNullException(nameof(messages));
+
+        var count = 0;
+        for (var i = 0; i < messages.Count; i++)
+        {
+            var message = messages[i];
+            count += tokensPerMessage;
+            count += CountTokens(message.Role);
+            count += CountTokens(message.Content);
+            if (message.Name != null)
+            {
+                count += CountTokens(message.Name);
+                count += tokensPerName;
+            }
+        }
+
+        count += 3; // every reply is primed with <|start|>assistant<|message|>
+        return count;
+    }
+
+    /// <summary>
     ///
     /// </summary>
     /// <param name="tokens"></param>

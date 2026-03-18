@@ -367,4 +367,115 @@ public partial class Tests
         var decoded = encoder.Decode(encoded);
         decoded.Should().Be("hello world");
     }
+
+    [TestMethod]
+    public void CreateForEncodingCl100K()
+    {
+        var encoder = TikTokenEncoder.CreateForEncoding("cl100k_base");
+        var tokens = encoder.Encode("hello world");
+
+        tokens.Count.Should().Be(2);
+    }
+
+    [TestMethod]
+    public void CreateForEncodingO200K()
+    {
+        var encoder = TikTokenEncoder.CreateForEncoding("o200k_base");
+        var tokens = encoder.Encode("hello world");
+
+        tokens.Count.Should().Be(2);
+    }
+
+    [TestMethod]
+    public void CreateForEncodingP50K()
+    {
+        var encoder = TikTokenEncoder.CreateForEncoding("p50k_base");
+        encoder.Encode("hello world").Count.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
+    public void CreateForEncodingR50K()
+    {
+        var encoder = TikTokenEncoder.CreateForEncoding("r50k_base");
+        encoder.Encode("hello world").Count.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
+    public void CreateForEncodingThrowsOnUnknown()
+    {
+        var act = () => TikTokenEncoder.CreateForEncoding("unknown_encoding");
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [TestMethod]
+    public void ModelPrefixMatchingO3Mini()
+    {
+        var encoder = TikTokenEncoder.CreateForModel(Models.O3Mini);
+        encoder.Should().NotBeNull();
+        encoder.Encode("hello").Count.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
+    public void ModelPrefixMatchingGpt4Turbo()
+    {
+        var encoder = TikTokenEncoder.CreateForModel(Models.Gpt4Turbo);
+        encoder.Should().NotBeNull();
+        encoder.Encode("hello").Count.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
+    public void CountMessageTokensBasic()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var messages = new List<ChatMessage>
+        {
+            new("system", "You are a helpful assistant."),
+            new("user", "hello world"),
+        };
+
+        var count = encoder.CountMessageTokens(messages);
+
+        // Each message: 3 overhead + role tokens + content tokens
+        // Plus 3 reply priming at the end
+        // "system" = 1 token, "You are a helpful assistant." = 6 tokens → 3 + 1 + 6 = 10
+        // "user" = 1 token, "hello world" = 2 tokens → 3 + 1 + 2 = 6
+        // Reply priming: 3
+        // Total: 10 + 6 + 3 = 19
+        count.Should().Be(19);
+    }
+
+    [TestMethod]
+    public void CountMessageTokensWithName()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var messages = new List<ChatMessage>
+        {
+            new("system", "You are a helpful assistant.", name: "helper"),
+        };
+
+        var countWithName = encoder.CountMessageTokens(messages);
+
+        var messagesWithoutName = new List<ChatMessage>
+        {
+            new("system", "You are a helpful assistant."),
+        };
+
+        var countWithoutName = encoder.CountMessageTokens(messagesWithoutName);
+
+        // Name adds: CountTokens("helper") + 1
+        // "helper" = 1 token, so name adds 2
+        countWithName.Should().Be(countWithoutName + 2);
+    }
+
+    [TestMethod]
+    public void CountMessageTokensEmpty()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var messages = new List<ChatMessage>();
+
+        var count = encoder.CountMessageTokens(messages);
+
+        // Only reply priming: 3
+        count.Should().Be(3);
+    }
 }
