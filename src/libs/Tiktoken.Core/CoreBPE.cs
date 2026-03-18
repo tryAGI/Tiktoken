@@ -1,5 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+#if NET8_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 using System.Text;
 using System.Text.RegularExpressions;
 using Tiktoken.Core;
@@ -627,58 +630,112 @@ public class CoreBpe
 #if NET8_0_OR_GREATER
     /// <summary>
     /// Decodes tokens directly to string using a pooled buffer (single-pass).
+    /// Dispatches to span-based overload for List&lt;int&gt; to avoid interface dispatch.
     /// </summary>
     internal string DecodeToString(IReadOnlyCollection<int> tokens)
     {
         tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+
+        if (tokens is List<int> list)
+        {
+            return DecodeToString(CollectionsMarshal.AsSpan(list));
+        }
 
         if (tokens.Count == 0)
         {
             return string.Empty;
         }
 
-        // Rent buffer with generous estimate (~6 bytes per token for UTF-8 text)
         var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(tokens.Count * 6);
         try
         {
             var offset = 0;
             foreach (var token in tokens)
             {
-                byte[]? tokenBytes = null;
                 if (Decoder.TryGetValue(token, out var value))
                 {
-                    tokenBytes = value;
+                    EnsureCapacity(ref rented, offset, value.Length);
+                    value.CopyTo(rented.AsSpan(offset));
+                    offset += value.Length;
                 }
                 else if (SpecialTokensDecoderBytes.TryGetValue(token, out var specialBytes))
                 {
-                    tokenBytes = specialBytes;
-                }
-
-                if (tokenBytes != null)
-                {
-                    // Grow if needed
-                    if (offset + tokenBytes.Length > rented.Length)
-                    {
-                        var newRented = System.Buffers.ArrayPool<byte>.Shared.Rent(
-                            Math.Max(rented.Length * 2, offset + tokenBytes.Length));
-                        Buffer.BlockCopy(rented, 0, newRented, 0, offset);
-                        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
-                        rented = newRented;
-                    }
-
-                    Buffer.BlockCopy(tokenBytes, 0, rented, offset, tokenBytes.Length);
-                    offset += tokenBytes.Length;
+                    EnsureCapacity(ref rented, offset, specialBytes.Length);
+                    specialBytes.CopyTo(rented.AsSpan(offset));
+                    offset += specialBytes.Length;
                 }
             }
 
             return offset == 0
                 ? string.Empty
-                : System.Text.Encoding.UTF8.GetString(rented, 0, offset);
+                : System.Text.Encoding.UTF8.GetString(rented.AsSpan(0, offset));
         }
         finally
         {
             System.Buffers.ArrayPool<byte>.Shared.Return(rented);
         }
+    }
+
+    /// <summary>
+    /// Decodes tokens directly to string using span-based iteration (zero interface dispatch).
+    /// </summary>
+    internal string DecodeToString(ReadOnlySpan<int> tokens)
+    {
+        if (tokens.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(tokens.Length * 6);
+        try
+        {
+            var offset = 0;
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                if (Decoder.TryGetValue(tokens[i], out var value))
+                {
+                    EnsureCapacity(ref rented, offset, value.Length);
+                    if (value.Length == 1)
+                    {
+                        rented[offset] = value[0];
+                    }
+                    else
+                    {
+                        value.CopyTo(rented.AsSpan(offset));
+                    }
+                    offset += value.Length;
+                }
+                else if (SpecialTokensDecoderBytes.TryGetValue(tokens[i], out var specialBytes))
+                {
+                    EnsureCapacity(ref rented, offset, specialBytes.Length);
+                    specialBytes.CopyTo(rented.AsSpan(offset));
+                    offset += specialBytes.Length;
+                }
+            }
+
+            return offset == 0
+                ? string.Empty
+                : System.Text.Encoding.UTF8.GetString(rented.AsSpan(0, offset));
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void EnsureCapacity(ref byte[] rented, int offset, int needed)
+    {
+        if (offset + needed <= rented.Length)
+        {
+            return;
+        }
+
+        var newRented = System.Buffers.ArrayPool<byte>.Shared.Rent(
+            Math.Max(rented.Length * 2, offset + needed));
+        rented.AsSpan(0, offset).CopyTo(newRented);
+        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        rented = newRented;
     }
 #endif
 

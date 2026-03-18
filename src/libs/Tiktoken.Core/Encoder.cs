@@ -154,7 +154,7 @@ public class Encoder
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="tokens"></param>
     /// <returns></returns>
@@ -168,4 +168,16 @@ public class Encoder
         return System.Text.Encoding.UTF8.GetString(bytes);
 #endif
     }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Decodes tokens to string using span-based iteration for maximum performance.
+    /// </summary>
+    /// <param name="tokens"></param>
+    /// <returns></returns>
+    public string Decode(ReadOnlySpan<int> tokens)
+    {
+        return _corePbe.DecodeToString(tokens);
+    }
+#endif
 }

@@ -103,4 +103,13 @@ public class Benchmarks
     [Benchmark]
     [BenchmarkCategory("Decode")]
     public string Tiktoken_Decode() => _tiktoken.Decode(_tiktokenEncoded);
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("Explore")]
+    public IReadOnlyCollection<string> Tiktoken_Explore() => _tiktoken.Explore(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("Explore")]
+    public IReadOnlyCollection<Tiktoken.UtfToken> Tiktoken_ExploreUtfSafe() => _tiktoken.ExploreUtfSafe(Data);
 }
