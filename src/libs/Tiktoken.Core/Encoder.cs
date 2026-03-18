@@ -212,18 +212,6 @@ public class Encoder
 
 #if NET8_0_OR_GREATER
     /// <summary>
-    /// Encodes text using parallel processing for large inputs.
-    /// Collects regex matches first, then processes BPE encoding in parallel.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    public IReadOnlyCollection<int> EncodeParallel(string text)
-    {
-        return _corePbe.EncodeNativeParallel(text, _specialTokensSet);
-    }
-
-    /// <summary>
     /// Decodes tokens to string using span-based iteration for maximum performance.
     /// </summary>
     /// <param name="tokens"></param>

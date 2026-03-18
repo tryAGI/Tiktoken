@@ -202,11 +202,4 @@ public class Benchmarks
     public int Tiktoken_CountTokens_FromUtf8() => _tiktoken.CountTokens(_dataUtf8.AsSpan());
 
 
-    [Benchmark(Baseline = true)]
-    [BenchmarkCategory("EncodeParallel")]
-    public IReadOnlyCollection<int> Tiktoken_Encode_Sequential() => _tiktoken.Encode(Data);
-
-    [Benchmark]
-    [BenchmarkCategory("EncodeParallel")]
-    public IReadOnlyCollection<int> Tiktoken_Encode_Parallel() => _tiktoken.EncodeParallel(Data);
 }
