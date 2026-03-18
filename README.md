@@ -20,11 +20,15 @@ We will be happy to accept any PR.
 ```csharp
 using Tiktoken;
 
-var encoder = ModelToEncoder.For("gpt-4o"); // or explicitly using new Encoder(new O200KBase())
+var encoder = TikTokenEncoder.CreateForModel(Models.Gpt4o);
 var tokens = encoder.Encode("hello world"); // [15339, 1917]
 var text = encoder.Decode(tokens); // hello world
 var numberOfTokens = encoder.CountTokens(text); // 2
 var stringTokens = encoder.Explore(text); // ["hello", " world"]
+
+// Alternative APIs:
+var encoder = ModelToEncoder.For("gpt-4o");
+var encoder = new Encoder(new O200KBase());
 ```
 
 ### Load from HuggingFace tokenizer.json

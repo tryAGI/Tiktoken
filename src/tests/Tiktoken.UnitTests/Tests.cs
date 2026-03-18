@@ -237,6 +237,26 @@ public partial class Tests
     }
 
     [TestMethod]
+    public void TikTokenEncoderCreateForModel()
+    {
+        var encoder = TikTokenEncoder.CreateForModel(Models.Gpt4o);
+        var tokens = encoder.Encode("hello world");
+
+        tokens.Count.Should().Be(2);
+
+        // Same cached instance as ModelToEncoder
+        var encoder2 = ModelToEncoder.For("gpt-4o");
+        encoder.Should().BeSameAs(encoder2);
+    }
+
+    [TestMethod]
+    public void TikTokenEncoderTryCreateForModelReturnsNull()
+    {
+        var encoder = TikTokenEncoder.TryCreateForModel("nonexistent-model");
+        encoder.Should().BeNull();
+    }
+
+    [TestMethod]
     public void TokenizerJsonLoadsGpt2()
     {
         var encoding = TokenizerJsonLoader.FromFile("Resources/gpt2.tokenizer.json", name: "gpt2");
