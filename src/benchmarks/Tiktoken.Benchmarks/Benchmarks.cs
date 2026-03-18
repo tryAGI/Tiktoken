@@ -25,10 +25,17 @@ public class Benchmarks
     [Params(Strings.HelloWorld, Strings.KingLear, Strings.Bitcoin)]
     public string Data = string.Empty;
 
+    private List<int> _sharpTokenEncoded = null!;
+    private List<int> _tiktokenSharpEncoded = null!;
+    private IReadOnlyCollection<int> _tiktokenEncoded = null!;
+
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         _tokenizerLib = await TokenizerBuilder.CreateByModelNameAsync("gpt-4");
+        _sharpTokenEncoded = _sharpToken.Encode(Data);
+        _tiktokenSharpEncoded = _tiktokenSharp.Encode(Data);
+        _tiktokenEncoded = _tiktoken.Encode(Data);
     }
     
     [Benchmark(Baseline = true)]
@@ -71,4 +78,17 @@ public class Benchmarks
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
     public int Tiktoken_() => _tiktoken.CountTokens(Data);
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("Decode")]
+    public string SharpTokenV2_0_3_Decode() => _sharpToken.Decode(_sharpTokenEncoded);
+
+    [Benchmark]
+    [BenchmarkCategory("Decode")]
+    public string TiktokenSharpV1_1_5_Decode() => _tiktokenSharp.Decode(_tiktokenSharpEncoded);
+
+    [Benchmark]
+    [BenchmarkCategory("Decode")]
+    public string Tiktoken_Decode() => _tiktoken.Decode(_tiktokenEncoded);
 }
