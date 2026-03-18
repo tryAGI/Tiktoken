@@ -179,5 +179,28 @@ public class Encoder
     {
         return _corePbe.DecodeToString(tokens);
     }
+
+    /// <summary>
+    /// Decodes tokens directly to UTF-8 bytes in a caller-provided buffer for zero-allocation decode.
+    /// </summary>
+    /// <param name="tokens">The tokens to decode.</param>
+    /// <param name="utf8Destination">The destination buffer for UTF-8 bytes.</param>
+    /// <returns>The number of bytes written to <paramref name="utf8Destination"/>.</returns>
+    /// <exception cref="ArgumentException">The destination buffer is too small.</exception>
+    public int DecodeToUtf8(ReadOnlySpan<int> tokens, Span<byte> utf8Destination)
+    {
+        return _corePbe.DecodeToUtf8(tokens, utf8Destination);
+    }
+
+    /// <summary>
+    /// Returns the number of UTF-8 bytes required to decode the given tokens.
+    /// Use this to determine the required buffer size for <see cref="DecodeToUtf8"/>.
+    /// </summary>
+    /// <param name="tokens">The tokens to measure.</param>
+    /// <returns>The number of UTF-8 bytes required.</returns>
+    public int GetDecodedUtf8ByteCount(ReadOnlySpan<int> tokens)
+    {
+        return _corePbe.GetDecodedUtf8ByteCount(tokens);
+    }
 #endif
 }

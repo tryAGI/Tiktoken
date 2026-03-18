@@ -343,6 +343,7 @@ public class CoreBpe
         var values = new List<string>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
+        Span<byte> pieceBytes = stackalloc byte[128];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
@@ -376,27 +377,29 @@ public class CoreBpe
 #if NET7_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
-                var fastKey = new string(textSpan.Slice(match.Index, match.Length));
+                var matchSpan = textSpan.Slice(match.Index, match.Length);
+                var fastKey = new string(matchSpan);
+
+                var piece = GetUtf8Bytes(matchSpan, pieceBytes);
 #else
             foreach (Match match in Regex.Matches(text[start..specialStart]))
             {
                 var matchValue = match.Value;
                 var fastKey = matchValue;
-#endif
 
                 var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+#endif
                 if (Encoder.ContainsKey(piece))
                 {
                     values.Add(fastKey);
                     continue;
                 }
-                
+
                 var pair = BytePairEncoding.BytePairExplore(piece, Encoder);
                 foreach (var bytes in pair)
                 {
                     var value = System.Text.Encoding.UTF8.GetString(bytes);
-                    
+
                     values.Add(value);
                 }
             }
@@ -404,7 +407,7 @@ public class CoreBpe
             if (specialLength != 0)
             {
                 start = specialStart + specialLength;
-                
+
 #if NET7_0_OR_GREATER
                 var piece = new string(textSpan.Slice(specialStart, specialLength));
 #else
@@ -436,6 +439,7 @@ public class CoreBpe
         var values = new List<UtfToken>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
+        Span<byte> pieceBytes = stackalloc byte[128];
 #endif
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
         
@@ -487,16 +491,18 @@ public class CoreBpe
 #if NET7_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchValue = textSpan.Slice(match.Index, match.Length).ToArray();
-                var fastKey = new string(textSpan.Slice(match.Index, match.Length));
+                var matchSpan = textSpan.Slice(match.Index, match.Length);
+                var fastKey = new string(matchSpan);
+
+                var piece = GetUtf8Bytes(matchSpan, pieceBytes);
 #else
             foreach (Match match in Regex.Matches(text[start..specialStart]))
             {
                 var matchValue = match.Value;
                 var fastKey = matchValue;
-#endif
 
                 var piece = System.Text.Encoding.UTF8.GetBytes(matchValue);
+#endif
                 if (Encoder.ContainsKey(piece))
                 {
                     if (highSurrogate)
@@ -721,6 +727,70 @@ public class CoreBpe
         {
             System.Buffers.ArrayPool<byte>.Shared.Return(rented);
         }
+    }
+
+    /// <summary>
+    /// Writes decoded UTF-8 bytes into caller-provided buffer. Returns bytes written.
+    /// </summary>
+    internal int DecodeToUtf8(ReadOnlySpan<int> tokens, Span<byte> utf8Destination)
+    {
+        var offset = 0;
+        for (var i = 0; i < tokens.Length; i++)
+        {
+            byte[]? value;
+            if (Decoder.TryGetValue(tokens[i], out value))
+            {
+                if (offset + value.Length > utf8Destination.Length)
+                {
+                    throw new ArgumentException(
+                        "Destination buffer is too small. Use GetDecodedUtf8ByteCount to determine the required size.",
+                        nameof(utf8Destination));
+                }
+
+                if (value.Length == 1)
+                {
+                    utf8Destination[offset] = value[0];
+                }
+                else
+                {
+                    value.CopyTo(utf8Destination.Slice(offset));
+                }
+                offset += value.Length;
+            }
+            else if (SpecialTokensDecoderBytes.TryGetValue(tokens[i], out var specialBytes))
+            {
+                if (offset + specialBytes.Length > utf8Destination.Length)
+                {
+                    throw new ArgumentException(
+                        "Destination buffer is too small. Use GetDecodedUtf8ByteCount to determine the required size.",
+                        nameof(utf8Destination));
+                }
+
+                specialBytes.CopyTo(utf8Destination.Slice(offset));
+                offset += specialBytes.Length;
+            }
+        }
+        return offset;
+    }
+
+    /// <summary>
+    /// Returns the number of UTF-8 bytes required to decode the given tokens.
+    /// </summary>
+    internal int GetDecodedUtf8ByteCount(ReadOnlySpan<int> tokens)
+    {
+        var count = 0;
+        for (var i = 0; i < tokens.Length; i++)
+        {
+            if (Decoder.TryGetValue(tokens[i], out var value))
+            {
+                count += value.Length;
+            }
+            else if (SpecialTokensDecoderBytes.TryGetValue(tokens[i], out var specialBytes))
+            {
+                count += specialBytes.Length;
+            }
+        }
+        return count;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
