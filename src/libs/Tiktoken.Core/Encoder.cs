@@ -65,6 +65,19 @@ public class Encoder
     {
         return _corePbe.CountTokensFromUtf8(utf8Text);
     }
+
+    /// <summary>
+    /// Encodes UTF-8 text directly into a caller-provided token buffer for zero-allocation encode.
+    /// Use <see cref="CountTokens(ReadOnlySpan{byte})"/> to determine the required buffer size.
+    /// </summary>
+    /// <param name="utf8Text">The UTF-8 encoded text to tokenize.</param>
+    /// <param name="tokenDestination">The destination buffer for token IDs.</param>
+    /// <returns>The number of tokens written to <paramref name="tokenDestination"/>.</returns>
+    /// <exception cref="ArgumentException">The destination buffer is too small.</exception>
+    public int EncodeUtf8(ReadOnlySpan<byte> utf8Text, Span<int> tokenDestination)
+    {
+        return _corePbe.EncodeFromUtf8(utf8Text, tokenDestination, _specialTokensSet);
+    }
 #endif
     
     /// <summary>

@@ -229,6 +229,49 @@ public class CoreBpe
             System.Buffers.ArrayPool<char>.Shared.Return(rented);
         }
     }
+
+    /// <summary>
+    /// Encodes UTF-8 bytes directly into a caller-provided token buffer.
+    /// Converts to chars internally using stackalloc/ArrayPool, then encodes.
+    /// </summary>
+    internal int EncodeFromUtf8(
+        ReadOnlySpan<byte> utf8Text,
+        Span<int> tokenDestination,
+        HashSet<string> disallowedSpecial)
+    {
+        var charCount = System.Text.Encoding.UTF8.GetCharCount(utf8Text);
+        char[]? rentedChars = null;
+        var chars = charCount <= 1024
+            ? stackalloc char[charCount]
+            : (rentedChars = System.Buffers.ArrayPool<char>.Shared.Rent(charCount)).AsSpan(0, charCount);
+
+        try
+        {
+            System.Text.Encoding.UTF8.GetChars(utf8Text, chars);
+            var tokens = EncodeNativeAllDisallowed(chars, disallowedSpecial);
+
+            if (tokens.Count > tokenDestination.Length)
+            {
+                throw new ArgumentException(
+                    "Destination buffer is too small. Use CountTokens to determine the required size.",
+                    nameof(tokenDestination));
+            }
+
+            var i = 0;
+            foreach (var token in tokens)
+            {
+                tokenDestination[i++] = token;
+            }
+            return tokens.Count;
+        }
+        finally
+        {
+            if (rentedChars != null)
+            {
+                System.Buffers.ArrayPool<char>.Shared.Return(rentedChars);
+            }
+        }
+    }
 #endif
 
     /// <summary>

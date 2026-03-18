@@ -202,4 +202,29 @@ public class Benchmarks
     public int Tiktoken_CountTokens_FromUtf8() => _tiktoken.CountTokens(_dataUtf8.AsSpan());
 
 
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("EncodeUtf8")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_Baseline() => _tiktoken.Encode(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("EncodeUtf8")]
+    public int Tiktoken_EncodeUtf8()
+    {
+        var tokenCount = _tiktoken.CountTokens(_dataUtf8.AsSpan());
+        if (tokenCount <= 1024)
+        {
+            Span<int> buffer = stackalloc int[tokenCount];
+            return _tiktoken.EncodeUtf8(_dataUtf8.AsSpan(), buffer);
+        }
+
+        var rented = System.Buffers.ArrayPool<int>.Shared.Rent(tokenCount);
+        try
+        {
+            return _tiktoken.EncodeUtf8(_dataUtf8.AsSpan(), rented.AsSpan(0, tokenCount));
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<int>.Shared.Return(rented);
+        }
+    }
 }
