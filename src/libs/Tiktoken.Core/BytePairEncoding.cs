@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 using Bytes = System.ReadOnlyMemory<byte>;
 #else
 using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
@@ -7,10 +7,14 @@ using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
 namespace Tiktoken.Core;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public static class BytePairEncoding
 {
+    // Maximum number of int elements to stackalloc (2 arrays × this size × 4 bytes each).
+    // 512 elements = 4KB per array = 8KB total on stack, well within safe limits.
+    private const int MaxStackAllocLength = 512;
+
     private static byte[] GetSlice(this Bytes bytes, int from, int to)
     {
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
@@ -19,7 +23,7 @@ public static class BytePairEncoding
         return bytes.Skip(from).Take(to - from).ToArray();
 #endif
     }
-    
+
     private static int GetLength(this Bytes bytes)
     {
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
@@ -28,7 +32,7 @@ public static class BytePairEncoding
         return bytes.Count;
 #endif
     }
-    
+
     private static unsafe bool TryFindMinRank(int* partsRanks, int count, out int result)
     {
         result = 0;
@@ -41,7 +45,7 @@ public static class BytePairEncoding
                 result = i;
             }
         }
-        
+
         return minRank != int.MaxValue;
     }
 
@@ -63,17 +67,17 @@ public static class BytePairEncoding
                 return rank;
             }
         }
-        
+
         return int.MaxValue;
     }
-    
+
     private static unsafe int FindParts(
         Bytes piece,
         int* partsIndexes,
+        int* partsRanks,
+        int partsLength,
         IReadOnlyDictionary<byte[], int> ranks)
     {
-        var partsLength = piece.GetLength() + 1;
-        var partsRanks = stackalloc int [partsLength];
         for (var i = 0; i < partsLength; i++)
         {
             partsIndexes[i] = i;
@@ -83,7 +87,7 @@ public static class BytePairEncoding
         {
             partsRanks[i] = GetRank(i, partsIndexes, partsLength, piece, ranks, length: 2);
         }
-        
+
         var count = partsLength - 1;
         while (true)
         {
@@ -91,7 +95,7 @@ public static class BytePairEncoding
             {
                 break;
             }
-            
+
             partsRanks[i] = GetRank(i, partsIndexes, count + 1, piece, ranks, length: 3);
             if (i > 0)
             {
@@ -104,70 +108,133 @@ public static class BytePairEncoding
             }
             count--;
         }
-        
+
         return count;
     }
-    
+
     internal static unsafe void BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks, List<int> outList)
     {
         var partsLength = piece.GetLength() + 1;
-        var partsIndexes = stackalloc int [partsLength];
-        var count = FindParts(piece, partsIndexes, ranks);
 
-        for (var i = 0; i < count; i++)
+        if (partsLength <= MaxStackAllocLength)
         {
-            var from = partsIndexes[i];
-            var to = partsIndexes[i + 1];
-            var slice = piece.GetSlice(from, to);
+            var partsIndexes = stackalloc int[partsLength];
+            var partsRanks = stackalloc int[partsLength];
+            var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
 
-            outList.Add(ranks[slice]);
+            for (var i = 0; i < count; i++)
+            {
+                outList.Add(ranks[piece.GetSlice(partsIndexes[i], partsIndexes[i + 1])]);
+            }
+        }
+        else
+        {
+            var heapIndexes = new int[partsLength];
+            var heapRanks = new int[partsLength];
+            fixed (int* partsIndexes = heapIndexes)
+            fixed (int* partsRanks = heapRanks)
+            {
+                var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
+
+                for (var i = 0; i < count; i++)
+                {
+                    outList.Add(ranks[piece.GetSlice(partsIndexes[i], partsIndexes[i + 1])]);
+                }
+            }
         }
     }
 
     internal static unsafe int[] BytePairEncodeToArray(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
-        var partsIndexes = stackalloc int [partsLength];
-        var count = FindParts(piece, partsIndexes, ranks);
 
-        var result = new int[count];
-        for (var i = 0; i < count; i++)
+        if (partsLength <= MaxStackAllocLength)
         {
-            var from = partsIndexes[i];
-            var to = partsIndexes[i + 1];
-            var slice = piece.GetSlice(from, to);
+            var partsIndexes = stackalloc int[partsLength];
+            var partsRanks = stackalloc int[partsLength];
+            var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
 
-            result[i] = ranks[slice];
+            var result = new int[count];
+            for (var i = 0; i < count; i++)
+            {
+                result[i] = ranks[piece.GetSlice(partsIndexes[i], partsIndexes[i + 1])];
+            }
+            return result;
         }
+        else
+        {
+            var heapIndexes = new int[partsLength];
+            var heapRanks = new int[partsLength];
+            fixed (int* partsIndexes = heapIndexes)
+            fixed (int* partsRanks = heapRanks)
+            {
+                var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
 
-        return result;
+                var result = new int[count];
+                for (var i = 0; i < count; i++)
+                {
+                    result[i] = ranks[piece.GetSlice(partsIndexes[i], partsIndexes[i + 1])];
+                }
+                return result;
+            }
+        }
     }
-    
+
     internal static unsafe List<byte[]> BytePairExplore(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
-        var partsIndexes = stackalloc int [partsLength];
-        var count = FindParts(piece, partsIndexes, ranks);
-        
-        var outList = new List<byte[]>(count);
-        for (var i = 0; i < count; i++)
+
+        if (partsLength <= MaxStackAllocLength)
         {
-            var from = partsIndexes[i];
-            var to = partsIndexes[i + 1];
-            var slice = piece.GetSlice(from, to);
-            
-            outList.Add(slice);
+            var partsIndexes = stackalloc int[partsLength];
+            var partsRanks = stackalloc int[partsLength];
+            var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
+
+            var outList = new List<byte[]>(count);
+            for (var i = 0; i < count; i++)
+            {
+                outList.Add(piece.GetSlice(partsIndexes[i], partsIndexes[i + 1]));
+            }
+            return outList;
         }
-        
-        return outList;
+        else
+        {
+            var heapIndexes = new int[partsLength];
+            var heapRanks = new int[partsLength];
+            fixed (int* partsIndexes = heapIndexes)
+            fixed (int* partsRanks = heapRanks)
+            {
+                var count = FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
+
+                var outList = new List<byte[]>(count);
+                for (var i = 0; i < count; i++)
+                {
+                    outList.Add(piece.GetSlice(partsIndexes[i], partsIndexes[i + 1]));
+                }
+                return outList;
+            }
+        }
     }
-    
+
     internal static unsafe int BytePairEncodeCountTokens(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
     {
         var partsLength = piece.GetLength() + 1;
-        var partsIndexes = stackalloc int [partsLength];
-        var count = FindParts(piece, partsIndexes, ranks);
-        
-        return count;
+
+        if (partsLength <= MaxStackAllocLength)
+        {
+            var partsIndexes = stackalloc int[partsLength];
+            var partsRanks = stackalloc int[partsLength];
+            return FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
+        }
+        else
+        {
+            var heapIndexes = new int[partsLength];
+            var heapRanks = new int[partsLength];
+            fixed (int* partsIndexes = heapIndexes)
+            fixed (int* partsRanks = heapRanks)
+            {
+                return FindParts(piece, partsIndexes, partsRanks, partsLength, ranks);
+            }
+        }
     }
 }

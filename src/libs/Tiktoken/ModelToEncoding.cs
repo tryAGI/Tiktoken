@@ -1,24 +1,28 @@
-﻿using Tiktoken.Encodings;
+using Tiktoken.Encodings;
 
 namespace Tiktoken;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public static class ModelToEncoding
 {
-    private static Dictionary<string, Encoding> Dictionary { get; } = new()
+    // Lazy singletons — each encoding is loaded only once, on first access.
+    private static readonly Lazy<Encoding> Cl100K = new(static () => new Cl100KBase());
+    private static readonly Lazy<Encoding> O200K = new(static () => new O200KBase());
+
+    private static Dictionary<string, Lazy<Encoding>> Dictionary { get; } = new()
     {
         // chat
-        { "gpt-4o", new O200KBase() },
-        { "gpt-4", new Cl100KBase() },
-        { "gpt-3.5-turbo", new Cl100KBase() },
-        { "gpt-35-turbo", new Cl100KBase() }, // Azure deployment name
-        
+        { "gpt-4o", O200K },
+        { "gpt-4", Cl100K },
+        { "gpt-3.5-turbo", Cl100K },
+        { "gpt-35-turbo", Cl100K }, // Azure deployment name
+
         // embeddings
-        { "text-embedding-ada-002", new Cl100KBase() },
-        { "text-embedding-3-small", new Cl100KBase() },
-        { "text-embedding-3-large", new Cl100KBase() },
+        { "text-embedding-ada-002", Cl100K },
+        { "text-embedding-3-small", Cl100K },
+        { "text-embedding-3-large", Cl100K },
     };
 
     /// <summary>
@@ -29,8 +33,10 @@ public static class ModelToEncoding
     /// <returns></returns>
     public static Encoding? TryFor(string modelName)
     {
-        return Dictionary
+        var lazy = Dictionary
             .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value;
+
+        return lazy?.Value;
     }
 
     /// <summary>
