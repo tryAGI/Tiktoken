@@ -5,7 +5,7 @@ using Tiktoken.Benchmarks;
 var summary = BenchmarkRunner.Run<Benchmarks>();
 var markdownPath = Directory.EnumerateFiles(summary.ResultsDirectoryPath, "*.md").First();
 var markdown = File.ReadAllText(markdownPath);
-var repositoryFolder = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..", "..");
+var repositoryFolder = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", ".."));
 var readmePath = Path.Combine(repositoryFolder, "README.md");
 var readme = File.ReadAllText(readmePath);
 var newReadme = BenchmarksRegex().Replace(readme, $@"<!--BENCHMARKS_START-->

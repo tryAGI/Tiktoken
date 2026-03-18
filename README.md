@@ -33,51 +33,51 @@ You can view the reports for each version [here](benchmarks)
 <!--BENCHMARKS_START-->
 ```
 
-BenchmarkDotNet v0.14.0, macOS Sequoia 15.1 (24B83) [Darwin 24.1.0]
-Apple M1 Pro, 1 CPU, 10 logical and 10 physical cores
-.NET SDK 9.0.100
-  [Host]     : .NET 9.0.0 (9.0.24.52809), Arm64 RyuJIT AdvSIMD
-  DefaultJob : .NET 9.0.0 (9.0.24.52809), Arm64 RyuJIT AdvSIMD
+BenchmarkDotNet v0.15.8, macOS Tahoe 26.3.1 (25D2128) [Darwin 25.3.0]
+Apple M4 Max, 1 CPU, 16 logical and 16 physical cores
+.NET SDK 10.0.201
+  [Host]     : .NET 10.0.5 (10.0.5, 10.0.526.15411), Arm64 RyuJIT armv8.0-a
+  DefaultJob : .NET 10.0.5 (10.0.5, 10.0.526.15411), Arm64 RyuJIT armv8.0-a
 
 
 ```
 | Method                            | Categories  | Data                | Mean         | Ratio | Gen0     | Gen1    | Allocated | Alloc Ratio |
 |---------------------------------- |------------ |-------------------- |-------------:|------:|---------:|--------:|----------:|------------:|
-| **SharpTokenV2_0_3_**                 | **CountTokens** | **1. (...)57. [19866]** | **567,130.0 ns** |  **1.00** |   **2.9297** |       **-** |   **20115 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens | 1. (...)57. [19866] | 483,976.7 ns |  0.85 |  64.4531 |  5.8594 |  404648 B |       20.12 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens | 1. (...)57. [19866] | 427,733.2 ns |  0.75 |        - |       - |     297 B |        0.01 |
-| TokenizerLibV1_3_3_               | CountTokens | 1. (...)57. [19866] | 773,467.5 ns |  1.36 | 246.0938 | 83.9844 | 1547675 B |       76.94 |
-| Tiktoken_                         | CountTokens | 1. (...)57. [19866] | 271,564.3 ns |  0.48 |  23.4375 |       - |  148313 B |        7.37 |
+| **SharpTokenV2_0_3_**                 | **CountTokens** | **1. (...)57. [19866]** | **367,069.9 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens | 1. (...)57. [19866] | 248,732.4 ns |  0.68 |   7.8125 |  0.4883 |   65968 B |        3.28 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens | 1. (...)57. [19866] | 247,020.3 ns |  0.67 |        - |       - |     304 B |        0.02 |
+| TokenizerLibV1_3_3_               | CountTokens | 1. (...)57. [19866] | 500,866.7 ns |  1.36 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
+| Tiktoken_                         | CountTokens | 1. (...)57. [19866] | 199,159.1 ns |  0.54 |  17.5781 |       - |  148312 B |        7.37 |
 |                                   |             |                     |              |       |          |         |           |             |
-| **SharpTokenV2_0_3_**                 | **CountTokens** | **Hello, World!**       |     **380.0 ns** |  **1.00** |   **0.0405** |       **-** |     **256 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens | Hello, World!       |     263.8 ns |  0.69 |   0.0505 |       - |     320 B |        1.25 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens | Hello, World!       |     305.7 ns |  0.80 |   0.0153 |       - |      96 B |        0.38 |
-| TokenizerLibV1_3_3_               | CountTokens | Hello, World!       |     509.6 ns |  1.34 |   0.2356 |  0.0010 |    1480 B |        5.78 |
-| Tiktoken_                         | CountTokens | Hello, World!       |     175.7 ns |  0.46 |   0.0191 |       - |     120 B |        0.47 |
+| **SharpTokenV2_0_3_**                 | **CountTokens** | **Hello, World!**       |     **234.7 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens | Hello, World!       |     166.4 ns |  0.71 |   0.0238 |       - |     200 B |        0.78 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens | Hello, World!       |     185.8 ns |  0.79 |   0.0124 |       - |     104 B |        0.41 |
+| TokenizerLibV1_3_3_               | CountTokens | Hello, World!       |     298.7 ns |  1.27 |   0.1769 |  0.0005 |    1480 B |        5.78 |
+| Tiktoken_                         | CountTokens | Hello, World!       |     122.8 ns |  0.52 |   0.0143 |       - |     120 B |        0.47 |
 |                                   |             |                     |              |       |          |         |           |             |
-| **SharpTokenV2_0_3_**                 | **CountTokens** | **King(...)edy. [275]** |   **5,990.7 ns** |  **1.00** |   **0.0763** |       **-** |     **520 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens | King(...)edy. [275] |   4,516.5 ns |  0.75 |   0.8011 |       - |    5064 B |        9.74 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens | King(...)edy. [275] |   3,871.2 ns |  0.65 |   0.0153 |       - |      96 B |        0.18 |
-| TokenizerLibV1_3_3_               | CountTokens | King(...)edy. [275] |   7,465.8 ns |  1.25 |   3.0823 |  0.1373 |   19344 B |       37.20 |
-| Tiktoken_                         | CountTokens | King(...)edy. [275] |   2,744.5 ns |  0.46 |   0.3128 |       - |    1976 B |        3.80 |
+| **SharpTokenV2_0_3_**                 | **CountTokens** | **King(...)edy. [275]** |   **4,018.7 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens | King(...)edy. [275] |   2,507.5 ns |  0.62 |   0.0916 |       - |     776 B |        1.49 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens | King(...)edy. [275] |   2,096.7 ns |  0.52 |   0.0114 |       - |     104 B |        0.20 |
+| TokenizerLibV1_3_3_               | CountTokens | King(...)edy. [275] |   4,807.5 ns |  1.20 |   2.3117 |  0.0992 |   19344 B |       37.20 |
+| Tiktoken_                         | CountTokens | King(...)edy. [275] |   1,761.0 ns |  0.44 |   0.2346 |       - |    1976 B |        3.80 |
 |                                   |             |                     |              |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**      | **1. (...)57. [19866]** | **568,150.3 ns** |  **1.00** |   **2.9297** |       **-** |   **20115 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode      | 1. (...)57. [19866] | 444,972.1 ns |  0.78 |  64.4531 |  5.8594 |  404649 B |       20.12 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | 1. (...)57. [19866] | 410,970.9 ns |  0.72 |  10.2539 |  0.4883 |   66137 B |        3.29 |
-| TokenizerLibV1_3_3_Encode         | Encode      | 1. (...)57. [19866] | 770,068.9 ns |  1.36 | 246.0938 | 90.8203 | 1547675 B |       76.94 |
-| Tiktoken_Encode                   | Encode      | 1. (...)57. [19866] | 290,030.9 ns |  0.51 |  33.6914 |  1.4648 |  214465 B |       10.66 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**      | **1. (...)57. [19866]** | **393,341.1 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode      | 1. (...)57. [19866] | 250,618.0 ns |  0.64 |   7.8125 |  0.4883 |   65968 B |        3.28 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | 1. (...)57. [19866] | 254,877.6 ns |  0.65 |   7.8125 |  0.4883 |   66144 B |        3.29 |
+| TokenizerLibV1_3_3_Encode         | Encode      | 1. (...)57. [19866] | 502,130.9 ns |  1.28 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
+| Tiktoken_Encode                   | Encode      | 1. (...)57. [19866] | 214,646.0 ns |  0.55 |  25.3906 |  2.9297 |  214464 B |       10.66 |
 |                                   |             |                     |              |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**      | **Hello, World!**       |     **381.2 ns** |  **1.00** |   **0.0405** |       **-** |     **256 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode      | Hello, World!       |     260.2 ns |  0.68 |   0.0505 |       - |     320 B |        1.25 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | Hello, World!       |     325.1 ns |  0.85 |   0.0267 |       - |     168 B |        0.66 |
-| TokenizerLibV1_3_3_Encode         | Encode      | Hello, World!       |     511.6 ns |  1.34 |   0.2356 |       - |    1480 B |        5.78 |
-| Tiktoken_Encode                   | Encode      | Hello, World!       |     241.4 ns |  0.63 |   0.0801 |       - |     504 B |        1.97 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**      | **Hello, World!**       |     **236.9 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode      | Hello, World!       |     170.8 ns |  0.72 |   0.0238 |       - |     200 B |        0.78 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | Hello, World!       |     208.9 ns |  0.88 |   0.0210 |       - |     176 B |        0.69 |
+| TokenizerLibV1_3_3_Encode         | Encode      | Hello, World!       |     301.8 ns |  1.27 |   0.1769 |  0.0005 |    1480 B |        5.78 |
+| Tiktoken_Encode                   | Encode      | Hello, World!       |     163.3 ns |  0.69 |   0.0601 |       - |     504 B |        1.97 |
 |                                   |             |                     |              |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**      | **King(...)edy. [275]** |   **5,957.3 ns** |  **1.00** |   **0.0763** |       **-** |     **520 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode      | King(...)edy. [275] |   4,523.8 ns |  0.76 |   0.8011 |       - |    5064 B |        9.74 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | King(...)edy. [275] |   4,069.8 ns |  0.68 |   0.1144 |       - |     744 B |        1.43 |
-| TokenizerLibV1_3_3_Encode         | Encode      | King(...)edy. [275] |   7,207.8 ns |  1.21 |   3.0823 |  0.1373 |   19344 B |       37.20 |
-| Tiktoken_Encode                   | Encode      | King(...)edy. [275] |   2,945.7 ns |  0.49 |   0.4654 |       - |    2936 B |        5.65 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**      | **King(...)edy. [275]** |   **4,030.5 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode      | King(...)edy. [275] |   2,481.8 ns |  0.62 |   0.0916 |       - |     776 B |        1.49 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode      | King(...)edy. [275] |   2,193.7 ns |  0.54 |   0.0877 |       - |     752 B |        1.45 |
+| TokenizerLibV1_3_3_Encode         | Encode      | King(...)edy. [275] |   4,881.7 ns |  1.21 |   2.3117 |  0.0992 |   19344 B |       37.20 |
+| Tiktoken_Encode                   | Encode      | King(...)edy. [275] |   1,881.4 ns |  0.47 |   0.3510 |       - |    2936 B |        5.65 |
 
 <!--BENCHMARKS_END-->
 

@@ -19,7 +19,7 @@ public class CoreBpe
     private Dictionary<string, int> FastEncoder { get; set; }
 
     internal bool EnableCache { get; set; } = true;
-    private ConcurrentDictionary<string, IReadOnlyCollection<int>> FastCache { get; set; } = new();
+    private ConcurrentDictionary<string, int[]> FastCache { get; set; } = new();
     private ConcurrentDictionary<string, int> FastCacheCounts { get; set; } = new();
 
     private Regex SpecialRegex { get; set; }
@@ -216,12 +216,15 @@ public class CoreBpe
                     continue;
                 }
                 
-                var pair = BytePairEncoding.BytePairEncode(piece, Encoder);
-                tokens.AddRange(pair);
-
                 if (EnableCache)
                 {
+                    var pair = BytePairEncoding.BytePairEncodeToArray(piece, Encoder);
+                    tokens.AddRange(pair);
                     FastCache[fastKey] = pair;
+                }
+                else
+                {
+                    BytePairEncoding.BytePairEncode(piece, Encoder, tokens);
                 }
             }
 

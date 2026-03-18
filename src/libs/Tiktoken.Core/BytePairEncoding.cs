@@ -108,23 +108,39 @@ public static class BytePairEncoding
         return count;
     }
     
-    internal static unsafe List<int> BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    internal static unsafe void BytePairEncode(Bytes piece, IReadOnlyDictionary<byte[], int> ranks, List<int> outList)
     {
         var partsLength = piece.GetLength() + 1;
         var partsIndexes = stackalloc int [partsLength];
         var count = FindParts(piece, partsIndexes, ranks);
-        
-        var outList = new List<int>(count);
+
         for (var i = 0; i < count; i++)
         {
             var from = partsIndexes[i];
             var to = partsIndexes[i + 1];
             var slice = piece.GetSlice(from, to);
-            
+
             outList.Add(ranks[slice]);
         }
-        
-        return outList;
+    }
+
+    internal static unsafe int[] BytePairEncodeToArray(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
+    {
+        var partsLength = piece.GetLength() + 1;
+        var partsIndexes = stackalloc int [partsLength];
+        var count = FindParts(piece, partsIndexes, ranks);
+
+        var result = new int[count];
+        for (var i = 0; i < count; i++)
+        {
+            var from = partsIndexes[i];
+            var to = partsIndexes[i + 1];
+            var slice = piece.GetSlice(from, to);
+
+            result[i] = ranks[slice];
+        }
+
+        return result;
     }
     
     internal static unsafe List<byte[]> BytePairExplore(Bytes piece, IReadOnlyDictionary<byte[], int> ranks)
