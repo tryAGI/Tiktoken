@@ -251,6 +251,98 @@ public class Encoder
     }
 
     /// <summary>
+    /// Counts total tokens for chat messages plus function/tool definitions.
+    /// </summary>
+    /// <remarks>
+    /// Tool token counting is based on reverse-engineered formulas from the OpenAI Cookbook
+    /// and community research. OpenAI internally converts function definitions to a TypeScript
+    /// namespace format before tokenizing. The overhead constants used here (funcInit=7,
+    /// propInit=3, propKey=3, funcEnd=12) are for gpt-4o and newer models.
+    /// <para>
+    /// For exact counts, use OpenAI's server-side token counting API.
+    /// </para>
+    /// </remarks>
+    /// <param name="messages">The chat messages.</param>
+    /// <param name="tools">The function/tool definitions.</param>
+    /// <param name="tokensPerMessage">Overhead tokens per message (default: 3).</param>
+    /// <param name="tokensPerName">Extra tokens when a message has a name (default: 1).</param>
+    /// <returns>The total token count for messages and tools.</returns>
+    public int CountMessageTokens(
+        IReadOnlyList<ChatMessage> messages,
+        IReadOnlyList<ChatFunction> tools,
+        int tokensPerMessage = 3,
+        int tokensPerName = 1)
+    {
+        tools = tools ?? throw new ArgumentNullException(nameof(tools));
+
+        var count = CountMessageTokens(messages, tokensPerMessage, tokensPerName);
+        count += CountToolTokens(tools);
+        return count;
+    }
+
+    /// <summary>
+    /// Counts tokens consumed by function/tool definitions using the OpenAI Cookbook formula.
+    /// Each function adds: funcInit (7) + encoded name:description + property overhead + funcEnd (12).
+    /// </summary>
+    /// <remarks>
+    /// Based on the OpenAI Cookbook formula for gpt-4o and newer models.
+    /// The overhead constants are: funcInit=7, propInit=3, propKey=3, enumInit=-3, enumItem=3, funcEnd=12.
+    /// </remarks>
+    /// <param name="tools">The function/tool definitions.</param>
+    /// <returns>The token count for the tool definitions.</returns>
+    public int CountToolTokens(IReadOnlyList<ChatFunction> tools)
+    {
+        tools = tools ?? throw new ArgumentNullException(nameof(tools));
+
+        const int funcInit = 7;
+        const int propInit = 3;
+        const int propKey = 3;
+        const int enumInit = -3;
+        const int enumItem = 3;
+        const int funcEnd = 12;
+
+        var count = 0;
+        for (var i = 0; i < tools.Count; i++)
+        {
+            var tool = tools[i];
+            count += funcInit;
+
+            // Tokenize "name:description" (trailing period stripped per OpenAI behavior)
+            var desc = tool.Description.TrimEnd('.');
+            count += CountTokens(tool.Name + ":" + desc);
+
+            if (tool.Parameters != null && tool.Parameters.Count > 0)
+            {
+                count += propInit;
+
+                for (var j = 0; j < tool.Parameters.Count; j++)
+                {
+                    var param = tool.Parameters[j];
+                    count += propKey;
+
+                    // Tokenize "key:type:description" (trailing period stripped)
+                    var paramDesc = param.Description.TrimEnd('.');
+                    count += CountTokens(param.Name + ":" + param.Type + ":" + paramDesc);
+
+                    if (param.EnumValues != null && param.EnumValues.Count > 0)
+                    {
+                        count += enumInit;
+                        for (var k = 0; k < param.EnumValues.Count; k++)
+                        {
+                            count += enumItem;
+                            count += CountTokens(param.EnumValues[k]);
+                        }
+                    }
+                }
+            }
+
+            count += funcEnd;
+        }
+
+        return count;
+    }
+
+    /// <summary>
     ///
     /// </summary>
     /// <param name="tokens"></param>

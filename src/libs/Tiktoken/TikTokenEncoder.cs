@@ -44,4 +44,40 @@ public static class TikTokenEncoder
     {
         return new Encoder(ModelToEncoding.ForEncoding(encodingName));
     }
+
+    /// <summary>
+    /// Counts total tokens for chat messages using the specified model's encoding.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// var messages = new List&lt;ChatMessage&gt;
+    /// {
+    ///     new("system", "You are a helpful assistant."),
+    ///     new("user", "What is 2+2?"),
+    /// };
+    /// int count = TikTokenEncoder.CountMessageTokens("gpt-4o", messages);
+    /// </code>
+    /// </example>
+    /// <param name="modelName">Model name (e.g., "gpt-4o").</param>
+    /// <param name="messages">The chat messages.</param>
+    /// <returns>The total token count.</returns>
+    public static int CountMessageTokens(string modelName, IReadOnlyList<ChatMessage> messages)
+    {
+        return CreateForModel(modelName).CountMessageTokens(messages);
+    }
+
+    /// <summary>
+    /// Counts total tokens for chat messages and tool definitions using the specified model's encoding.
+    /// </summary>
+    /// <param name="modelName">Model name (e.g., "gpt-4o").</param>
+    /// <param name="messages">The chat messages.</param>
+    /// <param name="tools">The function/tool definitions.</param>
+    /// <returns>The total token count including messages and tools.</returns>
+    public static int CountMessageTokens(
+        string modelName,
+        IReadOnlyList<ChatMessage> messages,
+        IReadOnlyList<ChatFunction> tools)
+    {
+        return CreateForModel(modelName).CountMessageTokens(messages, tools);
+    }
 }

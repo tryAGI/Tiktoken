@@ -478,4 +478,106 @@ public partial class Tests
         // Only reply priming: 3
         count.Should().Be(3);
     }
+
+    [TestMethod]
+    public void CountToolTokensBasic()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>
+        {
+            new("get_weather", "Get the current weather", new List<FunctionParameter>
+            {
+                new("location", "string", "The city name", isRequired: true),
+                new("unit", "string", "Temperature unit", enumValues: new[] { "celsius", "fahrenheit" }),
+            }),
+        };
+
+        var count = encoder.CountToolTokens(tools);
+
+        // Should be > 0 and include overhead: funcInit(7) + funcEnd(12) + propInit(3) + 2*propKey(6) + enum handling
+        count.Should().BeGreaterThan(30);
+    }
+
+    [TestMethod]
+    public void CountToolTokensNoParams()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>
+        {
+            new("do_nothing", "A function with no parameters"),
+        };
+
+        var count = encoder.CountToolTokens(tools);
+
+        // funcInit(7) + tokenize("do_nothing:A function with no parameters") + funcEnd(12)
+        count.Should().BeGreaterThan(19);
+    }
+
+    [TestMethod]
+    public void CountToolTokensEmpty()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>();
+
+        var count = encoder.CountToolTokens(tools);
+
+        count.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void CountMessageTokensWithTools()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var messages = new List<ChatMessage>
+        {
+            new("user", "What's the weather?"),
+        };
+        var tools = new List<ChatFunction>
+        {
+            new("get_weather", "Get weather", new List<FunctionParameter>
+            {
+                new("city", "string", "City name", isRequired: true),
+            }),
+        };
+
+        var countWithTools = encoder.CountMessageTokens(messages, tools);
+        var countWithoutTools = encoder.CountMessageTokens(messages);
+
+        // With tools should be larger
+        countWithTools.Should().BeGreaterThan(countWithoutTools);
+        // The difference should equal the tool tokens
+        (countWithTools - countWithoutTools).Should().Be(encoder.CountToolTokens(tools));
+    }
+
+    [TestMethod]
+    public void TikTokenEncoderCountMessageTokensStatic()
+    {
+        var messages = new List<ChatMessage>
+        {
+            new("user", "hello world"),
+        };
+
+        var count = TikTokenEncoder.CountMessageTokens("gpt-4o", messages);
+
+        // Should match the instance method
+        var encoder = TikTokenEncoder.CreateForModel("gpt-4o");
+        count.Should().Be(encoder.CountMessageTokens(messages));
+    }
+
+    [TestMethod]
+    public void TikTokenEncoderCountMessageTokensWithToolsStatic()
+    {
+        var messages = new List<ChatMessage>
+        {
+            new("user", "hello"),
+        };
+        var tools = new List<ChatFunction>
+        {
+            new("greet", "Say hello"),
+        };
+
+        var count = TikTokenEncoder.CountMessageTokens("gpt-4o", messages, tools);
+
+        count.Should().BeGreaterThan(0);
+    }
 }
