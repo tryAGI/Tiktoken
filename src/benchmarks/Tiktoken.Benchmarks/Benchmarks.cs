@@ -33,6 +33,7 @@ public class Benchmarks
     private int[] _tokenizerLibEncoded = null!;
     private int[] _tiktokenEncodedArray = null!;
     private int[] _tiktokenO200KEncodedArray = null!;
+    private byte[] _dataUtf8 = null!;
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -45,6 +46,7 @@ public class Benchmarks
         _tokenizerLibEncoded = _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty).ToArray();
         _tiktokenEncodedArray = _tiktokenEncoded.ToArray();
         _tiktokenO200KEncodedArray = _tiktokenO200K.Encode(Data).ToArray();
+        _dataUtf8 = System.Text.Encoding.UTF8.GetBytes(Data);
     }
     
     [Benchmark(Baseline = true)]
@@ -189,4 +191,22 @@ public class Benchmarks
     [Benchmark]
     [BenchmarkCategory("EncodeSpan")]
     public IReadOnlyCollection<int> Tiktoken_Encode_Span() => _tiktoken.Encode(Data.AsSpan());
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("CountTokensUtf8")]
+    public int Tiktoken_CountTokens_FromString() => _tiktoken.CountTokens(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("CountTokensUtf8")]
+    public int Tiktoken_CountTokens_FromUtf8() => _tiktoken.CountTokens(_dataUtf8.AsSpan());
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("EncodeParallel")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_Sequential() => _tiktoken.Encode(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("EncodeParallel")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_Parallel() => _tiktoken.EncodeParallel(Data);
 }

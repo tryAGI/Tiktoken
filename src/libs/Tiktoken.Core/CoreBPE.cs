@@ -204,8 +204,35 @@ public class CoreBpe
     }
 #endif
     
+#if NET7_0_OR_GREATER
     /// <summary>
-    /// 
+    /// Counts tokens from UTF-8 bytes, converting to chars internally using stackalloc/ArrayPool.
+    /// </summary>
+    internal int CountTokensFromUtf8(ReadOnlySpan<byte> utf8Text)
+    {
+        var charCount = System.Text.Encoding.UTF8.GetCharCount(utf8Text);
+        if (charCount <= 1024)
+        {
+            Span<char> chars = stackalloc char[charCount];
+            System.Text.Encoding.UTF8.GetChars(utf8Text, chars);
+            return CountTokensNative(chars);
+        }
+
+        var rented = System.Buffers.ArrayPool<char>.Shared.Rent(charCount);
+        try
+        {
+            System.Text.Encoding.UTF8.GetChars(utf8Text, rented.AsSpan(0, charCount));
+            return CountTokensNative(rented.AsSpan(0, charCount));
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<char>.Shared.Return(rented);
+        }
+    }
+#endif
+
+    /// <summary>
+    ///
     /// </summary>
     /// <param name="text"></param>
     /// <param name="allowedSpecial"></param>
@@ -350,8 +377,168 @@ public class CoreBpe
         return tokens;
     }
     
+#if NET8_0_OR_GREATER
     /// <summary>
-    /// 
+    /// Parallel encode for large texts. Collects regex matches first, then processes
+    /// BPE encoding in parallel. Results are concatenated in original order.
+    /// </summary>
+    internal IReadOnlyCollection<int> EncodeNativeParallel(
+        string text,
+        HashSet<string> disallowedSpecial)
+    {
+        text = text ?? throw new ArgumentNullException(nameof(text));
+
+        var textSpan = text.AsSpan();
+
+        // Check for special tokens
+        foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
+        {
+            var value = new string(textSpan.Slice(match.Index, match.Length));
+            if (disallowedSpecial.Contains(value))
+            {
+                throw new InvalidOperationException(value);
+            }
+        }
+
+        // Phase 1: Collect all regex match ranges
+        var matchRanges = new List<(int Index, int Length)>();
+        foreach (var match in Regex.EnumerateMatches(textSpan))
+        {
+            matchRanges.Add((match.Index, match.Length));
+        }
+
+        if (matchRanges.Count == 0) return Array.Empty<int>();
+
+        // Phase 2: Process each match in parallel
+        var results = new int[matchRanges.Count][];
+
+        Parallel.For(0, matchRanges.Count, i =>
+        {
+            var (index, length) = matchRanges[i];
+            var matchStr = text.Substring(index, length);
+
+            if (FastEncoder.TryGetValue(matchStr, out var fastToken))
+            {
+                results[i] = [fastToken];
+                return;
+            }
+            if (EnableCache && FastCache.TryGetValue(matchStr, out var fastTokens))
+            {
+                results[i] = fastTokens;
+                return;
+            }
+
+            var piece = System.Text.Encoding.UTF8.GetBytes(matchStr);
+            if (Encoder.TryGetValue(piece, out var token))
+            {
+                results[i] = [token];
+                return;
+            }
+
+            var pair = BytePairEncoding.BytePairEncodeToArray(piece, Encoder);
+            if (EnableCache) FastCache[matchStr] = pair;
+            results[i] = pair;
+        });
+
+        // Phase 3: Concatenate in order
+        var totalCount = 0;
+        for (var i = 0; i < results.Length; i++) totalCount += results[i].Length;
+
+        var tokens = new List<int>(totalCount);
+        for (var i = 0; i < results.Length; i++) tokens.AddRange(results[i]);
+
+        return tokens;
+    }
+#endif
+
+#if NET7_0_OR_GREATER
+    /// <summary>
+    /// Optimized encode path for the common case where all special tokens are disallowed.
+    /// Accepts ReadOnlySpan&lt;char&gt; to avoid string allocation when input is already a span.
+    /// </summary>
+    internal IReadOnlyCollection<int> EncodeNativeAllDisallowed(
+        ReadOnlySpan<char> text,
+        HashSet<string> disallowedSpecial)
+    {
+        // Any special token match is an error
+        foreach (var match in SpecialRegex.EnumerateMatches(text))
+        {
+            var value = new string(text.Slice(match.Index, match.Length));
+            if (disallowedSpecial.Contains(value))
+            {
+                throw new InvalidOperationException(value);
+            }
+        }
+
+        var tokens = new List<int>();
+        Span<byte> pieceBytes = stackalloc byte[128];
+
+#if NET9_0_OR_GREATER
+        var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
+        var fastCacheLookup = FastCache.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        foreach (var match in Regex.EnumerateMatches(text))
+        {
+            var fastKey = text.Slice(match.Index, match.Length);
+
+            if (fastEncoderLookup.TryGetValue(fastKey, out var fastToken))
+            {
+                tokens.Add(fastToken);
+                continue;
+            }
+            if (EnableCache && fastCacheLookup.TryGetValue(fastKey, out var fastTokens))
+            {
+                tokens.AddRange(fastTokens);
+                continue;
+            }
+
+            var piece = GetUtf8Bytes(fastKey, pieceBytes);
+#else
+        foreach (var match in Regex.EnumerateMatches(text))
+        {
+            var fastKey = new string(text.Slice(match.Index, match.Length));
+
+            if (FastEncoder.TryGetValue(fastKey, out var fastToken))
+            {
+                tokens.Add(fastToken);
+                continue;
+            }
+            if (EnableCache && FastCache.TryGetValue(fastKey, out var fastTokens))
+            {
+                tokens.AddRange(fastTokens);
+                continue;
+            }
+
+            var piece = GetUtf8Bytes(text.Slice(match.Index, match.Length), pieceBytes);
+#endif
+            if (Encoder.TryGetValue(piece, out var token))
+            {
+                tokens.Add(token);
+                continue;
+            }
+
+            if (EnableCache)
+            {
+                var pair = BytePairEncoding.BytePairEncodeToArray(piece, Encoder);
+                tokens.AddRange(pair);
+#if NET9_0_OR_GREATER
+                fastCacheLookup[fastKey] = pair;
+#else
+                FastCache[fastKey] = pair;
+#endif
+            }
+            else
+            {
+                BytePairEncoding.BytePairEncode(piece, Encoder, tokens);
+            }
+        }
+
+        return tokens;
+    }
+#endif
+
+    /// <summary>
+    ///
     /// </summary>
     /// <param name="text"></param>
     /// <param name="allowedSpecial"></param>

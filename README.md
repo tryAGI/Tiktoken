@@ -43,122 +43,140 @@ Apple M4 Max, 1 CPU, 16 logical and 16 physical cores
 ```
 | Method                            | Categories        | Data                | Mean          | Ratio | Gen0     | Gen1    | Allocated | Alloc Ratio |
 |---------------------------------- |------------------ |-------------------- |--------------:|------:|---------:|--------:|----------:|------------:|
-| **SharpTokenV2_0_3_**                 | **CountTokens**       | **1. (...)57. [19866]** | **348,613.47 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens       | 1. (...)57. [19866] | 236,894.32 ns |  0.68 |   7.8125 |  0.7324 |   65968 B |        3.28 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | 1. (...)57. [19866] | 236,372.17 ns |  0.68 |        - |       - |     304 B |        0.02 |
-| TokenizerLibV1_3_3_               | CountTokens       | 1. (...)57. [19866] | 513,570.57 ns |  1.47 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
-| Tiktoken_                         | CountTokens       | 1. (...)57. [19866] | 152,146.46 ns |  0.44 |        - |       - |         - |        0.00 |
+| **SharpTokenV2_0_3_**                 | **CountTokens**       | **1. (...)57. [19866]** | **395,640.32 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens       | 1. (...)57. [19866] | 246,965.33 ns |  0.63 |   7.8125 |  0.4883 |   65968 B |        3.28 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | 1. (...)57. [19866] | 251,585.20 ns |  0.64 |        - |       - |     304 B |        0.02 |
+| TokenizerLibV1_3_3_               | CountTokens       | 1. (...)57. [19866] | 489,143.33 ns |  1.24 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
+| Tiktoken_                         | CountTokens       | 1. (...)57. [19866] | 158,518.64 ns |  0.40 |        - |       - |         - |        0.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_**                 | **CountTokens**       | **Hello, World!**       |     **225.87 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens       | Hello, World!       |     164.45 ns |  0.73 |   0.0238 |       - |     200 B |        0.78 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | Hello, World!       |     186.90 ns |  0.83 |   0.0124 |       - |     104 B |        0.41 |
-| TokenizerLibV1_3_3_               | CountTokens       | Hello, World!       |     289.58 ns |  1.28 |   0.1769 |  0.0005 |    1480 B |        5.78 |
-| Tiktoken_                         | CountTokens       | Hello, World!       |      98.47 ns |  0.44 |        - |       - |         - |        0.00 |
+| **SharpTokenV2_0_3_**                 | **CountTokens**       | **Hello, World!**       |     **230.81 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens       | Hello, World!       |     170.55 ns |  0.74 |   0.0238 |       - |     200 B |        0.78 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | Hello, World!       |     185.16 ns |  0.80 |   0.0124 |       - |     104 B |        0.41 |
+| TokenizerLibV1_3_3_               | CountTokens       | Hello, World!       |     295.45 ns |  1.28 |   0.1769 |  0.0005 |    1480 B |        5.78 |
+| Tiktoken_                         | CountTokens       | Hello, World!       |     112.81 ns |  0.49 |        - |       - |         - |        0.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_**                 | **CountTokens**       | **King(...)edy. [275]** |   **3,894.70 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
-| TiktokenSharpV1_1_5_              | CountTokens       | King(...)edy. [275] |   2,418.81 ns |  0.62 |   0.0916 |       - |     776 B |        1.49 |
-| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | King(...)edy. [275] |   2,077.94 ns |  0.53 |   0.0114 |       - |     104 B |        0.20 |
-| TokenizerLibV1_3_3_               | CountTokens       | King(...)edy. [275] |   4,651.70 ns |  1.19 |   2.3117 |  0.0992 |   19344 B |       37.20 |
-| Tiktoken_                         | CountTokens       | King(...)edy. [275] |   1,371.85 ns |  0.35 |   0.0038 |       - |      32 B |        0.06 |
+| **SharpTokenV2_0_3_**                 | **CountTokens**       | **King(...)edy. [275]** |   **3,936.01 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
+| TiktokenSharpV1_1_5_              | CountTokens       | King(...)edy. [275] |   2,478.27 ns |  0.63 |   0.0916 |       - |     776 B |        1.49 |
+| MicrosoftMLTokenizerV1_0_0_       | CountTokens       | King(...)edy. [275] |   2,085.47 ns |  0.53 |   0.0114 |       - |     104 B |        0.20 |
+| TokenizerLibV1_3_3_               | CountTokens       | King(...)edy. [275] |   4,681.36 ns |  1.19 |   2.3117 |  0.0992 |   19344 B |       37.20 |
+| Tiktoken_                         | CountTokens       | King(...)edy. [275] |   1,398.44 ns |  0.36 |   0.0038 |       - |      32 B |        0.06 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **1. (...)57. [19866]** | **151,192.68 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
-| Tiktoken_CountTokens_Span         | CountTokensSpan   | 1. (...)57. [19866] | 151,751.78 ns |  1.00 |        - |       - |         - |          NA |
+| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **1. (...)57. [19866]** | **155,989.85 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_CountTokens_Span         | CountTokensSpan   | 1. (...)57. [19866] | 155,544.13 ns |  1.00 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **Hello, World!**       |     **100.42 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
-| Tiktoken_CountTokens_Span         | CountTokensSpan   | Hello, World!       |      99.81 ns |  0.99 |        - |       - |         - |          NA |
+| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **Hello, World!**       |      **99.99 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_CountTokens_Span         | CountTokensSpan   | Hello, World!       |      99.90 ns |  1.00 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **King(...)edy. [275]** |   **1,384.27 ns** |  **1.00** |   **0.0038** |       **-** |      **32 B** |        **1.00** |
-| Tiktoken_CountTokens_Span         | CountTokensSpan   | King(...)edy. [275] |   1,375.33 ns |  0.99 |   0.0038 |       - |      32 B |        1.00 |
+| **Tiktoken_CountTokens_String**       | **CountTokensSpan**   | **King(...)edy. [275]** |   **1,397.43 ns** |  **1.00** |   **0.0038** |       **-** |      **32 B** |        **1.00** |
+| Tiktoken_CountTokens_Span         | CountTokensSpan   | King(...)edy. [275] |   1,391.35 ns |  1.00 |   0.0038 |       - |      32 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **1. (...)57. [19866]** | **155,091.36 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
-| Tiktoken_o200k_CountTokens        | CountTokens_o200k | 1. (...)57. [19866] | 179,129.30 ns |  1.16 |        - |       - |         - |          NA |
+| **Tiktoken_CountTokens_FromString**   | **CountTokensUtf8**   | **1. (...)57. [19866]** | **155,492.65 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_CountTokens_FromUtf8     | CountTokensUtf8   | 1. (...)57. [19866] | 155,085.59 ns |  1.00 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **Hello, World!**       |     **100.70 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
-| Tiktoken_o200k_CountTokens        | CountTokens_o200k | Hello, World!       |     111.06 ns |  1.10 |        - |       - |         - |          NA |
+| **Tiktoken_CountTokens_FromString**   | **CountTokensUtf8**   | **Hello, World!**       |     **102.32 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_CountTokens_FromUtf8     | CountTokensUtf8   | Hello, World!       |     107.62 ns |  1.05 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **King(...)edy. [275]** |   **1,385.04 ns** |  **1.00** |   **0.0038** |       **-** |      **32 B** |        **1.00** |
-| Tiktoken_o200k_CountTokens        | CountTokens_o200k | King(...)edy. [275] |   1,488.69 ns |  1.07 |   0.0038 |       - |      32 B |        1.00 |
+| **Tiktoken_CountTokens_FromString**   | **CountTokensUtf8**   | **King(...)edy. [275]** |   **1,393.31 ns** |  **1.00** |   **0.0038** |       **-** |      **32 B** |        **1.00** |
+| Tiktoken_CountTokens_FromUtf8     | CountTokensUtf8   | King(...)edy. [275] |   1,438.62 ns |  1.03 |   0.0038 |       - |      32 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Decode**           | **Decode**            | **1. (...)57. [19866]** |  **45,851.36 ns** |  **1.00** |  **14.8926** |       **-** |  **125232 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Decode        | Decode            | 1. (...)57. [19866] |  35,104.78 ns |  0.77 |  15.8691 |  2.6245 |  133400 B |        1.07 |
-| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | 1. (...)57. [19866] |  67,549.84 ns |  1.47 |   4.6387 |       - |   39800 B |        0.32 |
-| TokenizerLibV1_3_3_Decode         | Decode            | 1. (...)57. [19866] |  46,262.32 ns |  1.01 |  28.0151 |  2.9297 |  234680 B |        1.87 |
-| Tiktoken_Decode                   | Decode            | 1. (...)57. [19866] |  27,105.12 ns |  0.59 |   4.7302 |       - |   39760 B |        0.32 |
+| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **1. (...)57. [19866]** | **159,303.83 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_o200k_CountTokens        | CountTokens_o200k | 1. (...)57. [19866] | 184,700.05 ns |  1.16 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Decode**           | **Decode**            | **Hello, World!**       |      **59.22 ns** |  **1.00** |   **0.0564** |       **-** |     **472 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Decode        | Decode            | Hello, World!       |      42.00 ns |  0.71 |   0.0105 |       - |      88 B |        0.19 |
-| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | Hello, World!       |      46.30 ns |  0.78 |   0.0105 |       - |      88 B |        0.19 |
-| TokenizerLibV1_3_3_Decode         | Decode            | Hello, World!       |      45.60 ns |  0.77 |   0.0344 |       - |     288 B |        0.61 |
-| Tiktoken_Decode                   | Decode            | Hello, World!       |      22.44 ns |  0.38 |   0.0057 |       - |      48 B |        0.10 |
+| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **Hello, World!**       |     **105.32 ns** |  **1.00** |        **-** |       **-** |         **-** |          **NA** |
+| Tiktoken_o200k_CountTokens        | CountTokens_o200k | Hello, World!       |     113.54 ns |  1.08 |        - |       - |         - |          NA |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Decode**           | **Decode**            | **King(...)edy. [275]** |     **542.80 ns** |  **1.00** |   **0.2146** |       **-** |    **1800 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Decode        | Decode            | King(...)edy. [275] |     455.72 ns |  0.84 |   0.0734 |       - |     616 B |        0.34 |
-| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | King(...)edy. [275] |     559.89 ns |  1.03 |   0.0734 |       - |     616 B |        0.34 |
-| TokenizerLibV1_3_3_Decode         | Decode            | King(...)edy. [275] |     437.23 ns |  0.81 |   0.3901 |  0.0005 |    3264 B |        1.81 |
-| Tiktoken_Decode                   | Decode            | King(...)edy. [275] |     233.96 ns |  0.43 |   0.0687 |       - |     576 B |        0.32 |
+| **Tiktoken_cl100k_CountTokens**       | **CountTokens_o200k** | **King(...)edy. [275]** |   **1,402.98 ns** |  **1.00** |   **0.0038** |       **-** |      **32 B** |        **1.00** |
+| Tiktoken_o200k_CountTokens        | CountTokens_o200k | King(...)edy. [275] |   1,510.67 ns |  1.08 |   0.0038 |       - |      32 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **1. (...)57. [19866]** |  **27,301.37 ns** |  **1.00** |   **4.7302** |       **-** |   **39760 B** |        **1.00** |
-| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | 1. (...)57. [19866] |  27,008.63 ns |  0.99 |        - |       - |         - |        0.00 |
+| **SharpTokenV2_0_3_Decode**           | **Decode**            | **1. (...)57. [19866]** |  **47,949.27 ns** |  **1.00** |  **14.8926** |       **-** |  **125232 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Decode        | Decode            | 1. (...)57. [19866] |  36,451.39 ns |  0.76 |  15.8691 |  2.6245 |  133400 B |        1.07 |
+| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | 1. (...)57. [19866] |  69,771.13 ns |  1.46 |   4.6387 |       - |   39800 B |        0.32 |
+| TokenizerLibV1_3_3_Decode         | Decode            | 1. (...)57. [19866] |  47,515.18 ns |  0.99 |  28.0151 |  2.9297 |  234680 B |        1.87 |
+| Tiktoken_Decode                   | Decode            | 1. (...)57. [19866] |  27,829.35 ns |  0.58 |   4.7302 |       - |   39760 B |        0.32 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **Hello, World!**       |      **23.08 ns** |  **1.00** |   **0.0057** |       **-** |      **48 B** |        **1.00** |
-| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | Hello, World!       |      14.53 ns |  0.63 |        - |       - |         - |        0.00 |
+| **SharpTokenV2_0_3_Decode**           | **Decode**            | **Hello, World!**       |      **59.52 ns** |  **1.00** |   **0.0564** |       **-** |     **472 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Decode        | Decode            | Hello, World!       |      43.59 ns |  0.73 |   0.0105 |       - |      88 B |        0.19 |
+| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | Hello, World!       |      47.41 ns |  0.80 |   0.0105 |       - |      88 B |        0.19 |
+| TokenizerLibV1_3_3_Decode         | Decode            | Hello, World!       |      46.06 ns |  0.77 |   0.0344 |       - |     288 B |        0.61 |
+| Tiktoken_Decode                   | Decode            | Hello, World!       |      23.51 ns |  0.39 |   0.0057 |       - |      48 B |        0.10 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **King(...)edy. [275]** |     **242.21 ns** |  **1.00** |   **0.0687** |       **-** |     **576 B** |        **1.00** |
-| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | King(...)edy. [275] |     245.46 ns |  1.01 |        - |       - |         - |        0.00 |
+| **SharpTokenV2_0_3_Decode**           | **Decode**            | **King(...)edy. [275]** |     **552.59 ns** |  **1.00** |   **0.2146** |       **-** |    **1800 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Decode        | Decode            | King(...)edy. [275] |     466.91 ns |  0.84 |   0.0734 |       - |     616 B |        0.34 |
+| MicrosoftMLTokenizerV1_0_0_Decode | Decode            | King(...)edy. [275] |     568.44 ns |  1.03 |   0.0734 |       - |     616 B |        0.34 |
+| TokenizerLibV1_3_3_Decode         | Decode            | King(...)edy. [275] |     456.15 ns |  0.83 |   0.3901 |  0.0005 |    3264 B |        1.81 |
+| Tiktoken_Decode                   | Decode            | King(...)edy. [275] |     252.60 ns |  0.46 |   0.0687 |       - |     576 B |        0.32 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **1. (...)57. [19866]** |  **27,400.05 ns** |  **1.00** |   **4.7302** |       **-** |   **39760 B** |        **1.00** |
-| Tiktoken_o200k_Decode             | Decode_o200k      | 1. (...)57. [19866] |  28,053.16 ns |  1.02 |   4.7302 |       - |   39760 B |        1.00 |
+| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **1. (...)57. [19866]** |  **28,276.91 ns** |  **1.00** |   **4.7302** |       **-** |   **39760 B** |        **1.00** |
+| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | 1. (...)57. [19866] |  28,032.22 ns |  0.99 |        - |       - |         - |        0.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **Hello, World!**       |      **23.34 ns** |  **1.00** |   **0.0057** |       **-** |      **48 B** |        **1.00** |
-| Tiktoken_o200k_Decode             | Decode_o200k      | Hello, World!       |      22.11 ns |  0.95 |   0.0057 |       - |      48 B |        1.00 |
+| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **Hello, World!**       |      **23.36 ns** |  **1.00** |   **0.0057** |       **-** |      **48 B** |        **1.00** |
+| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | Hello, World!       |      14.64 ns |  0.63 |        - |       - |         - |        0.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **King(...)edy. [275]** |     **237.99 ns** |  **1.00** |   **0.0687** |       **-** |     **576 B** |        **1.00** |
-| Tiktoken_o200k_Decode             | Decode_o200k      | King(...)edy. [275] |     242.26 ns |  1.02 |   0.0687 |       - |     576 B |        1.00 |
+| **Tiktoken_Decode_Baseline**          | **DecodeToUtf8**      | **King(...)edy. [275]** |     **241.93 ns** |  **1.00** |   **0.0687** |       **-** |     **576 B** |        **1.00** |
+| Tiktoken_DecodeToUtf8             | DecodeToUtf8      | King(...)edy. [275] |     245.73 ns |  1.02 |        - |       - |         - |        0.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**            | **1. (...)57. [19866]** | **350,676.28 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode            | 1. (...)57. [19866] | 239,419.81 ns |  0.68 |   7.8125 |  0.7324 |   65968 B |        3.28 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | 1. (...)57. [19866] | 242,204.83 ns |  0.69 |   7.8125 |  0.4883 |   66144 B |        3.29 |
-| TokenizerLibV1_3_3_Encode         | Encode            | 1. (...)57. [19866] | 465,618.98 ns |  1.33 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
-| Tiktoken_Encode                   | Encode            | 1. (...)57. [19866] | 164,531.72 ns |  0.47 |   7.8125 |  0.7324 |   66152 B |        3.29 |
+| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **1. (...)57. [19866]** |  **28,213.89 ns** |  **1.00** |   **4.7302** |       **-** |   **39760 B** |        **1.00** |
+| Tiktoken_o200k_Decode             | Decode_o200k      | 1. (...)57. [19866] |  28,622.39 ns |  1.01 |   4.7302 |       - |   39760 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**            | **Hello, World!**       |     **232.05 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode            | Hello, World!       |     163.92 ns |  0.71 |   0.0238 |       - |     200 B |        0.78 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | Hello, World!       |     191.02 ns |  0.82 |   0.0210 |       - |     176 B |        0.69 |
-| TokenizerLibV1_3_3_Encode         | Encode            | Hello, World!       |     296.46 ns |  1.28 |   0.1769 |  0.0005 |    1480 B |        5.78 |
-| Tiktoken_Encode                   | Encode            | Hello, World!       |     139.91 ns |  0.60 |   0.0458 |       - |     384 B |        1.50 |
+| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **Hello, World!**       |      **22.72 ns** |  **1.00** |   **0.0057** |       **-** |      **48 B** |        **1.00** |
+| Tiktoken_o200k_Decode             | Decode_o200k      | Hello, World!       |      22.77 ns |  1.00 |   0.0057 |       - |      48 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **SharpTokenV2_0_3_Encode**           | **Encode**            | **King(...)edy. [275]** |   **3,846.47 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
-| TiktokenSharpV1_1_5_Encode        | Encode            | King(...)edy. [275] |   2,432.95 ns |  0.63 |   0.0916 |       - |     776 B |        1.49 |
-| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | King(...)edy. [275] |   2,157.73 ns |  0.56 |   0.0877 |       - |     752 B |        1.45 |
-| TokenizerLibV1_3_3_Encode         | Encode            | King(...)edy. [275] |   4,743.63 ns |  1.23 |   2.3117 |  0.0992 |   19344 B |       37.20 |
-| Tiktoken_Encode                   | Encode            | King(...)edy. [275] |   1,552.19 ns |  0.40 |   0.1183 |       - |     992 B |        1.91 |
+| **Tiktoken_cl100k_Decode**            | **Decode_o200k**      | **King(...)edy. [275]** |     **242.54 ns** |  **1.00** |   **0.0687** |       **-** |     **576 B** |        **1.00** |
+| Tiktoken_o200k_Decode             | Decode_o200k      | King(...)edy. [275] |     240.68 ns |  0.99 |   0.0687 |       - |     576 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Encode_String**            | **EncodeSpan**        | **1. (...)57. [19866]** | **163,177.87 ns** |  **1.00** |   **7.8125** |  **0.7324** |   **66152 B** |        **1.00** |
-| Tiktoken_Encode_Span              | EncodeSpan        | 1. (...)57. [19866] | 169,573.74 ns |  1.04 |  12.4512 |  1.9531 |  105912 B |        1.60 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**            | **1. (...)57. [19866]** | **362,962.03 ns** |  **1.00** |   **1.9531** |       **-** |   **20112 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode            | 1. (...)57. [19866] | 239,389.16 ns |  0.66 |   7.8125 |  0.7324 |   65968 B |        3.28 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | 1. (...)57. [19866] | 249,150.50 ns |  0.69 |   7.8125 |  0.4883 |   66144 B |        3.29 |
+| TokenizerLibV1_3_3_Encode         | Encode            | 1. (...)57. [19866] | 477,043.19 ns |  1.31 | 184.5703 | 75.1953 | 1547672 B |       76.95 |
+| Tiktoken_Encode                   | Encode            | 1. (...)57. [19866] | 172,183.91 ns |  0.47 |   7.8125 |  0.7324 |   65840 B |        3.27 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Encode_String**            | **EncodeSpan**        | **Hello, World!**       |     **139.52 ns** |  **1.00** |   **0.0458** |       **-** |     **384 B** |        **1.00** |
-| Tiktoken_Encode_Span              | EncodeSpan        | Hello, World!       |     147.99 ns |  1.06 |   0.0515 |       - |     432 B |        1.12 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**            | **Hello, World!**       |     **231.91 ns** |  **1.00** |   **0.0305** |       **-** |     **256 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode            | Hello, World!       |     165.56 ns |  0.71 |   0.0238 |       - |     200 B |        0.78 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | Hello, World!       |     195.16 ns |  0.84 |   0.0210 |       - |     176 B |        0.69 |
+| TokenizerLibV1_3_3_Encode         | Encode            | Hello, World!       |     291.73 ns |  1.26 |   0.1769 |  0.0005 |    1480 B |        5.78 |
+| Tiktoken_Encode                   | Encode            | Hello, World!       |     129.08 ns |  0.56 |   0.0086 |       - |      72 B |        0.28 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Encode_String**            | **EncodeSpan**        | **King(...)edy. [275]** |   **1,536.40 ns** |  **1.00** |   **0.1183** |       **-** |     **992 B** |        **1.00** |
-| Tiktoken_Encode_Span              | EncodeSpan        | King(...)edy. [275] |   1,571.46 ns |  1.02 |   0.1869 |       - |    1568 B |        1.58 |
+| **SharpTokenV2_0_3_Encode**           | **Encode**            | **King(...)edy. [275]** |   **3,944.63 ns** |  **1.00** |   **0.0610** |       **-** |     **520 B** |        **1.00** |
+| TiktokenSharpV1_1_5_Encode        | Encode            | King(...)edy. [275] |   2,466.92 ns |  0.63 |   0.0916 |       - |     776 B |        1.49 |
+| MicrosoftMLTokenizerV1_0_0_Encode | Encode            | King(...)edy. [275] |   2,220.83 ns |  0.56 |   0.0877 |       - |     752 B |        1.45 |
+| TokenizerLibV1_3_3_Encode         | Encode            | King(...)edy. [275] |   4,669.47 ns |  1.18 |   2.3117 |  0.0992 |   19344 B |       37.20 |
+| Tiktoken_Encode                   | Encode            | King(...)edy. [275] |   1,518.53 ns |  0.38 |   0.0801 |       - |     680 B |        1.31 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **1. (...)57. [19866]** | **167,691.56 ns** |  **1.00** |   **7.8125** |  **0.7324** |   **66152 B** |        **1.00** |
-| Tiktoken_o200k_Encode             | Encode_o200k      | 1. (...)57. [19866] | 193,942.95 ns |  1.16 |   7.8125 |  0.7324 |   66152 B |        1.00 |
+| **Tiktoken_Encode_Sequential**        | **EncodeParallel**    | **1. (...)57. [19866]** | **169,286.69 ns** |  **1.00** |   **7.8125** |  **0.7324** |   **65840 B** |        **1.00** |
+| Tiktoken_Encode_Parallel          | EncodeParallel    | 1. (...)57. [19866] | 193,536.92 ns |  1.14 |  57.1289 | 18.7988 |  473964 B |        7.20 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **Hello, World!**       |     **141.92 ns** |  **1.00** |   **0.0458** |       **-** |     **384 B** |        **1.00** |
-| Tiktoken_o200k_Encode             | Encode_o200k      | Hello, World!       |     147.47 ns |  1.04 |   0.0458 |       - |     384 B |        1.00 |
+| **Tiktoken_Encode_Sequential**        | **EncodeParallel**    | **Hello, World!**       |     **133.76 ns** |  **1.00** |   **0.0086** |       **-** |      **72 B** |        **1.00** |
+| Tiktoken_Encode_Parallel          | EncodeParallel    | Hello, World!       |   1,712.79 ns | 12.81 |   0.2937 |       - |    2449 B |       34.01 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **King(...)edy. [275]** |   **1,545.76 ns** |  **1.00** |   **0.1183** |       **-** |     **992 B** |        **1.00** |
-| Tiktoken_o200k_Encode             | Encode_o200k      | King(...)edy. [275] |   1,661.88 ns |  1.08 |   0.1183 |       - |     992 B |        1.00 |
+| **Tiktoken_Encode_Sequential**        | **EncodeParallel**    | **King(...)edy. [275]** |   **1,528.97 ns** |  **1.00** |   **0.0801** |       **-** |     **680 B** |        **1.00** |
+| Tiktoken_Encode_Parallel          | EncodeParallel    | King(...)edy. [275] |   8,339.82 ns |  5.46 |   1.0986 |  0.0153 |    9177 B |       13.50 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Explore**                  | **Explore**           | **1. (...)57. [19866]** | **308,772.80 ns** |  **1.00** |  **63.9648** | **20.9961** |  **538312 B** |        **1.00** |
-| Tiktoken_ExploreUtfSafe           | Explore           | 1. (...)57. [19866] | 343,259.32 ns |  1.11 |  83.0078 | 30.7617 |  696384 B |        1.29 |
+| **Tiktoken_Encode_String**            | **EncodeSpan**        | **1. (...)57. [19866]** | **172,280.23 ns** |  **1.00** |   **7.8125** |  **0.7324** |   **65840 B** |        **1.00** |
+| Tiktoken_Encode_Span              | EncodeSpan        | 1. (...)57. [19866] | 172,507.90 ns |  1.00 |   7.8125 |  0.7324 |   65840 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Explore**                  | **Explore**           | **Hello, World!**       |     **193.90 ns** |  **1.00** |   **0.0772** |       **-** |     **648 B** |        **1.00** |
-| Tiktoken_ExploreUtfSafe           | Explore           | Hello, World!       |     216.08 ns |  1.11 |   0.0966 |  0.0002 |     808 B |        1.25 |
+| **Tiktoken_Encode_String**            | **EncodeSpan**        | **Hello, World!**       |     **127.61 ns** |  **1.00** |   **0.0086** |       **-** |      **72 B** |        **1.00** |
+| Tiktoken_Encode_Span              | EncodeSpan        | Hello, World!       |     124.76 ns |  0.98 |   0.0086 |       - |      72 B |        1.00 |
 |                                   |                   |                     |               |       |          |         |           |             |
-| **Tiktoken_Explore**                  | **Explore**           | **King(...)edy. [275]** |   **3,018.24 ns** |  **1.00** |   **0.8278** |  **0.0076** |    **6952 B** |        **1.00** |
-| Tiktoken_ExploreUtfSafe           | Explore           | King(...)edy. [275] |   3,357.26 ns |  1.11 |   1.0910 |  0.0191 |    9128 B |        1.31 |
+| **Tiktoken_Encode_String**            | **EncodeSpan**        | **King(...)edy. [275]** |   **1,520.20 ns** |  **1.00** |   **0.0801** |       **-** |     **680 B** |        **1.00** |
+| Tiktoken_Encode_Span              | EncodeSpan        | King(...)edy. [275] |   1,532.78 ns |  1.01 |   0.0801 |       - |     680 B |        1.00 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **1. (...)57. [19866]** | **175,672.49 ns** |  **1.00** |   **7.8125** |  **0.7324** |   **65840 B** |        **1.00** |
+| Tiktoken_o200k_Encode             | Encode_o200k      | 1. (...)57. [19866] | 205,426.34 ns |  1.17 |   7.8125 |  0.7324 |   65840 B |        1.00 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **Hello, World!**       |     **132.49 ns** |  **1.00** |   **0.0086** |       **-** |      **72 B** |        **1.00** |
+| Tiktoken_o200k_Encode             | Encode_o200k      | Hello, World!       |     138.96 ns |  1.05 |   0.0086 |       - |      72 B |        1.00 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_cl100k_Encode**            | **Encode_o200k**      | **King(...)edy. [275]** |   **1,530.39 ns** |  **1.00** |   **0.0801** |       **-** |     **680 B** |        **1.00** |
+| Tiktoken_o200k_Encode             | Encode_o200k      | King(...)edy. [275] |   1,655.82 ns |  1.08 |   0.0801 |       - |     680 B |        1.00 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_Explore**                  | **Explore**           | **1. (...)57. [19866]** | **317,681.57 ns** |  **1.00** |  **63.9648** | **20.9961** |  **538312 B** |        **1.00** |
+| Tiktoken_ExploreUtfSafe           | Explore           | 1. (...)57. [19866] | 356,971.81 ns |  1.12 |  83.0078 | 30.7617 |  696384 B |        1.29 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_Explore**                  | **Explore**           | **Hello, World!**       |     **200.53 ns** |  **1.00** |   **0.0772** |       **-** |     **648 B** |        **1.00** |
+| Tiktoken_ExploreUtfSafe           | Explore           | Hello, World!       |     221.01 ns |  1.10 |   0.0966 |  0.0002 |     808 B |        1.25 |
+|                                   |                   |                     |               |       |          |         |           |             |
+| **Tiktoken_Explore**                  | **Explore**           | **King(...)edy. [275]** |   **3,082.20 ns** |  **1.00** |   **0.8278** |  **0.0076** |    **6952 B** |        **1.00** |
+| Tiktoken_ExploreUtfSafe           | Explore           | King(...)edy. [275] |   3,464.40 ns |  1.12 |   1.0910 |  0.0191 |    9128 B |        1.31 |
 
 <!--BENCHMARKS_END-->
 

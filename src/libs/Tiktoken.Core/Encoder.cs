@@ -54,6 +54,17 @@ public class Encoder
     {
         return _corePbe.CountTokensNative(text);
     }
+
+    /// <summary>
+    /// Counts tokens directly from UTF-8 bytes, avoiding caller-side string allocation.
+    /// Converts to chars internally using stackalloc for small inputs, ArrayPool for large ones.
+    /// </summary>
+    /// <param name="utf8Text"></param>
+    /// <returns></returns>
+    public int CountTokens(ReadOnlySpan<byte> utf8Text)
+    {
+        return _corePbe.CountTokensFromUtf8(utf8Text);
+    }
 #endif
     
     /// <summary>
@@ -69,14 +80,14 @@ public class Encoder
 
 #if NET7_0_OR_GREATER
     /// <summary>
-    /// Encodes text from a span. Avoids caller-side string allocation when text is already a span.
+    /// Encodes text from a span without string allocation (on NET9+ uses zero-copy dictionary lookups).
     /// </summary>
     /// <param name="text"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     public IReadOnlyCollection<int> Encode(ReadOnlySpan<char> text)
     {
-        return EncodeWithAllDisallowedSpecial(new string(text));
+        return _corePbe.EncodeNativeAllDisallowed(text, _specialTokensSet);
     }
 #endif
     
@@ -135,10 +146,14 @@ public class Encoder
     /// <exception cref="InvalidOperationException"></exception>
     public IReadOnlyCollection<int> EncodeWithAllDisallowedSpecial(string text)
     {
+#if NET7_0_OR_GREATER
+        return _corePbe.EncodeNativeAllDisallowed(text.AsSpan(), _specialTokensSet);
+#else
         return _corePbe.EncodeNative(
             text,
             allowedSpecial: EmptyHashSet,
             disallowedSpecial: _specialTokensSet);
+#endif
     }
     
     /// <summary>
@@ -196,6 +211,18 @@ public class Encoder
     }
 
 #if NET8_0_OR_GREATER
+    /// <summary>
+    /// Encodes text using parallel processing for large inputs.
+    /// Collects regex matches first, then processes BPE encoding in parallel.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IReadOnlyCollection<int> EncodeParallel(string text)
+    {
+        return _corePbe.EncodeNativeParallel(text, _specialTokensSet);
+    }
+
     /// <summary>
     /// Decodes tokens to string using span-based iteration for maximum performance.
     /// </summary>
