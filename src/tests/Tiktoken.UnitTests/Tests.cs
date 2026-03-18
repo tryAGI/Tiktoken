@@ -193,11 +193,46 @@ public partial class Tests
         int i = 0;
 
         tokens.Count.Should().Be(expected.Count);
-        
+
         foreach (UtfToken token in tokens)
         {
             token.Token.Should().Be(expected[i]);
             i++;
         }
+    }
+
+    [TestMethod]
+    [DataRow("cl100k_base")]
+    [DataRow("o200k_base")]
+    public void LargeInputDoesNotStackOverflow(string encodingName)
+    {
+        // Regression test for #75: stackalloc in BytePairEncoding caused StackOverflowException
+        // on large regex matches (>512 UTF-8 bytes). A 1000-char Cyrillic word = 2000 UTF-8 bytes.
+        var largeWord = new string('я', 1000);
+        var text = $"Hello {largeWord} world";
+
+        Encoding encoding = encodingName switch
+        {
+            "cl100k_base" => new Cl100KBase(),
+            "o200k_base" => new O200KBase(),
+            _ => throw new ArgumentOutOfRangeException(nameof(encodingName))
+        };
+        var encoder = new Encoder(encoding);
+
+        var count = encoder.CountTokens(text);
+        var encoded = encoder.Encode(text);
+        var decoded = encoder.Decode(encoded);
+
+        count.Should().Be(encoded.Count);
+        decoded.Should().Be(text);
+    }
+
+    [TestMethod]
+    public void ModelToEncoderCachesInstances()
+    {
+        var encoder1 = ModelToEncoder.For("gpt-4o");
+        var encoder2 = ModelToEncoder.For("gpt-4o");
+
+        encoder1.Should().BeSameAs(encoder2);
     }
 }
