@@ -160,8 +160,12 @@ public class Encoder
     /// <returns></returns>
     public string Decode(IReadOnlyCollection<int> tokens)
     {
+#if NET8_0_OR_GREATER
+        return _corePbe.DecodeToString(tokens);
+#else
         var bytes = _corePbe.DecodeNative(tokens);
-        
+
         return System.Text.Encoding.UTF8.GetString(bytes);
+#endif
     }
 }

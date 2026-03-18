@@ -28,6 +28,8 @@ public class Benchmarks
     private List<int> _sharpTokenEncoded = null!;
     private List<int> _tiktokenSharpEncoded = null!;
     private IReadOnlyCollection<int> _tiktokenEncoded = null!;
+    private IReadOnlyList<int> _microsoftMlEncoded = null!;
+    private int[] _tokenizerLibEncoded = null!;
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -36,6 +38,8 @@ public class Benchmarks
         _sharpTokenEncoded = _sharpToken.Encode(Data);
         _tiktokenSharpEncoded = _tiktokenSharp.Encode(Data);
         _tiktokenEncoded = _tiktoken.Encode(Data);
+        _microsoftMlEncoded = _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
+        _tokenizerLibEncoded = _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty).ToArray();
     }
     
     [Benchmark(Baseline = true)]
@@ -87,6 +91,14 @@ public class Benchmarks
     [Benchmark]
     [BenchmarkCategory("Decode")]
     public string TiktokenSharpV1_1_5_Decode() => _tiktokenSharp.Decode(_tiktokenSharpEncoded);
+
+    [Benchmark]
+    [BenchmarkCategory("Decode")]
+    public string? MicrosoftMLTokenizerV1_0_0_Decode() => _microsoftMlTiktoken.Decode(_microsoftMlEncoded);
+
+    [Benchmark]
+    [BenchmarkCategory("Decode")]
+    public string TokenizerLibV1_3_3_Decode() => _tokenizerLib!.Decode(_tokenizerLibEncoded);
 
     [Benchmark]
     [BenchmarkCategory("Decode")]

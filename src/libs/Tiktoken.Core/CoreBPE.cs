@@ -27,9 +27,10 @@ public class CoreBpe
 
     private Dictionary<int, byte[]> Decoder { get; set; }
     private Dictionary<int, string> SpecialTokensDecoder { get; set; }
+    private Dictionary<int, byte[]> SpecialTokensDecoderBytes { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="encoder"></param>
     /// <param name="specialTokensEncoder"></param>
@@ -42,7 +43,7 @@ public class CoreBpe
         encoder = encoder ?? throw new ArgumentNullException(nameof(encoder));
         specialTokensEncoder = specialTokensEncoder ?? throw new ArgumentNullException(nameof(specialTokensEncoder));
         pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
-        
+
         Encoder = encoder;
         FastEncoder = Encoder
             .ToDictionary(
@@ -62,7 +63,7 @@ public class CoreBpe
                 static x => x.Value,
                 StringComparer.Ordinal);
         SpecialTokensEncoder = specialTokensEncoder;
-        
+
         Regex = new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
 
@@ -74,6 +75,10 @@ public class CoreBpe
             .ToDictionary(
                 static x => x.Value,
                 static x => x.Key);
+        SpecialTokensDecoderBytes = specialTokensEncoder
+            .ToDictionary(
+                static x => x.Value,
+                static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
     }
 
     /// <summary>
@@ -603,30 +608,79 @@ public class CoreBpe
     public byte[] DecodeNative(IReadOnlyCollection<int> tokens)
     {
         tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
-        
+
         var ret = new List<byte>(tokens.Count * 2);
         foreach (var token in tokens)
         {
-            byte[] tokenBytes = Array.Empty<byte>();
             if (Decoder.TryGetValue(token, out var value))
             {
-                tokenBytes = value;
-            } 
-            else
-            {
-                if (SpecialTokensDecoder.TryGetValue(token, out var valueS))
-                {
-                    tokenBytes = System.Text.Encoding.UTF8.GetBytes(valueS);
-                }
+                ret.AddRange(value);
             }
-
-            if (tokenBytes.Length > 0)
+            else if (SpecialTokensDecoderBytes.TryGetValue(token, out var specialBytes))
             {
-                ret.AddRange(tokenBytes);
-            } 
+                ret.AddRange(specialBytes);
+            }
         }
         return ret.ToArray();
     }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Decodes tokens directly to string using a pooled buffer (single-pass).
+    /// </summary>
+    internal string DecodeToString(IReadOnlyCollection<int> tokens)
+    {
+        tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+
+        if (tokens.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        // Rent buffer with generous estimate (~6 bytes per token for UTF-8 text)
+        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(tokens.Count * 6);
+        try
+        {
+            var offset = 0;
+            foreach (var token in tokens)
+            {
+                byte[]? tokenBytes = null;
+                if (Decoder.TryGetValue(token, out var value))
+                {
+                    tokenBytes = value;
+                }
+                else if (SpecialTokensDecoderBytes.TryGetValue(token, out var specialBytes))
+                {
+                    tokenBytes = specialBytes;
+                }
+
+                if (tokenBytes != null)
+                {
+                    // Grow if needed
+                    if (offset + tokenBytes.Length > rented.Length)
+                    {
+                        var newRented = System.Buffers.ArrayPool<byte>.Shared.Rent(
+                            Math.Max(rented.Length * 2, offset + tokenBytes.Length));
+                        Buffer.BlockCopy(rented, 0, newRented, 0, offset);
+                        System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+                        rented = newRented;
+                    }
+
+                    Buffer.BlockCopy(tokenBytes, 0, rented, offset, tokenBytes.Length);
+                    offset += tokenBytes.Length;
+                }
+            }
+
+            return offset == 0
+                ? string.Empty
+                : System.Text.Encoding.UTF8.GetString(rented, 0, offset);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
+    }
+#endif
 
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
