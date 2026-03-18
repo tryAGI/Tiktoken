@@ -235,4 +235,116 @@ public partial class Tests
 
         encoder1.Should().BeSameAs(encoder2);
     }
+
+    [TestMethod]
+    public void TokenizerJsonLoadsGpt2()
+    {
+        var encoding = TokenizerJsonLoader.FromFile("Resources/gpt2.tokenizer.json", name: "gpt2");
+        var encoder = new Encoder(encoding);
+
+        // GPT-2 vocab: "hello" = 31373, " world" (Ġworld) = 995
+        var encoded = encoder.Encode("hello world");
+        var decoded = encoder.Decode(encoded);
+
+        decoded.Should().Be("hello world");
+        encoded.Should().BeEquivalentTo(new[] { 31373, 995 });
+        encoder.CountTokens("hello world").Should().Be(2);
+    }
+
+    [TestMethod]
+    public void TokenizerJsonSpecialTokensExtracted()
+    {
+        var encoding = TokenizerJsonLoader.FromFile("Resources/gpt2.tokenizer.json", name: "gpt2");
+
+        encoding.SpecialTokens.Should().ContainKey("<|endoftext|>");
+        encoding.SpecialTokens["<|endoftext|>"].Should().Be(50256);
+    }
+
+    [TestMethod]
+    public void TokenizerJsonFromStream()
+    {
+        using var stream = File.OpenRead("Resources/gpt2.tokenizer.json");
+        var encoding = TokenizerJsonLoader.FromStream(stream, name: "gpt2");
+        var encoder = new Encoder(encoding);
+
+        var encoded = encoder.Encode("hello world");
+        encoded.Should().BeEquivalentTo(new[] { 31373, 995 });
+    }
+
+    [TestMethod]
+    public void TokenizerJsonRoundTrip()
+    {
+        var encoding = TokenizerJsonLoader.FromFile("Resources/gpt2.tokenizer.json", name: "gpt2");
+        var encoder = new Encoder(encoding);
+
+        var texts = new[]
+        {
+            Strings.HelloWorld,
+            Strings.KingLear,
+            Strings.Chinese,
+        };
+
+        foreach (var text in texts)
+        {
+            var encoded = encoder.Encode(text);
+            var decoded = encoder.Decode(encoded);
+
+            decoded.Should().Be(text);
+            encoder.CountTokens(text).Should().Be(encoded.Count);
+        }
+    }
+
+    [TestMethod]
+    public void TokenizerJsonDetectsSequenceSplitPattern()
+    {
+        // Simulate Llama 3/Qwen2 format: Sequence[Split(regex), ByteLevel]
+        var json = """
+        {
+            "version": "1.0",
+            "added_tokens": [
+                { "id": 3, "special": true, "content": "<eos>" }
+            ],
+            "pre_tokenizer": {
+                "type": "Sequence",
+                "pretokenizers": [
+                    {
+                        "type": "Split",
+                        "pattern": {
+                            "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+                        }
+                    },
+                    {
+                        "type": "ByteLevel",
+                        "add_prefix_space": false,
+                        "trim_offsets": true
+                    }
+                ]
+            },
+            "model": {
+                "vocab": {
+                    "h": 0, "e": 1, "l": 2, "o": 3,
+                    "\u0120": 4, "w": 5, "r": 6, "d": 7,
+                    "he": 8, "ll": 9, "lo": 10,
+                    "hel": 11, "hello": 12,
+                    "\u0120w": 13, "or": 14, "ld": 15,
+                    "\u0120wo": 16, "rld": 17,
+                    "\u0120world": 18
+                },
+                "merges": []
+            }
+        }
+        """;
+
+        var encoding = TokenizerJsonLoader.FromJson(json, name: "test-seq");
+
+        // Pattern should be auto-detected from the Split pre-tokenizer
+        encoding.Pattern.Should().Contain("\\p{L}+");
+        encoding.SpecialTokens.Should().ContainKey("<eos>");
+
+        // Verify ByteLevel decoding: Ġ (U+0120) maps to space (byte 0x20)
+        var encoder = new Encoder(encoding);
+        var encoded = encoder.Encode("hello world");
+        var decoded = encoder.Decode(encoded);
+        decoded.Should().Be("hello world");
+    }
 }

@@ -28,6 +28,13 @@
     <ProjectReference Include="..\..\libs\Tiktoken.Encodings.p50k\Tiktoken.Encodings.p50k.csproj" />
     <ProjectReference Include="..\..\libs\Tiktoken.Encodings.r50k\Tiktoken.Encodings.r50k.csproj" />
     <ProjectReference Include="..\..\libs\Tiktoken\Tiktoken.csproj" />
+    <ProjectReference Include="..\..\libs\Tiktoken.Encodings.Tokenizer\Tiktoken.Encodings.Tokenizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\gpt2.tokenizer.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net4.6.2;netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+        <RootNamespace>Tiktoken.Encodings</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Label="NuGet">
+        <Description>Load tokenizer.json (HuggingFace format) as a Tiktoken encoding.</Description>
+        <PackageTags>chatgpt;openai;tiktoken;tokens;huggingface;tokenizer;bpe;llama;qwen;deepseek;gpt2</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Tiktoken.Encodings.Abstractions\Tiktoken.Encodings.Abstractions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Text.Json" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net4.6.2'">
+      <PackageReference Include="System.ValueTuple" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PolySharp">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+</Project>

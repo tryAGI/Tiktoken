@@ -11,6 +11,7 @@
     <Project Path="src/libs/Tiktoken.Encodings.p50k/Tiktoken.Encodings.p50k.csproj" />
     <Project Path="src/libs/Tiktoken.Encodings.r50k/Tiktoken.Encodings.r50k.csproj" />
     <Project Path="src/libs/Tiktoken/Tiktoken.csproj" />
+    <Project Path="src/libs/Tiktoken.Encodings.Tokenizer/Tiktoken.Encodings.Tokenizer.csproj" />
   </Folder>
   <Folder Name="/misc/">
     <File Path=".gitattributes" />
