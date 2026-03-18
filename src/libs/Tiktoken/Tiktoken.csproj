@@ -8,6 +8,7 @@
       <ProjectReference Include="..\Tiktoken.Core\Tiktoken.Core.csproj" />
       <ProjectReference Include="..\Tiktoken.Encodings.cl100k\Tiktoken.Encodings.cl100k.csproj" />
       <ProjectReference Include="..\Tiktoken.Encodings.o200k\Tiktoken.Encodings.o200k.csproj" />
+      <ProjectReference Include="..\Tiktoken.Encodings.Tokenizer\Tiktoken.Encodings.Tokenizer.csproj" />
     </ItemGroup>
 
 </Project>

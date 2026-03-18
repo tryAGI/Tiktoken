@@ -38,6 +38,7 @@ dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks/Tiktoken.Benc
 | `src/libs/Tiktoken.Encodings.o200k/` | `o200k_base` encoding (GPT-4o) |
 | `src/libs/Tiktoken.Encodings.p50k/` | `p50k_base` / `p50k_edit` encodings |
 | `src/libs/Tiktoken.Encodings.r50k/` | `r50k_base` encoding |
+| `src/libs/Tiktoken.Encodings.Tokenizer/` | Load HuggingFace `tokenizer.json` files (GPT-2, Llama 3, Qwen2, etc.) |
 | `src/tests/Tiktoken.UnitTests/` | Unit tests (MSTest + FluentAssertions + Verify) |
 | `src/benchmarks/Tiktoken.Benchmarks/` | BenchmarkDotNet performance benchmarks |
 | `benchmarks/` | Historical benchmark result reports (Markdown) |
@@ -61,7 +62,7 @@ var parts = encoder.Explore(text);                 // ["hello", " world"]
 
 ### Build Configuration
 
-- **Target frameworks:** `net4.6.2`, `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`
+- **Target frameworks:** `net4.6.2`, `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0`
 - **Language:** C# with nullable reference types
 - **Unsafe code:** Enabled in Core for performance
 - **Encoding data:** Embedded as `.tiktoken` resources in `Tiktoken.Core/Encodings/`
