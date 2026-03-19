@@ -122,9 +122,8 @@ public partial class Tests
 
         Console.WriteLine($"Server tokens: {serverTokens}, Local tokens: {localTokens}, Diff: {serverTokens - localTokens}");
 
-        // Allow ±20% tolerance since the formula is reverse-engineered
-        var tolerance = Math.Max(serverTokens * 0.2, 5);
-        localTokens.Should().BeCloseTo(serverTokens, (uint)tolerance,
+        // Constants are calibrated to match exactly; allow ±3 tokens for future drift
+        localTokens.Should().BeCloseTo(serverTokens, 3,
             $"Local estimate ({localTokens}) should be close to server count ({serverTokens})");
     }
 
@@ -207,9 +206,86 @@ public partial class Tests
 
         Console.WriteLine($"No-params tool: Server={serverTokens}, Local={localTokens}, ToolTokens={toolTokensOnly}, Diff={serverTokens - localTokens}");
 
-        var tolerance = Math.Max(serverTokens * 0.2, 5);
-        localTokens.Should().BeCloseTo(serverTokens, (uint)tolerance,
+        localTokens.Should().BeCloseTo(serverTokens, 3,
             $"Local ({localTokens}) should be close to server ({serverTokens})");
     }
 
+    [TestMethod]
+    public async Task ValidateMultipleToolsAgainstOpenAiApi()
+    {
+        var apiKey = GetOpenAiApiKey();
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Assert.Inconclusive("OPENAI_API_KEY not set — skipping integration test.");
+            return;
+        }
+
+        using var httpClient = CreateOpenAiClient(apiKey);
+
+        // Two tools to verify sectionOverhead is applied once, not per-tool
+        var requestJson = """
+        {
+            "model": "gpt-4o-mini",
+            "input": [{"role": "user", "content": "What time is it in Paris?"}],
+            "tools": [
+                {
+                    "type": "function",
+                    "name": "get_time",
+                    "description": "Get the current time for a timezone",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "timezone": {
+                                "type": "string",
+                                "description": "IANA timezone name"
+                            }
+                        },
+                        "required": ["timezone"]
+                    }
+                },
+                {
+                    "type": "function",
+                    "name": "get_weather",
+                    "description": "Get the current weather",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "description": "City name"
+                            }
+                        },
+                        "required": ["city"]
+                    }
+                }
+            ]
+        }
+        """;
+
+        var serverTokens = await GetServerTokenCount(httpClient, requestJson);
+
+        var encoder = ModelToEncoder.For("gpt-4o-mini");
+        var messages = new List<ChatMessage>
+        {
+            new("user", "What time is it in Paris?"),
+        };
+        var tools = new List<ChatFunction>
+        {
+            new("get_time", "Get the current time for a timezone", new List<FunctionParameter>
+            {
+                new("timezone", "string", "IANA timezone name", isRequired: true),
+            }),
+            new("get_weather", "Get the current weather", new List<FunctionParameter>
+            {
+                new("city", "string", "City name", isRequired: true),
+            }),
+        };
+
+        var localTokens = encoder.CountMessageTokens(messages, tools);
+
+        Console.WriteLine($"Multi-tool: Server={serverTokens}, Local={localTokens}, Diff={serverTokens - localTokens}");
+
+        localTokens.Should().BeCloseTo(serverTokens, 3,
+            $"Local ({localTokens}) should be close to server ({serverTokens}) for multi-tool");
+    }
 }
