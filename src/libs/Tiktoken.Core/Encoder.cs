@@ -334,12 +334,21 @@ public class Encoder
 
             // Tokenize "key:type:description" (trailing period stripped)
             var paramDesc = param.Description.TrimEnd('.');
-            var type = param.Type;
+            string type;
 
-            // For array types, append item type (e.g., "array:string[]")
-            if (type == "array" && param.ArrayItemType != null)
+            if (param.AnyOf != null && param.AnyOf.Count > 0)
             {
+                // anyOf union: "string | number"
+                type = string.Join(" | ", param.AnyOf);
+            }
+            else if (param.Type == "array" && param.ArrayItemType != null)
+            {
+                // Array with item type: "string[]"
                 type = param.ArrayItemType + "[]";
+            }
+            else
+            {
+                type = param.Type;
             }
 
             count += CountTokens(param.Name + ":" + type + ":" + paramDesc);

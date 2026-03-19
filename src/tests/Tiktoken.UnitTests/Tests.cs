@@ -633,4 +633,35 @@ public partial class Tests
 
         count.Should().BeGreaterThan(19); // funcInit + funcEnd + propInit + propKey + tokens
     }
+
+    [TestMethod]
+    public void CountToolTokensAnyOf()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>
+        {
+            new("update_field", "Update a field value", new List<FunctionParameter>
+            {
+                new("value", "", "The new value", isRequired: true,
+                    anyOf: new[] { "string", "number", "boolean" }),
+            }),
+        };
+
+        var count = encoder.CountToolTokens(tools);
+
+        // Should tokenize the type as "string | number | boolean"
+        count.Should().BeGreaterThan(19);
+
+        // Compare with a simple string type — anyOf should produce more tokens
+        var simpleTools = new List<ChatFunction>
+        {
+            new("update_field", "Update a field value", new List<FunctionParameter>
+            {
+                new("value", "string", "The new value", isRequired: true),
+            }),
+        };
+
+        var simpleCount = encoder.CountToolTokens(simpleTools);
+        count.Should().BeGreaterThan(simpleCount);
+    }
 }

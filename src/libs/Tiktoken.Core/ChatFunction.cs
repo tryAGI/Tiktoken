@@ -80,6 +80,12 @@ public class FunctionParameter
     public string? ArrayItemType { get; set; }
 
     /// <summary>
+    /// Union types for <c>anyOf</c> schemas (e.g., ["string", "number"] becomes "string | number").
+    /// When set, <see cref="Type"/> is ignored and this list is used instead.
+    /// </summary>
+    public IReadOnlyList<string>? AnyOf { get; set; }
+
+    /// <summary>
     /// Creates a new function parameter.
     /// </summary>
     public FunctionParameter()
@@ -96,7 +102,8 @@ public class FunctionParameter
         bool isRequired = false,
         IReadOnlyList<string>? enumValues = null,
         IReadOnlyList<FunctionParameter>? properties = null,
-        string? arrayItemType = null)
+        string? arrayItemType = null,
+        IReadOnlyList<string>? anyOf = null)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Type = type ?? throw new ArgumentNullException(nameof(type));
@@ -105,5 +112,6 @@ public class FunctionParameter
         EnumValues = enumValues;
         Properties = properties;
         ArrayItemType = arrayItemType;
+        AnyOf = anyOf;
     }
 }
