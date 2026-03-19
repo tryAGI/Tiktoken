@@ -61,6 +61,8 @@ public class FunctionParameter
 
     /// <summary>
     /// Whether this parameter is required.
+    /// Note: this field does not affect token counting (verified against OpenAI's API —
+    /// required vs optional params produce the same token count).
     /// </summary>
     public bool IsRequired { get; set; }
 
