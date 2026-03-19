@@ -39,7 +39,7 @@ dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks/Tiktoken.Benc
 | `src/libs/Tiktoken.Encodings.p50k/` | `p50k_base` / `p50k_edit` encodings |
 | `src/libs/Tiktoken.Encodings.r50k/` | `r50k_base` encoding |
 | `src/libs/Tiktoken.Encodings.Tokenizer/` | Load HuggingFace `tokenizer.json` files (GPT-2, Llama 3, Qwen2, etc.) |
-| `src/tests/Tiktoken.UnitTests/` | Unit tests (MSTest + FluentAssertions + Verify) |
+| `src/tests/Tiktoken.UnitTests/` | Unit tests (MSTest + AwesomeAssertions + Verify) |
 | `src/benchmarks/Tiktoken.Benchmarks/` | BenchmarkDotNet performance benchmarks |
 | `benchmarks/` | Historical benchmark result reports (Markdown) |
 
@@ -67,7 +67,7 @@ var parts = encoder.Explore(text);                 // ["hello", " world"]
 - **Unsafe code:** Enabled in Core for performance
 - **Encoding data:** Embedded as `.tiktoken` resources in `Tiktoken.Core/Encodings/`
 - **Versioning:** Semantic versioning from git tags via MinVer
-- **Testing:** MSTest + FluentAssertions + Verify
+- **Testing:** MSTest + AwesomeAssertions + Verify
 
 ### CI/CD
 
