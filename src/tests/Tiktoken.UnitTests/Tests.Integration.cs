@@ -289,4 +289,127 @@ public partial class Tests
             $"Local ({localTokens}) should be close to server ({serverTokens}) for multi-tool");
     }
 
+    [TestMethod]
+    public async Task ValidateThreeToolsAgainstOpenAiApi()
+    {
+        var apiKey = GetOpenAiApiKey();
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Assert.Inconclusive("OPENAI_API_KEY not set — skipping integration test.");
+            return;
+        }
+
+        using var httpClient = CreateOpenAiClient(apiKey);
+
+        // Three tools to verify per-tool overhead scales correctly
+        var requestJson = """
+        {
+            "model": "gpt-4o-mini",
+            "input": [{"role": "user", "content": "Plan a trip to Tokyo"}],
+            "tools": [
+                {
+                    "type": "function",
+                    "name": "get_weather",
+                    "description": "Get weather forecast for a city",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "description": "City name"
+                            },
+                            "days": {
+                                "type": "number",
+                                "description": "Number of forecast days"
+                            }
+                        },
+                        "required": ["city"]
+                    }
+                },
+                {
+                    "type": "function",
+                    "name": "search_flights",
+                    "description": "Search for available flights",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "origin": {
+                                "type": "string",
+                                "description": "Departure airport code"
+                            },
+                            "destination": {
+                                "type": "string",
+                                "description": "Arrival airport code"
+                            },
+                            "date": {
+                                "type": "string",
+                                "description": "Travel date in YYYY-MM-DD format"
+                            }
+                        },
+                        "required": ["origin", "destination", "date"]
+                    }
+                },
+                {
+                    "type": "function",
+                    "name": "book_hotel",
+                    "description": "Book a hotel room",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "city": {
+                                "type": "string",
+                                "description": "City name"
+                            },
+                            "checkin": {
+                                "type": "string",
+                                "description": "Check-in date"
+                            },
+                            "nights": {
+                                "type": "number",
+                                "description": "Number of nights"
+                            }
+                        },
+                        "required": ["city", "checkin", "nights"]
+                    }
+                }
+            ]
+        }
+        """;
+
+        var serverTokens = await GetServerTokenCount(httpClient, requestJson);
+
+        var encoder = ModelToEncoder.For("gpt-4o-mini");
+        var messages = new List<ChatMessage>
+        {
+            new("user", "Plan a trip to Tokyo"),
+        };
+        var tools = new List<ChatFunction>
+        {
+            new("get_weather", "Get weather forecast for a city", new List<FunctionParameter>
+            {
+                new("city", "string", "City name", isRequired: true),
+                new("days", "number", "Number of forecast days"),
+            }),
+            new("search_flights", "Search for available flights", new List<FunctionParameter>
+            {
+                new("origin", "string", "Departure airport code", isRequired: true),
+                new("destination", "string", "Arrival airport code", isRequired: true),
+                new("date", "string", "Travel date in YYYY-MM-DD format", isRequired: true),
+            }),
+            new("book_hotel", "Book a hotel room", new List<FunctionParameter>
+            {
+                new("city", "string", "City name", isRequired: true),
+                new("checkin", "string", "Check-in date", isRequired: true),
+                new("nights", "number", "Number of nights", isRequired: true),
+            }),
+        };
+
+        var localTokens = encoder.CountMessageTokens(messages, tools);
+
+        Console.WriteLine($"Three-tool: Server={serverTokens}, Local={localTokens}, Diff={serverTokens - localTokens}");
+
+        localTokens.Should().BeCloseTo(serverTokens, 3,
+            $"Local ({localTokens}) should be close to server ({serverTokens}) for three-tool");
+    }
+
 }

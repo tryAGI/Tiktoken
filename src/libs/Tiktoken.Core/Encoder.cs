@@ -257,7 +257,7 @@ public class Encoder
     /// Tool token counting is based on reverse-engineered formulas calibrated against OpenAI's
     /// /v1/responses/input_tokens endpoint. OpenAI internally converts function definitions to a
     /// TypeScript namespace format before tokenizing. Constants: sectionOverhead=10, perFunction=7,
-    /// propInit=3, propKey=3.
+    /// propInit=4, propKey=2.
     /// <para>
     /// For exact counts, use OpenAI's server-side token counting API.
     /// </para>
@@ -287,7 +287,7 @@ public class Encoder
     /// </summary>
     /// <remarks>
     /// Constants calibrated against OpenAI's /v1/responses/input_tokens endpoint:
-    /// sectionOverhead=10, perFunction=7, propInit=3, propKey=3, enumInit=-3, enumItem=2.
+    /// sectionOverhead=10, perFunction=7, propInit=4, propKey=2, enumInit=-3, enumItem=2.
     /// </remarks>
     /// <param name="tools">The function/tool definitions.</param>
     /// <returns>The token count for the tool definitions.</returns>
@@ -327,8 +327,8 @@ public class Encoder
 
     private int CountParameterTokens(IReadOnlyList<FunctionParameter> parameters)
     {
-        const int propInit = 3;
-        const int propKey = 3;
+        const int propInit = 4;
+        const int propKey = 2;
         const int enumInit = -3;
         const int enumItem = 2;
 
