@@ -70,6 +70,16 @@ public class FunctionParameter
     public IReadOnlyList<string>? EnumValues { get; set; }
 
     /// <summary>
+    /// Nested properties when <see cref="Type"/> is "object".
+    /// </summary>
+    public IReadOnlyList<FunctionParameter>? Properties { get; set; }
+
+    /// <summary>
+    /// Item type when <see cref="Type"/> is "array" (e.g., "string", "number").
+    /// </summary>
+    public string? ArrayItemType { get; set; }
+
+    /// <summary>
     /// Creates a new function parameter.
     /// </summary>
     public FunctionParameter()
@@ -84,12 +94,16 @@ public class FunctionParameter
         string type,
         string description = "",
         bool isRequired = false,
-        IReadOnlyList<string>? enumValues = null)
+        IReadOnlyList<string>? enumValues = null,
+        IReadOnlyList<FunctionParameter>? properties = null,
+        string? arrayItemType = null)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Type = type ?? throw new ArgumentNullException(nameof(type));
         Description = description ?? string.Empty;
         IsRequired = isRequired;
         EnumValues = enumValues;
+        Properties = properties;
+        ArrayItemType = arrayItemType;
     }
 }

@@ -63,6 +63,47 @@ var encoding = TokenizerJsonLoader.FromFile("tokenizer.json", patterns: myPatter
 - `Split` with regex pattern — direct regex-based splitting
 - `Sequence[Split, ByteLevel]` — Llama 3, Qwen2, DeepSeek, and other modern models
 
+### Count message tokens (OpenAI chat format)
+
+Count tokens for chat messages using OpenAI's official formula, including support for function/tool definitions:
+
+```csharp
+using Tiktoken;
+
+// Simple message counting
+var messages = new List<ChatMessage>
+{
+    new("system", "You are a helpful assistant."),
+    new("user", "What is the weather in Paris?"),
+};
+int count = TikTokenEncoder.CountMessageTokens("gpt-4o", messages);
+
+// With tool/function definitions
+var tools = new List<ChatFunction>
+{
+    new("get_weather", "Get the current weather", new List<FunctionParameter>
+    {
+        new("location", "string", "The city name", isRequired: true),
+        new("unit", "string", "Temperature unit",
+            enumValues: new[] { "celsius", "fahrenheit" }),
+    }),
+};
+int countWithTools = TikTokenEncoder.CountMessageTokens("gpt-4o", messages, tools);
+
+// Or use the Encoder instance directly
+var encoder = ModelToEncoder.For("gpt-4o");
+int toolTokens = encoder.CountToolTokens(tools);
+```
+
+Nested object parameters and array types are also supported:
+```csharp
+new FunctionParameter("address", "object", "Mailing address", properties: new List<FunctionParameter>
+{
+    new("street", "string", "Street address", isRequired: true),
+    new("city", "string", "City name", isRequired: true),
+});
+```
+
 ### Benchmarks
 You can view the reports for each version [here](benchmarks)
 

@@ -580,4 +580,57 @@ public partial class Tests
 
         count.Should().BeGreaterThan(0);
     }
+
+    [TestMethod]
+    public void CountToolTokensNestedObject()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>
+        {
+            new("create_order", "Create a new order", new List<FunctionParameter>
+            {
+                new("item", "string", "Item name", isRequired: true),
+                new("address", "object", "Shipping address", properties: new List<FunctionParameter>
+                {
+                    new("street", "string", "Street address", isRequired: true),
+                    new("city", "string", "City", isRequired: true),
+                    new("zip", "string", "ZIP code"),
+                }),
+            }),
+        };
+
+        var count = encoder.CountToolTokens(tools);
+
+        // Should count both top-level and nested parameters
+        // Flat version for comparison
+        var flatTools = new List<ChatFunction>
+        {
+            new("create_order", "Create a new order", new List<FunctionParameter>
+            {
+                new("item", "string", "Item name", isRequired: true),
+            }),
+        };
+
+        var flatCount = encoder.CountToolTokens(flatTools);
+
+        // Nested version should have more tokens
+        count.Should().BeGreaterThan(flatCount);
+    }
+
+    [TestMethod]
+    public void CountToolTokensArrayType()
+    {
+        var encoder = ModelToEncoder.For("gpt-4o");
+        var tools = new List<ChatFunction>
+        {
+            new("process_items", "Process a list of items", new List<FunctionParameter>
+            {
+                new("items", "array", "The items to process", isRequired: true, arrayItemType: "string"),
+            }),
+        };
+
+        var count = encoder.CountToolTokens(tools);
+
+        count.Should().BeGreaterThan(19); // funcInit + funcEnd + propInit + propKey + tokens
+    }
 }

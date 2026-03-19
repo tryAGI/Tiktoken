@@ -295,10 +295,6 @@ public class Encoder
         tools = tools ?? throw new ArgumentNullException(nameof(tools));
 
         const int funcInit = 7;
-        const int propInit = 3;
-        const int propKey = 3;
-        const int enumInit = -3;
-        const int enumItem = 3;
         const int funcEnd = 12;
 
         var count = 0;
@@ -313,30 +309,56 @@ public class Encoder
 
             if (tool.Parameters != null && tool.Parameters.Count > 0)
             {
-                count += propInit;
-
-                for (var j = 0; j < tool.Parameters.Count; j++)
-                {
-                    var param = tool.Parameters[j];
-                    count += propKey;
-
-                    // Tokenize "key:type:description" (trailing period stripped)
-                    var paramDesc = param.Description.TrimEnd('.');
-                    count += CountTokens(param.Name + ":" + param.Type + ":" + paramDesc);
-
-                    if (param.EnumValues != null && param.EnumValues.Count > 0)
-                    {
-                        count += enumInit;
-                        for (var k = 0; k < param.EnumValues.Count; k++)
-                        {
-                            count += enumItem;
-                            count += CountTokens(param.EnumValues[k]);
-                        }
-                    }
-                }
+                count += CountParameterTokens(tool.Parameters);
             }
 
             count += funcEnd;
+        }
+
+        return count;
+    }
+
+    private int CountParameterTokens(IReadOnlyList<FunctionParameter> parameters)
+    {
+        const int propInit = 3;
+        const int propKey = 3;
+        const int enumInit = -3;
+        const int enumItem = 3;
+
+        var count = propInit;
+
+        for (var i = 0; i < parameters.Count; i++)
+        {
+            var param = parameters[i];
+            count += propKey;
+
+            // Tokenize "key:type:description" (trailing period stripped)
+            var paramDesc = param.Description.TrimEnd('.');
+            var type = param.Type;
+
+            // For array types, append item type (e.g., "array:string[]")
+            if (type == "array" && param.ArrayItemType != null)
+            {
+                type = param.ArrayItemType + "[]";
+            }
+
+            count += CountTokens(param.Name + ":" + type + ":" + paramDesc);
+
+            if (param.EnumValues != null && param.EnumValues.Count > 0)
+            {
+                count += enumInit;
+                for (var k = 0; k < param.EnumValues.Count; k++)
+                {
+                    count += enumItem;
+                    count += CountTokens(param.EnumValues[k]);
+                }
+            }
+
+            // Recurse into nested object properties
+            if (param.Properties != null && param.Properties.Count > 0)
+            {
+                count += CountParameterTokens(param.Properties);
+            }
         }
 
         return count;
