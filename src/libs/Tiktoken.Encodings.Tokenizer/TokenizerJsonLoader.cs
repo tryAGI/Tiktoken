@@ -135,7 +135,7 @@ public static class TokenizerJsonLoader
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public static async System.Threading.Tasks.Task<Encoding> FromUrlAsync(
-        string url,
+        Uri url,
         System.Net.Http.HttpClient httpClient,
         string name = "tokenizer",
         IReadOnlyList<string>? patterns = null,
@@ -144,7 +144,7 @@ public static class TokenizerJsonLoader
         url = url ?? throw new ArgumentNullException(nameof(url));
         httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
-        using var response = await httpClient.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+        using var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync(

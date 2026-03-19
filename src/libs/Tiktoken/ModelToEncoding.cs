@@ -13,17 +13,23 @@ public static class ModelToEncoding
 
     private static Dictionary<string, Lazy<Encoding>> Dictionary { get; } = new()
     {
-        // o-series reasoning models
+        // o-series reasoning models (o200k_base)
+        { "o4", O200K },
         { "o3", O200K },
         { "o1", O200K },
 
-        // chat
+        // GPT-4o / GPT-4.x family (o200k_base)
         { "gpt-4o", O200K },
+        { "gpt-4.5", O200K },
+        { "gpt-4.1", O200K },
+        { "chatgpt-4o", O200K },
+
+        // GPT-4 (cl100k_base)
         { "gpt-4", Cl100K },
         { "gpt-3.5-turbo", Cl100K },
         { "gpt-35-turbo", Cl100K }, // Azure deployment name
 
-        // embeddings
+        // embeddings (cl100k_base)
         { "text-embedding-ada-002", Cl100K },
         { "text-embedding-3-small", Cl100K },
         { "text-embedding-3-large", Cl100K },
@@ -37,10 +43,23 @@ public static class ModelToEncoding
     /// <returns></returns>
     public static Encoding? TryFor(string modelName)
     {
-        var lazy = Dictionary
-            .FirstOrDefault(a => modelName.StartsWith(a.Key, StringComparison.Ordinal)).Value;
+        modelName = modelName ?? throw new ArgumentNullException(nameof(modelName));
 
-        return lazy?.Value;
+        // Prefer the longest matching prefix so that "gpt-4.1-mini" matches
+        // "gpt-4.1" (o200k_base) rather than "gpt-4" (cl100k_base).
+        Lazy<Encoding>? best = null;
+        var bestLen = 0;
+        foreach (var kvp in Dictionary)
+        {
+            if (kvp.Key.Length > bestLen &&
+                modelName.StartsWith(kvp.Key, StringComparison.Ordinal))
+            {
+                best = kvp.Value;
+                bestLen = kvp.Key.Length;
+            }
+        }
+
+        return best?.Value;
     }
 
     /// <summary>

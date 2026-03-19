@@ -88,7 +88,7 @@ public class TokenizerSplitPattern
     /// String pattern variant.
     /// </summary>
     [JsonPropertyName("String")]
-    public string? String { get; set; }
+    public string? StringValue { get; set; }
 }
 
 /// <summary>

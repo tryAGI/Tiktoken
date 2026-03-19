@@ -16,14 +16,14 @@ namespace Tiktoken.Benchmarks;
 [HideColumns("Error", "StdDev", "StdDev", "RatioSD")]
 public class Benchmarks
 {
-    private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding("cl100k_base");
-    private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("cl100k_base");
-    private readonly Encoder _tiktoken = new(new Cl100KBase());
-    private readonly Encoder _tiktokenO200K = new(new O200KBase());
-    private readonly Tokenizer _microsoftMlTiktoken = TiktokenTokenizer.CreateForModel("gpt-4");
+    private readonly GptEncoding _sharpToken = GptEncoding.GetEncoding("o200k_base");
+    private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("o200k_base");
+    private readonly Encoder _tiktoken = new(new O200KBase());
+    private readonly Encoder _tiktokenCl100K = new(new Cl100KBase());
+    private readonly Tokenizer _microsoftMlTiktoken = TiktokenTokenizer.CreateForModel("gpt-4o");
     private ITokenizer? _tokenizerLib;
 
-    [Params(Strings.HelloWorld, Strings.KingLear, Strings.Bitcoin)]
+    [Params(Strings.HelloWorld, Strings.Code, Strings.Multilingual, Strings.MultilingualLong, Strings.Bitcoin)]
     public string Data = string.Empty;
 
     private List<int> _sharpTokenEncoded = null!;
@@ -32,20 +32,20 @@ public class Benchmarks
     private IReadOnlyList<int> _microsoftMlEncoded = null!;
     private int[] _tokenizerLibEncoded = null!;
     private int[] _tiktokenEncodedArray = null!;
-    private int[] _tiktokenO200KEncodedArray = null!;
+    private int[] _tiktokenCl100KEncodedArray = null!;
     private byte[] _dataUtf8 = null!;
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
-        _tokenizerLib = await TokenizerBuilder.CreateByModelNameAsync("gpt-4");
+        _tokenizerLib = await TokenizerBuilder.CreateByModelNameAsync("gpt-4o");
         _sharpTokenEncoded = _sharpToken.Encode(Data);
         _tiktokenSharpEncoded = _tiktokenSharp.Encode(Data);
         _tiktokenEncoded = _tiktoken.Encode(Data);
         _microsoftMlEncoded = _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
         _tokenizerLibEncoded = _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty).ToArray();
         _tiktokenEncodedArray = _tiktokenEncoded.ToArray();
-        _tiktokenO200KEncodedArray = _tiktokenO200K.Encode(Data).ToArray();
+        _tiktokenCl100KEncodedArray = _tiktokenCl100K.Encode(Data).ToArray();
         _dataUtf8 = System.Text.Encoding.UTF8.GetBytes(Data);
     }
     
@@ -149,30 +149,30 @@ public class Benchmarks
 
 
     [Benchmark(Baseline = true)]
-    [BenchmarkCategory("Encode_o200k")]
-    public IReadOnlyCollection<int> Tiktoken_cl100k_Encode() => _tiktoken.Encode(Data);
+    [BenchmarkCategory("Encode_cl100k")]
+    public IReadOnlyCollection<int> Tiktoken_o200k_Encode() => _tiktoken.Encode(Data);
 
     [Benchmark]
-    [BenchmarkCategory("Encode_o200k")]
-    public IReadOnlyCollection<int> Tiktoken_o200k_Encode() => _tiktokenO200K.Encode(Data);
+    [BenchmarkCategory("Encode_cl100k")]
+    public IReadOnlyCollection<int> Tiktoken_cl100k_Encode() => _tiktokenCl100K.Encode(Data);
 
 
     [Benchmark(Baseline = true)]
-    [BenchmarkCategory("CountTokens_o200k")]
-    public int Tiktoken_cl100k_CountTokens() => _tiktoken.CountTokens(Data);
+    [BenchmarkCategory("CountTokens_cl100k")]
+    public int Tiktoken_o200k_CountTokens() => _tiktoken.CountTokens(Data);
 
     [Benchmark]
-    [BenchmarkCategory("CountTokens_o200k")]
-    public int Tiktoken_o200k_CountTokens() => _tiktokenO200K.CountTokens(Data);
+    [BenchmarkCategory("CountTokens_cl100k")]
+    public int Tiktoken_cl100k_CountTokens() => _tiktokenCl100K.CountTokens(Data);
 
 
     [Benchmark(Baseline = true)]
-    [BenchmarkCategory("Decode_o200k")]
-    public string Tiktoken_cl100k_Decode() => _tiktoken.Decode(_tiktokenEncodedArray);
+    [BenchmarkCategory("Decode_cl100k")]
+    public string Tiktoken_o200k_Decode() => _tiktoken.Decode(_tiktokenEncodedArray);
 
     [Benchmark]
-    [BenchmarkCategory("Decode_o200k")]
-    public string Tiktoken_o200k_Decode() => _tiktokenO200K.Decode(_tiktokenO200KEncodedArray);
+    [BenchmarkCategory("Decode_cl100k")]
+    public string Tiktoken_cl100k_Decode() => _tiktokenCl100K.Decode(_tiktokenCl100KEncodedArray);
 
 
     [Benchmark(Baseline = true)]

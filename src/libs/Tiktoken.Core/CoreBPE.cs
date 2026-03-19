@@ -102,7 +102,7 @@ public class CoreBpe
             var matchValue = match.Value;
             var fastKey = matchValue;
 
-            if (FastEncoder.ContainsKey(fastKey))
+            if (IsAscii(fastKey) && FastEncoder.ContainsKey(fastKey))
             {
                 tokens++;
                 continue;
@@ -151,7 +151,7 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (fastEncoderLookup.ContainsKey(fastKey))
+            if (IsAscii(fastKey) && fastEncoderLookup.ContainsKey(fastKey))
             {
                 tokens++;
                 continue;
@@ -168,7 +168,7 @@ public class CoreBpe
         {
             var fastKey = new string(text.Slice(match.Index, match.Length));
 
-            if (FastEncoder.ContainsKey(fastKey))
+            if (IsAscii(fastKey) && FastEncoder.ContainsKey(fastKey))
             {
                 tokens++;
                 continue;
@@ -333,7 +333,7 @@ public class CoreBpe
             {
                 var fastKey = textSpan.Slice(match.Index, match.Length);
 
-                if (fastEncoderLookup.TryGetValue(fastKey, out var fastToken))
+                if (IsAscii(fastKey) && fastEncoderLookup.TryGetValue(fastKey, out var fastToken))
                 {
                     tokens.Add(fastToken);
                     continue;
@@ -350,7 +350,7 @@ public class CoreBpe
             {
                 var fastKey = new string(textSpan.Slice(match.Index, match.Length));
 
-                if (FastEncoder.TryGetValue(fastKey, out var fastToken))
+                if (IsAscii(fastKey) && FastEncoder.TryGetValue(fastKey, out var fastToken))
                 {
                     tokens.Add(fastToken);
                     continue;
@@ -368,7 +368,7 @@ public class CoreBpe
                 var matchValue = match.Value;
                 var fastKey = matchValue;
 
-                if (FastEncoder.TryGetValue(fastKey, out var fastToken))
+                if (IsAscii(fastKey) && FastEncoder.TryGetValue(fastKey, out var fastToken))
                 {
                     tokens.Add(fastToken);
                     continue;
@@ -450,7 +450,7 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (fastEncoderLookup.TryGetValue(fastKey, out var fastToken))
+            if (IsAscii(fastKey) && fastEncoderLookup.TryGetValue(fastKey, out var fastToken))
             {
                 tokens.Add(fastToken);
                 continue;
@@ -467,7 +467,7 @@ public class CoreBpe
         {
             var fastKey = new string(text.Slice(match.Index, match.Length));
 
-            if (FastEncoder.TryGetValue(fastKey, out var fastToken))
+            if (IsAscii(fastKey) && FastEncoder.TryGetValue(fastKey, out var fastToken))
             {
                 tokens.Add(fastToken);
                 continue;
@@ -988,6 +988,36 @@ public class CoreBpe
         rented.AsSpan(0, offset).CopyTo(newRented);
         System.Buffers.ArrayPool<byte>.Shared.Return(rented);
         rented = newRented;
+    }
+#endif
+
+    // FastEncoder maps byte values to chars, which creates false matches for
+    // non-ASCII characters (U+0080-U+00FF) where the char code equals a single
+    // byte value in the vocabulary. E.g., 'ª' (U+00AA) would falsely match the
+    // FastEncoder key for byte [0xAA], but its correct UTF-8 encoding is [0xC2, 0xAA].
+    // We must only use FastEncoder for ASCII-only strings.
+#if NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsAscii(ReadOnlySpan<char> text) => System.Text.Ascii.IsValid(text);
+#elif NET7_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsAscii(ReadOnlySpan<char> text)
+    {
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] > 127) return false;
+        }
+        return true;
+    }
+#else
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsAscii(string text)
+    {
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] > 127) return false;
+        }
+        return true;
     }
 #endif
 

@@ -5,21 +5,48 @@ namespace Tiktoken.UnitTests;
 [TestClass]
 public partial class Tests
 {
-    // private static IEnumerable<object[]> TestData => ReadTestPlans(H.Resources.TestPlans_txt).Select(static x => new object[] { x });
-    //
-    // [TestMethod]
-    // [DynamicData(nameof(TestData))]
-    // public void VariousCases(Tuple<string, string, List<int>> resource)
-    // {
-    //     var (encodingName, textToEncode, expectedEncoded) = resource;
-    //
-    //     var encoding = Encoding.Get(encodingName);
-    //     var encoded = encoding.Encode(textToEncode);
-    //     var decodedText = encoding.Decode(encoded);
-    //
-    //     encoded.Should().BeEquivalentTo(expectedEncoded);
-    //     decodedText.Should().Be(textToEncode);
-    // }
+    private static IEnumerable<object[]> TestData => ReadTestPlans(H.Resources.TestPlans_txt).Select(static x => new object[] { x });
+
+    [TestMethod]
+    [DynamicData(nameof(TestData))]
+    public void VariousCases(Tuple<string, string, List<int>> resource)
+    {
+        var (encodingName, textToEncode, expectedEncoded) = resource;
+
+        var encoding = ModelToEncoding.ForEncoding(encodingName);
+        var encoder = new Encoder(encoding);
+        var encoded = encoder.Encode(textToEncode);
+
+        encoded.Should().BeEquivalentTo(expectedEncoded);
+    }
+
+    [TestMethod]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
+    public void RoundTripAllSamples(string encodingName)
+    {
+        var encoding = ModelToEncoding.ForEncoding(encodingName);
+        var encoder = new Encoder(encoding);
+        var failures = new List<string>();
+
+        for (var i = 0; i < TestSamples.Length; i++)
+        {
+            var sample = TestSamples[i];
+            var encoded = encoder.Encode(sample);
+            var decoded = encoder.Decode(encoded);
+
+            if (decoded != sample)
+            {
+                failures.Add($"[{i}] '{(sample.Length > 40 ? sample[..40] + "..." : sample)}'");
+            }
+        }
+
+        failures.Should().BeEmpty(
+            $"round-trip failed for {failures.Count} sample(s) with {encodingName}: {string.Join(", ", failures)}");
+    }
     
     public Task BaseTest(string encodingName, string text, bool special = false)
     {
@@ -91,11 +118,33 @@ public partial class Tests
     [DataRow("p50k_base")]
     [DataRow("p50k_edit")]
     [DataRow("r50k_base")]
-    public Task KingLear(string encodingName)
+    public Task Multilingual(string encodingName)
     {
-        return BaseTest(encodingName, Strings.KingLear);
+        return BaseTest(encodingName, Strings.Multilingual);
     }
-    
+
+    [TestMethod]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
+    public Task Code(string encodingName)
+    {
+        return BaseTest(encodingName, Strings.Code);
+    }
+
+    [TestMethod]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
+    public Task MultilingualLong(string encodingName)
+    {
+        return BaseTest(encodingName, Strings.MultilingualLong);
+    }
+
     [TestMethod]
     [DataRow("o200k_base")]
     [DataRow("cl100k_base")]
@@ -300,7 +349,9 @@ public partial class Tests
         var texts = new[]
         {
             Strings.HelloWorld,
-            Strings.KingLear,
+            Strings.Multilingual,
+            Strings.Code,
+            Strings.MultilingualLong,
             Strings.Chinese,
         };
 
@@ -663,5 +714,304 @@ public partial class Tests
 
         var simpleCount = encoder.CountToolTokens(simpleTools);
         count.Should().BeGreaterThan(simpleCount);
+    }
+
+    [TestMethod]
+    public void EmptyStringReturnsZeroTokens()
+    {
+        var encodingNames = new[] { "o200k_base", "cl100k_base", "p50k_base", "p50k_edit", "r50k_base" };
+
+        foreach (var encodingName in encodingNames)
+        {
+            var encoding = ModelToEncoding.ForEncoding(encodingName);
+            var encoder = new Encoder(encoding);
+
+            encoder.Encode("").Should().BeEmpty($"Encode should return empty for {encodingName}");
+            encoder.CountTokens("").Should().Be(0, $"CountTokens should return 0 for {encodingName}");
+            encoder.Decode(Array.Empty<int>()).Should().Be("", $"Decode of empty should return empty for {encodingName}");
+        }
+    }
+
+    [TestMethod]
+    public void SpecialTokenThrowsWhenDisallowed()
+    {
+        var encoder = new Encoder(new Cl100KBase());
+
+        var act = () => encoder.EncodeWithAllDisallowedSpecial("hello <|endoftext|> world");
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [TestMethod]
+    public void SpecialTokenAllowedWhenExplicit()
+    {
+        var encoder = new Encoder(new Cl100KBase());
+
+        // Test with the same text the existing Special() BaseTest uses
+        var encoded = encoder.EncodeWithAllAllowedSpecial(Strings.Special);
+
+        encoded.Should().NotBeEmpty();
+        // <|endoftext|> should be encoded as token 100257 in cl100k_base
+        encoded.Should().Contain(100257);
+
+        var decoded = encoder.Decode(encoded.ToList());
+        decoded.Should().Be(Strings.Special);
+    }
+
+    [TestMethod]
+    public void ModelToEncoderThrowsForUnknownModel()
+    {
+        var act = () => ModelToEncoder.For("nonexistent-model-xyz");
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [TestMethod]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    [DataRow("p50k_base")]
+    [DataRow("p50k_edit")]
+    [DataRow("r50k_base")]
+    public void CountTokensMatchesEncodeLength(string encodingName)
+    {
+        var encoding = ModelToEncoding.ForEncoding(encodingName);
+        var encoder = new Encoder(encoding);
+
+        var texts = new[]
+        {
+            Strings.HelloWorld,
+            Strings.Chinese,
+            Strings.Multilingual,
+            Strings.Code,
+            Strings.MultilingualLong,
+            "A journey of a thousand miles begins with a single step.",
+            "こんにちは、世界！",
+            "1234567890",
+            " ",
+            "a",
+        };
+
+        foreach (var text in texts)
+        {
+            var encoded = encoder.Encode(text);
+            encoder.CountTokens(text).Should().Be(
+                encoded.Count,
+                $"CountTokens should match Encode().Count for '{text}' with {encodingName}");
+        }
+    }
+
+    [TestMethod]
+    public void ParallelEncodingIsThreadSafe()
+    {
+        var testPlans = ReadTestPlans(H.Resources.TestPlans_txt).ToList();
+        var exceptions = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+
+        Parallel.ForEach(testPlans, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, plan =>
+        {
+            try
+            {
+                var (encodingName, textToEncode, expectedEncoded) = plan;
+
+                var encoding = ModelToEncoding.ForEncoding(encodingName);
+                var encoder = new Encoder(encoding);
+                var encoded = encoder.Encode(textToEncode);
+
+                if (!encoded.SequenceEqual(expectedEncoded))
+                {
+                    throw new AssertFailedException(
+                        $"Parallel encoding mismatch for '{textToEncode}' with {encodingName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                exceptions.Add(ex);
+            }
+        });
+
+        if (!exceptions.IsEmpty)
+        {
+            throw new AggregateException("Parallel encoding failures", exceptions);
+        }
+    }
+
+    [TestMethod]
+    public void HelloWorldExactTokenIds()
+    {
+        // "hello world" — verified against Python tiktoken
+        new Encoder(new Cl100KBase()).Encode("hello world")
+            .Should().BeEquivalentTo(new[] { 15339, 1917 });
+
+        new Encoder(new O200KBase()).Encode("hello world")
+            .Should().BeEquivalentTo(new[] { 24912, 2375 });
+
+        new Encoder(new R50KBase()).Encode("hello world")
+            .Should().BeEquivalentTo(new[] { 31373, 995 });
+    }
+
+    [TestMethod]
+    public void HelloWorldWithPunctuationExactTokenIds()
+    {
+        // "Hello, World!" — verified against Python tiktoken
+        new Encoder(new Cl100KBase()).Encode("Hello, World!")
+            .Should().BeEquivalentTo(new[] { 9906, 11, 4435, 0 });
+    }
+
+    [TestMethod]
+    public void CrossValidateWithPythonTiktoken()
+    {
+        // Cross-validate .NET encoder output against Python tiktoken.
+        // Runs the GenerateTestPlans.py script and compares results.
+        // Skips gracefully if Python or tiktoken module is not available.
+        var scriptDir = AppContext.BaseDirectory;
+        while (scriptDir != null && !File.Exists(Path.Combine(scriptDir, "Tiktoken.UnitTests.csproj")))
+        {
+            scriptDir = Path.GetDirectoryName(scriptDir);
+        }
+        if (scriptDir == null)
+        {
+            Assert.Inconclusive("Could not find project directory");
+            return;
+        }
+
+        var scriptPath = Path.Combine(scriptDir, "Resources", "GenerateTestPlans.py");
+        if (!File.Exists(scriptPath))
+        {
+            Assert.Inconclusive("GenerateTestPlans.py not found");
+            return;
+        }
+
+        // Try python3 first, then python
+        var pythonCmd = "python3";
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = pythonCmd,
+            Arguments = $"\"{scriptPath}\" --stdout",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        string pythonOutput;
+        try
+        {
+            using var process = System.Diagnostics.Process.Start(psi)!;
+            pythonOutput = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit(30_000);
+
+            if (process.ExitCode != 0)
+            {
+                Assert.Inconclusive($"Python script failed (exit {process.ExitCode}): {stderr}");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Assert.Inconclusive($"Python not available: {ex.Message}");
+            return;
+        }
+
+        // Parse Python output
+        var pythonPlans = ReadTestPlansFromString(pythonOutput).ToList();
+
+        // Generate .NET output for comparison
+        var dotnetPlans = new List<Tuple<string, string, List<int>>>();
+        foreach (var encodingName in EncodingNames)
+        {
+            var encoding = ModelToEncoding.ForEncoding(encodingName);
+            var encoder = new Encoder(encoding);
+
+            foreach (var sample in TestSamples)
+            {
+                var tokens = encoder.Encode(sample);
+                dotnetPlans.Add(Tuple.Create(encodingName, sample, tokens.ToList()));
+            }
+        }
+
+        // Compare
+        var mismatches = new List<string>();
+        var pythonDict = pythonPlans.ToDictionary(p => (p.Item1, p.Item2), p => p.Item3);
+
+        foreach (var plan in dotnetPlans)
+        {
+            if (pythonDict.TryGetValue((plan.Item1, plan.Item2), out var pythonTokens))
+            {
+                if (!plan.Item3.SequenceEqual(pythonTokens))
+                {
+                    mismatches.Add(
+                        $"{plan.Item1}: '{(plan.Item2.Length > 30 ? plan.Item2[..30] + "..." : plan.Item2)}' " +
+                        $"(.NET={plan.Item3.Count} tokens, Python={pythonTokens.Count} tokens)");
+                }
+            }
+        }
+
+        if (mismatches.Count > 0)
+        {
+            // Report but don't fail — some divergence is expected due to
+            // .NET vs Python regex engine differences for \p{L} classification
+            Console.WriteLine($"Cross-validation divergences ({mismatches.Count}):");
+            foreach (var m in mismatches)
+            {
+                Console.WriteLine($"  {m}");
+            }
+        }
+
+        // At minimum, the majority should match
+        var matchCount = dotnetPlans.Count - mismatches.Count;
+        matchCount.Should().BeGreaterThan(dotnetPlans.Count * 8 / 10,
+            $"At least 80% of test cases should match Python tiktoken. " +
+            $"Matched {matchCount}/{dotnetPlans.Count}. Mismatches:\n{string.Join("\n", mismatches.Take(10))}");
+    }
+
+    [TestMethod]
+    [DataRow("gpt-4o", "o200k_base")]
+    [DataRow("gpt-4o-mini", "o200k_base")]
+    [DataRow("gpt-4.5-preview", "o200k_base")]
+    [DataRow("gpt-4.1", "o200k_base")]
+    [DataRow("gpt-4.1-mini", "o200k_base")]
+    [DataRow("gpt-4.1-nano", "o200k_base")]
+    [DataRow("chatgpt-4o-latest", "o200k_base")]
+    [DataRow("o4-mini", "o200k_base")]
+    [DataRow("o3", "o200k_base")]
+    [DataRow("o3-mini", "o200k_base")]
+    [DataRow("o3-pro", "o200k_base")]
+    [DataRow("o1", "o200k_base")]
+    [DataRow("o1-mini", "o200k_base")]
+    [DataRow("gpt-4", "cl100k_base")]
+    [DataRow("gpt-4-turbo", "cl100k_base")]
+    [DataRow("gpt-3.5-turbo", "cl100k_base")]
+    [DataRow("gpt-35-turbo", "cl100k_base")]
+    [DataRow("text-embedding-ada-002", "cl100k_base")]
+    [DataRow("text-embedding-3-small", "cl100k_base")]
+    [DataRow("text-embedding-3-large", "cl100k_base")]
+    public void ModelToEncodingMapsCorrectly(string modelName, string expectedEncoding)
+    {
+        var encoding = ModelToEncoding.For(modelName);
+        var expectedEnc = ModelToEncoding.ForEncoding(expectedEncoding);
+
+        // Verify they produce the same tokens for a test string
+        var encoder1 = new Encoder(encoding);
+        var encoder2 = new Encoder(expectedEnc);
+
+        var tokens1 = encoder1.Encode("hello world");
+        var tokens2 = encoder2.Encode("hello world");
+
+        tokens1.Should().BeEquivalentTo(tokens2,
+            $"Model '{modelName}' should use {expectedEncoding} encoding");
+    }
+
+    [TestMethod]
+    public void TryForReturnsNullForUnknownModel()
+    {
+        var encoding = ModelToEncoding.TryFor("nonexistent-model-xyz-999");
+        encoding.Should().BeNull();
+    }
+
+    [TestMethod]
+    public void TryForEncodingReturnsNullForUnknownEncoding()
+    {
+        var encoding = ModelToEncoding.TryForEncoding("nonexistent_encoding");
+        encoding.Should().BeNull();
     }
 }

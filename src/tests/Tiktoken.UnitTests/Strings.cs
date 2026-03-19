@@ -5,7 +5,41 @@ public static class Strings
     public const string HelloWorld = "hello world";
     public const string Special = "hello <|endoftext|>";
     public const string Chinese = "我很抱歉，我不能提供任何非法或不道德的建议。快速赚钱是不容易的，需要耐心、刻苦努力和经验。如果您想增加收入，请考虑增加工作时间、寻找其他业务机会、学习新技能或提高自己的价值等方法。请记住，通过合法而道德的方式来获得收入，才是长期稳定的解决方案。";
-    public const string KingLear = "King Lear, one of Shakespeare's darkest and most savage plays, tells the story of the foolish and Job-like Lear, who divides his kingdom, as he does his affections, according to vanity and whim. Lear’s failure as a father engulfs himself and his world in turmoil and tragedy.";
+    public const string Multilingual = "The quick brown fox jumps over the lazy dog. Le renard brun saute par-dessus le chien paresseux. Ñoño español con eñe. Überraschung auf Deutsch. Привет мир! Как дела? 素早い茶色の狐が怠惰な犬を飛び越える。빠른 갈색 여우가 게으른 개를 뛰어넘는다. مرحبا بالعالم. สวัสดีชาวโลก 🦊🐕🌍✨";
+    public const string Code = @"import numpy as np
+from typing import Optional
+
+def binary_search(arr: list[int], target: int) -> Optional[int]:
+    """"""Find the index of target in a sorted array.
+
+    Args:
+        arr: A sorted list of integers.
+        target: The value to search for.
+
+    Returns:
+        The index of target if found, None otherwise.
+
+    Examples:
+        >>> binary_search([1, 3, 5, 7, 9], 5)
+        2
+        >>> binary_search([1, 3, 5, 7, 9], 4)
+        None
+    """"""
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return None
+
+# Performance: O(log n) time, O(1) space
+result = binary_search([2, 4, 6, 8, 10, 12], 8)
+print(f""Found at index: {result}"")  # Output: Found at index: 3";
+    public const string MultilingualLong = "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the English alphabet. It has been used since the late 19th century to test typewriters and keyboards.\n\nLe renard brun rapide saute par-dessus le chien paresseux. Ce pangramme est utilisé pour tester les polices de caractères et les claviers. La langue française est parlée par environ 300 millions de personnes dans le monde.\n\nDer schnelle braune Fuchs springt über den faulen Hund. Dieser Pangram wird zum Testen von Schriftarten und Tastaturen verwendet. Die deutsche Sprache hat viele zusammengesetzte Wörter wie Geschwindigkeitsbegrenzung und Rindfleischetikettierungsüberwachungsaufgabenübertragungsgesetz.\n\nБыстрая коричневая лиса перепрыгивает через ленивую собаку. Эта фраза используется для проверки шрифтов и клавиатур. Русский язык является одним из самых распространённых языков в мире. Он использует кириллический алфавит, который также применяется в украинском, белорусском и болгарском языках.\n\n素早い茶色の狐が怠惰な犬を飛び越える。この文は日本語のフォントやキーボードのテストに使用されます。日本語には、ひらがな、カタカナ、漢字の三つの文字体系があります。自然言語処理の分野では、日本語のトークン化は特に難しい課題です。\n\n敏捷的棕色狐狸跳过了懒惰的狗。这个句子用于测试字体和键盘。中文是世界上使用人数最多的语言。中文使用汉字书写系统，每个汉字代表一个音节和一个意义。自然语言处理领域中，中文分词是一个重要的研究课题。\n\n빠른 갈색 여우가 게으른 개를 뛰어넘는다. 이 문장은 글꼴과 키보드 테스트에 사용됩니다. 한국어는 한글이라는 고유의 문자 체계를 사용합니다. 한글은 세종대왕이 1443년에 창제한 과학적인 문자입니다.\n\nالثعلب البني السريع يقفز فوق الكلب الكسول. تُستخدم هذه الجملة لاختبار الخطوط ولوحات المفاتيح. اللغة العربية هي واحدة من أكثر اللغات انتشاراً في العالم. تُكتب العربية من اليمين إلى اليسار وتستخدم أبجدية فريدة.\n\nสุนัขจิ้งจอกสีน้ำตาลกระโดดข้ามสุนัขขี้เกียจ ภาษาไทยมีระบบการเขียนที่ไม่ใช้ช่องว่างระหว่างคำ การแบ่งคำในภาษาไทยเป็นความท้าทายสำคัญในการประมวลผลภาษาธรรมชาติ\n\nहिन्दी भाषा देवनागरी लिपि में लिखी जाती है। यह विश्व की चौथी सबसे अधिक बोली जाने वाली भाषा है। प्राकृतिक भाषा प्रसंस्करण में हिन्दी के लिए विशेष चुनौतियाँ हैं।\n\nהשועל החום המהיר קופץ מעל הכלב העצלן. השפה העברית היא שפה שמית הנכתבת מימין לשמאל. עיבוד שפה טבעית בעברית מציב אתגרים ייחודיים בשל מורפולוגיה עשירה ומערכת ניקוד.\n\nსწრაფი ყავისფერი მელა გადახტა ზარმაც ძაღლს. ქართული ენა იყენებს უნიკალურ მხედრულ დამწერლობას. ბუნებრივი ენის დამუშავება ქართულში განსაკუთრებულ სირთულეებს წარმოადგენს აგლუტინაციური მორფოლოგიის გამო.\n\n🦊🐕🌍✨ #NLP #multilingual #tokenization";
     public const string EploreUtfBoundary = " řeknu";
     public const string Bitcoin = @"1. Introduction
 Commerce on the Internet has come to rely almost exclusively on financial institutions serving as
