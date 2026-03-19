@@ -1,10 +1,17 @@
-﻿using System.Reflection;
+using System.Reflection;
+#if NET7_0_OR_GREATER
+using System.Text.RegularExpressions;
+#endif
 using static Tiktoken.Encodings.EncodingConstants;
 
 namespace Tiktoken.Encodings;
 
 /// <inheritdoc />
+#if NET7_0_OR_GREATER
+public partial class O200KBase : Encoding
+#else
 public class O200KBase : Encoding
+#endif
 {
     /// <inheritdoc />
     public O200KBase() : base(
@@ -25,5 +32,17 @@ public class O200KBase : Encoding
             [EndOfPrompt] = 200018,
         })
     {
+#if NET7_0_OR_GREATER
+        CompiledRegex = TokenPattern();
+        CompiledSpecialRegex = SpecialTokenPattern();
+#endif
     }
+
+#if NET7_0_OR_GREATER
+    [GeneratedRegex(@"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n/]*|\s*[\r\n]+|\s+(?!\S)|\s+")]
+    private static partial Regex TokenPattern();
+
+    [GeneratedRegex(@"(<\|endoftext\|>|<\|endofprompt\|>)")]
+    private static partial Regex SpecialTokenPattern();
+#endif
 }

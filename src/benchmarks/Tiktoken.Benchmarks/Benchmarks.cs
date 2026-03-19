@@ -19,9 +19,10 @@ public class Benchmarks
     private readonly TikToken _tiktokenSharp = TikToken.GetEncoding("o200k_base");
     private readonly Encoder _tiktoken = new(new O200KBase());
     private readonly Encoder _tiktokenCl100K = new(new Cl100KBase());
+    private readonly Encoder _tiktokenNoCache = new(new O200KBase()) { EnableCache = false };
     private readonly Tokenizer _microsoftMlTiktoken = TiktokenTokenizer.CreateForModel("gpt-4o");
 
-    [Params(Strings.HelloWorld, Strings.Code, Strings.Multilingual, Strings.MultilingualLong, Strings.Bitcoin)]
+    [Params(Strings.HelloWorld, Strings.Code, Strings.Multilingual, Strings.MultilingualLong, Strings.Bitcoin, Strings.CjkHeavy)]
     public string Data = string.Empty;
 
     private List<int> _sharpTokenEncoded = null!;
@@ -209,5 +210,49 @@ public class Benchmarks
         {
             System.Buffers.ArrayPool<int>.Shared.Return(rented);
         }
+    }
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("CountTokensColdCache")]
+    public int Tiktoken_CountTokens_Cached() => _tiktoken.CountTokens(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("CountTokensColdCache")]
+    public int Tiktoken_CountTokens_NoCache() => _tiktokenNoCache.CountTokens(Data);
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("EncodeColdCache")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_Cached() => _tiktoken.Encode(Data);
+
+    [Benchmark]
+    [BenchmarkCategory("EncodeColdCache")]
+    public IReadOnlyCollection<int> Tiktoken_Encode_NoCache() => _tiktokenNoCache.Encode(Data);
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("Construction")]
+    public Encoder Tiktoken_Construction_o200k() => new(new O200KBase());
+
+    [Benchmark]
+    [BenchmarkCategory("Construction")]
+    public Encoder Tiktoken_Construction_cl100k() => new(new Cl100KBase());
+
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("FirstCall")]
+    public int Tiktoken_FirstCall_CountTokens()
+    {
+        var encoder = new Encoder(new O200KBase());
+        return encoder.CountTokens(Data);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("FirstCall")]
+    public IReadOnlyCollection<int> Tiktoken_FirstCall_Encode()
+    {
+        var encoder = new Encoder(new O200KBase());
+        return encoder.Encode(Data);
     }
 }

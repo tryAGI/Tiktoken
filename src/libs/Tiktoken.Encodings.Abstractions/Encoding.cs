@@ -1,17 +1,19 @@
-﻿namespace Tiktoken.Encodings;
+﻿using System.Text.RegularExpressions;
+
+namespace Tiktoken.Encodings;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public class Encoding
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public string Name { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public IReadOnlyList<string> Patterns { get; set; }
 
@@ -21,17 +23,27 @@ public class Encoding
     public string Pattern => string.Join("|", Patterns);
 
     /// <summary>
+    /// Pre-compiled regex instance. When set, used instead of compiling Pattern at runtime.
+    /// </summary>
+    public Regex? CompiledRegex { get; protected set; }
+
+    /// <summary>
+    /// Pre-compiled special token regex instance. When set, used instead of compiling at runtime.
+    /// </summary>
+    public Regex? CompiledSpecialRegex { get; protected set; }
+
+    /// <summary>
     /// tiktoken file
     /// </summary>
     public IReadOnlyDictionary<byte[], int> MergeableRanks { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public IReadOnlyDictionary<string, int> SpecialTokens { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="name"></param>
     /// <param name="patterns"></param>
