@@ -1,6 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using Microsoft.DeepDev;
 using Microsoft.ML.Tokenizers;
 using SharpToken;
 using Tiktoken.Encodings;
@@ -21,7 +20,6 @@ public class Benchmarks
     private readonly Encoder _tiktoken = new(new O200KBase());
     private readonly Encoder _tiktokenCl100K = new(new Cl100KBase());
     private readonly Tokenizer _microsoftMlTiktoken = TiktokenTokenizer.CreateForModel("gpt-4o");
-    private ITokenizer? _tokenizerLib;
 
     [Params(Strings.HelloWorld, Strings.Code, Strings.Multilingual, Strings.MultilingualLong, Strings.Bitcoin)]
     public string Data = string.Empty;
@@ -30,62 +28,51 @@ public class Benchmarks
     private List<int> _tiktokenSharpEncoded = null!;
     private IReadOnlyCollection<int> _tiktokenEncoded = null!;
     private IReadOnlyList<int> _microsoftMlEncoded = null!;
-    private int[] _tokenizerLibEncoded = null!;
     private int[] _tiktokenEncodedArray = null!;
     private int[] _tiktokenCl100KEncodedArray = null!;
     private byte[] _dataUtf8 = null!;
 
     [GlobalSetup]
-    public async Task GlobalSetup()
+    public void GlobalSetup()
     {
-        _tokenizerLib = await TokenizerBuilder.CreateByModelNameAsync("gpt-4o");
         _sharpTokenEncoded = _sharpToken.Encode(Data);
         _tiktokenSharpEncoded = _tiktokenSharp.Encode(Data);
         _tiktokenEncoded = _tiktoken.Encode(Data);
         _microsoftMlEncoded = _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
-        _tokenizerLibEncoded = _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty).ToArray();
         _tiktokenEncodedArray = _tiktokenEncoded.ToArray();
         _tiktokenCl100KEncodedArray = _tiktokenCl100K.Encode(Data).ToArray();
         _dataUtf8 = System.Text.Encoding.UTF8.GetBytes(Data);
     }
-    
+
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Encode")]
-    public List<int> SharpTokenV2_0_3_Encode() => _sharpToken.Encode(Data);
-    
+    public List<int> SharpTokenV2_0_4_Encode() => _sharpToken.Encode(Data);
+
     [Benchmark]
     [BenchmarkCategory("Encode")]
-    public List<int> TiktokenSharpV1_1_5_Encode() => _tiktokenSharp.Encode(Data);
-    
+    public List<int> TiktokenSharpV1_2_1_Encode() => _tiktokenSharp.Encode(Data);
+
     [Benchmark]
     [BenchmarkCategory("Encode")]
-    public IReadOnlyCollection<int> MicrosoftMLTokenizerV1_0_0_Encode() => _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
-    
-    [Benchmark]
-    [BenchmarkCategory("Encode")]
-    public IReadOnlyCollection<int> TokenizerLibV1_3_3_Encode() => _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty);
-    
+    public IReadOnlyCollection<int> MicrosoftMLTokenizerV3_0_0_Encode() => _microsoftMlTiktoken.EncodeToIds(Data.AsSpan());
+
     [Benchmark]
     [BenchmarkCategory("Encode")]
     public IReadOnlyCollection<int> Tiktoken_Encode() => _tiktoken.Encode(Data);
-    
-    
+
+
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("CountTokens")]
-    public int SharpTokenV2_0_3_() => _sharpToken.Encode(Data).Count;
-    
+    public int SharpTokenV2_0_4_() => _sharpToken.Encode(Data).Count;
+
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
-    public int TiktokenSharpV1_1_5_() => _tiktokenSharp.Encode(Data).Count;
-    
+    public int TiktokenSharpV1_2_1_() => _tiktokenSharp.Encode(Data).Count;
+
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
-    public int MicrosoftMLTokenizerV1_0_0_() => _microsoftMlTiktoken.CountTokens(Data.AsSpan());
-    
-    [Benchmark]
-    [BenchmarkCategory("CountTokens")]
-    public int TokenizerLibV1_3_3_() => _tokenizerLib!.Encode(Data, ArraySegment<string>.Empty).Count;
-    
+    public int MicrosoftMLTokenizerV3_0_0_() => _microsoftMlTiktoken.CountTokens(Data.AsSpan());
+
     [Benchmark]
     [BenchmarkCategory("CountTokens")]
     public int Tiktoken_() => _tiktoken.CountTokens(Data);
@@ -93,19 +80,15 @@ public class Benchmarks
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Decode")]
-    public string SharpTokenV2_0_3_Decode() => _sharpToken.Decode(_sharpTokenEncoded);
+    public string SharpTokenV2_0_4_Decode() => _sharpToken.Decode(_sharpTokenEncoded);
 
     [Benchmark]
     [BenchmarkCategory("Decode")]
-    public string TiktokenSharpV1_1_5_Decode() => _tiktokenSharp.Decode(_tiktokenSharpEncoded);
+    public string TiktokenSharpV1_2_1_Decode() => _tiktokenSharp.Decode(_tiktokenSharpEncoded);
 
     [Benchmark]
     [BenchmarkCategory("Decode")]
-    public string? MicrosoftMLTokenizerV1_0_0_Decode() => _microsoftMlTiktoken.Decode(_microsoftMlEncoded);
-
-    [Benchmark]
-    [BenchmarkCategory("Decode")]
-    public string TokenizerLibV1_3_3_Decode() => _tokenizerLib!.Decode(_tokenizerLibEncoded);
+    public string? MicrosoftMLTokenizerV3_0_0_Decode() => _microsoftMlTiktoken.Decode(_microsoftMlEncoded);
 
     [Benchmark]
     [BenchmarkCategory("Decode")]

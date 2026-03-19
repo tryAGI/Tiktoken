@@ -9,9 +9,8 @@
     <ItemGroup>
       <PackageReference Include="BenchmarkDotNet" />
       <PackageReference Include="Microsoft.Bcl.Memory" />
-      <PackageReference Include="Microsoft.DeepDev.TokenizerLib" />
       <PackageReference Include="Microsoft.ML.Tokenizers" />
-      <PackageReference Include="Microsoft.ML.Tokenizers.Data.Cl100kBase" />
+      <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" />
       <PackageReference Include="SharpToken" />
       <PackageReference Include="TiktokenSharp" />
     </ItemGroup>
