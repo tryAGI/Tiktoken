@@ -254,10 +254,10 @@ public class Encoder
     /// Counts total tokens for chat messages plus function/tool definitions.
     /// </summary>
     /// <remarks>
-    /// Tool token counting is based on reverse-engineered formulas from the OpenAI Cookbook
-    /// and community research. OpenAI internally converts function definitions to a TypeScript
-    /// namespace format before tokenizing. The overhead constants used here (funcInit=7,
-    /// propInit=3, propKey=3, funcEnd=12) are for gpt-4o and newer models.
+    /// Tool token counting is based on reverse-engineered formulas calibrated against OpenAI's
+    /// /v1/responses/input_tokens endpoint. OpenAI internally converts function definitions to a
+    /// TypeScript namespace format before tokenizing. Constants: sectionOverhead=10, perFunction=7,
+    /// propInit=3, propKey=3.
     /// <para>
     /// For exact counts, use OpenAI's server-side token counting API.
     /// </para>
@@ -281,12 +281,13 @@ public class Encoder
     }
 
     /// <summary>
-    /// Counts tokens consumed by function/tool definitions using the OpenAI Cookbook formula.
-    /// Each function adds: funcInit (7) + encoded name:description + property overhead + funcEnd (12).
+    /// Counts tokens consumed by function/tool definitions.
+    /// Adds a one-time section overhead (10 tokens) plus per-function overhead (7 tokens each)
+    /// plus encoded name:description and property costs.
     /// </summary>
     /// <remarks>
-    /// Based on the OpenAI Cookbook formula for gpt-4o and newer models.
-    /// The overhead constants are: funcInit=7, propInit=3, propKey=3, enumInit=-3, enumItem=3, funcEnd=12.
+    /// Constants calibrated against OpenAI's /v1/responses/input_tokens endpoint:
+    /// sectionOverhead=10, perFunction=7, propInit=3, propKey=3, enumInit=-3, enumItem=2.
     /// </remarks>
     /// <param name="tools">The function/tool definitions.</param>
     /// <returns>The token count for the tool definitions.</returns>
@@ -294,14 +295,22 @@ public class Encoder
     {
         tools = tools ?? throw new ArgumentNullException(nameof(tools));
 
-        const int funcInit = 7;
-        const int funcEnd = 12;
+        // Overhead constants calibrated against OpenAI's /v1/responses/input_tokens endpoint.
+        // The tools section has a one-time wrapper overhead (namespace declaration)
+        // plus per-function overhead for each tool definition.
+        const int sectionOverhead = 10; // namespace functions { ... } // namespace functions
+        const int perFunction = 7;      // type name = (_: { ... }) => any;
 
-        var count = 0;
+        if (tools.Count == 0)
+        {
+            return 0;
+        }
+
+        var count = sectionOverhead;
         for (var i = 0; i < tools.Count; i++)
         {
             var tool = tools[i];
-            count += funcInit;
+            count += perFunction;
 
             // Tokenize "name:description" (trailing period stripped per OpenAI behavior)
             var desc = tool.Description.TrimEnd('.');
@@ -311,8 +320,6 @@ public class Encoder
             {
                 count += CountParameterTokens(tool.Parameters);
             }
-
-            count += funcEnd;
         }
 
         return count;
@@ -323,7 +330,7 @@ public class Encoder
         const int propInit = 3;
         const int propKey = 3;
         const int enumInit = -3;
-        const int enumItem = 3;
+        const int enumItem = 2;
 
         var count = propInit;
 
