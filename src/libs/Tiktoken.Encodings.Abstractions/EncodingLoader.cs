@@ -22,8 +22,22 @@ public static class EncodingLoader
     {
         assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
 
-        var resourcePath = assembly
-            .GetManifestResourceNames()
+        var resourceNames = assembly.GetManifestResourceNames();
+
+        // Prefer binary format (.ttkb) for faster loading
+        var binaryName = name.Replace(".tiktoken", ".ttkb");
+        var binaryResourcePath = resourceNames
+            .FirstOrDefault(x => x.EndsWith(binaryName, StringComparison.OrdinalIgnoreCase));
+        if (binaryResourcePath != null)
+        {
+            using var binaryStream =
+                assembly.GetManifestResourceStream(binaryResourcePath) ??
+                throw new InvalidOperationException("Resource not found.");
+            return LoadEncodingFromBinaryStream(binaryStream);
+        }
+
+        // Fall back to text format (.tiktoken)
+        var resourcePath = resourceNames
             .Single(x => x.EndsWith(name, StringComparison.OrdinalIgnoreCase));
 
         using var stream =
@@ -65,6 +79,44 @@ public static class EncodingLoader
             var tokenBytes = Convert.FromBase64String(tokens[0]);
             var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
 #endif
+            dictionary[tokenBytes] = rank;
+        }
+
+        return dictionary;
+    }
+
+    /// <summary>
+    /// Loads encoding from a binary .ttkb stream (compact format: no base64 decoding overhead).
+    /// Format: [TTKB magic 4B][version uint32 LE][count uint32 LE][entries: rank int32 LE + len byte + token bytes]
+    /// </summary>
+    public static Dictionary<byte[], int> LoadEncodingFromBinaryStream(Stream stream)
+    {
+        stream = stream ?? throw new ArgumentNullException(nameof(stream));
+
+        using var reader = new BinaryReader(stream);
+
+        // Read and validate header
+        var magic = reader.ReadBytes(4);
+        if (magic.Length < 4 || magic[0] != (byte)'T' || magic[1] != (byte)'T' ||
+            magic[2] != (byte)'K' || magic[3] != (byte)'B')
+        {
+            throw new FormatException("Invalid binary encoding file: bad magic.");
+        }
+
+        var version = reader.ReadUInt32();
+        if (version != 1)
+        {
+            throw new FormatException($"Unsupported binary encoding version: {version}");
+        }
+
+        var count = (int)reader.ReadUInt32();
+        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
+
+        for (var i = 0; i < count; i++)
+        {
+            var rank = reader.ReadInt32();
+            var tokenLength = reader.ReadByte();
+            var tokenBytes = reader.ReadBytes(tokenLength);
             dictionary[tokenBytes] = rank;
         }
 

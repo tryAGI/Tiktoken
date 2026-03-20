@@ -42,13 +42,15 @@ public class CoreBpe
     private Regex Regex { get; set; }
 
 #if NET8_0_OR_GREATER
-    private FrozenDictionary<int, byte[]> Decoder { get; set; }
-    private FrozenDictionary<int, string> SpecialTokensDecoder { get; set; }
-    private FrozenDictionary<int, byte[]> SpecialTokensDecoderBytes { get; set; }
+    private FrozenDictionary<int, byte[]> Decoder => _lazyDecoder.Value;
+    private FrozenDictionary<int, byte[]> SpecialTokensDecoderBytes => _lazySpecialTokensDecoderBytes.Value;
+    private Lazy<FrozenDictionary<int, byte[]>> _lazyDecoder = null!;
+    private Lazy<FrozenDictionary<int, byte[]>> _lazySpecialTokensDecoderBytes = null!;
 #else
-    private Dictionary<int, byte[]> Decoder { get; set; }
-    private Dictionary<int, string> SpecialTokensDecoder { get; set; }
-    private Dictionary<int, byte[]> SpecialTokensDecoderBytes { get; set; }
+    private Dictionary<int, byte[]> Decoder => _lazyDecoder.Value;
+    private Dictionary<int, byte[]> SpecialTokensDecoderBytes => _lazySpecialTokensDecoderBytes.Value;
+    private Lazy<Dictionary<int, byte[]>> _lazyDecoder = null!;
+    private Lazy<Dictionary<int, byte[]>> _lazySpecialTokensDecoderBytes = null!;
 #endif
 
     /// <summary>
@@ -86,26 +88,27 @@ public class CoreBpe
             decoderDict[kvp.Value] = kvp.Key;
         }
 
-        // Freeze all large dictionaries in parallel
+        // Freeze Encoder and FastEncoder in parallel
         var comparer = new ByteArrayComparer();
         var frozenEncoderTask = System.Threading.Tasks.Task.Run(() => encoder.ToFrozenDictionary(comparer));
         var frozenFastEncoderTask = System.Threading.Tasks.Task.Run(() => fastEncoderDict.ToFrozenDictionary(StringComparer.Ordinal));
-        var frozenDecoderTask = System.Threading.Tasks.Task.Run(() => decoderDict.ToFrozenDictionary());
 
         // Build small dictionaries and compile regex while large dicts freeze in parallel
         SpecialTokensEncoder = specialTokensEncoder.ToFrozenDictionary(StringComparer.Ordinal);
-        SpecialTokensDecoder = specialTokensEncoder
-            .ToFrozenDictionary(static x => x.Value, static x => x.Key);
-        SpecialTokensDecoderBytes = specialTokensEncoder
-            .ToFrozenDictionary(static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
 
         Regex = compiledRegex ?? new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = compiledSpecialRegex ?? new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
 
+        // Lazy-init Decoder and SpecialTokensDecoderBytes (only built on first Decode call)
+        _lazyDecoder = new Lazy<FrozenDictionary<int, byte[]>>(() => decoderDict.ToFrozenDictionary());
+        var capturedSpecialTokensEncoder = specialTokensEncoder;
+        _lazySpecialTokensDecoderBytes = new Lazy<FrozenDictionary<int, byte[]>>(() =>
+            capturedSpecialTokensEncoder.ToFrozenDictionary(
+                static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key)));
+
         // Wait for parallel frozen dictionary construction
         Encoder = frozenEncoderTask.Result;
         FastEncoder = frozenFastEncoderTask.Result;
-        Decoder = frozenDecoderTask.Result;
 #else
         Encoder = encoder;
 
@@ -136,12 +139,14 @@ public class CoreBpe
         Regex = compiledRegex ?? new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = compiledSpecialRegex ?? new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
 
-        Decoder = Encoder
-            .ToDictionary(static x => x.Value, static x => x.Key);
-        SpecialTokensDecoder = specialTokensEncoder
-            .ToDictionary(static x => x.Value, static x => x.Key);
-        SpecialTokensDecoderBytes = specialTokensEncoder
-            .ToDictionary(static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
+        // Lazy-init Decoder and SpecialTokensDecoderBytes (only built on first Decode call)
+        var capturedEncoder = Encoder;
+        _lazyDecoder = new Lazy<Dictionary<int, byte[]>>(() =>
+            capturedEncoder.ToDictionary(static x => x.Value, static x => x.Key));
+        var capturedSpecialTokensEncoder = specialTokensEncoder;
+        _lazySpecialTokensDecoderBytes = new Lazy<Dictionary<int, byte[]>>(() =>
+            capturedSpecialTokensEncoder.ToDictionary(
+                static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key)));
 #endif
     }
 

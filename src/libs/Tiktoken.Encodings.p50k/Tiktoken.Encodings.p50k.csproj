@@ -7,6 +7,7 @@
 
     <ItemGroup Label="Resources">
         <EmbeddedResource Include="*.tiktoken" />
+        <EmbeddedResource Include="*.ttkb" />
     </ItemGroup>
 
     <ItemGroup>
