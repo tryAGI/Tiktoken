@@ -21,11 +21,16 @@ public static class EncodingLoader
         string name)
     {
         assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
+        name = name ?? throw new ArgumentNullException(nameof(name));
 
         var resourceNames = assembly.GetManifestResourceNames();
 
         // Prefer binary format (.ttkb) for faster loading
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        var binaryName = name.Replace(".tiktoken", ".ttkb", StringComparison.Ordinal);
+#else
         var binaryName = name.Replace(".tiktoken", ".ttkb");
+#endif
         var binaryResourcePath = resourceNames
             .FirstOrDefault(x => x.EndsWith(binaryName, StringComparison.OrdinalIgnoreCase));
         if (binaryResourcePath != null)
@@ -124,7 +129,60 @@ public static class EncodingLoader
     }
 
     /// <summary>
-    /// 
+    /// Loads encoding from a binary .ttkb byte array.
+    /// </summary>
+    /// <param name="data">Binary .ttkb data.</param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static Dictionary<byte[], int> LoadEncodingFromBinaryData(byte[] data)
+    {
+        data = data ?? throw new ArgumentNullException(nameof(data));
+
+        using var stream = new MemoryStream(data, writable: false);
+        return LoadEncodingFromBinaryStream(stream);
+    }
+
+    /// <summary>
+    /// Writes encoding data in binary .ttkb format to a stream.
+    /// Can be used to convert custom .tiktoken text data to the faster binary format.
+    /// </summary>
+    /// <param name="stream">The output stream.</param>
+    /// <param name="encoder">The encoding dictionary (token bytes to rank).</param>
+    /// <exception cref="ArgumentException">Thrown when any token exceeds 255 bytes.</exception>
+    public static void WriteEncodingToBinaryStream(
+        Stream stream,
+        IReadOnlyDictionary<byte[], int> encoder)
+    {
+        stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        encoder = encoder ?? throw new ArgumentNullException(nameof(encoder));
+
+        using var writer = new BinaryWriter(stream);
+
+        // Header
+        writer.Write((byte)'T');
+        writer.Write((byte)'T');
+        writer.Write((byte)'K');
+        writer.Write((byte)'B');
+        writer.Write((uint)1);             // version
+        writer.Write((uint)encoder.Count);  // count
+
+        // Entries
+        foreach (var kvp in encoder)
+        {
+            if (kvp.Key.Length > 255)
+            {
+                throw new ArgumentException(
+                    $"Token at rank {kvp.Value} is {kvp.Key.Length} bytes (max 255).");
+            }
+
+            writer.Write(kvp.Value);            // rank (int32 LE)
+            writer.Write((byte)kvp.Key.Length);  // token length (uint8)
+            writer.Write(kvp.Key);               // raw token bytes
+        }
+    }
+
+    /// <summary>
+    ///
     /// </summary>
     /// <param name="lines"></param>
     /// <param name="name"></param>

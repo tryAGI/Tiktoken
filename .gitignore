@@ -400,3 +400,6 @@ FodyWeavers.xsd
 
 # Environment variables
 .env
+
+# Generated .ttkb files in data/ (source of truth is .tiktoken; .ttkb lives in encoding dirs)
+data/*.ttkb
