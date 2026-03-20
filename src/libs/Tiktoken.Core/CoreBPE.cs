@@ -184,6 +184,10 @@ public class CoreBpe
             if (Encoder.ContainsKey(piece))
             {
                 tokens++;
+                if (EnableCache)
+                {
+                    FastCacheCounts[fastKey] = 1;
+                }
                 continue;
             }
 
@@ -207,7 +211,7 @@ public class CoreBpe
     internal int CountTokensNative(ReadOnlySpan<char> text)
     {
         var tokens = 0;
-        Span<byte> pieceBytes = stackalloc byte[128];
+        Span<byte> pieceBytes = stackalloc byte[512];
 #if NET9_0_OR_GREATER
         var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
         var fastCacheCountLookup = FastCacheCounts.GetAlternateLookup<ReadOnlySpan<char>>();
@@ -234,6 +238,10 @@ public class CoreBpe
             if (encoderSpanLookup.ContainsKey(pieceSpan))
             {
                 tokens++;
+                if (EnableCache)
+                {
+                    fastCacheCountLookup[fastKey] = 1;
+                }
                 continue;
             }
 
@@ -265,6 +273,10 @@ public class CoreBpe
             if (Encoder.ContainsKey(piece))
             {
                 tokens++;
+                if (EnableCache)
+                {
+                    FastCacheCounts[fastKey] = 1;
+                }
                 continue;
             }
 
@@ -371,7 +383,7 @@ public class CoreBpe
         var tokens = new List<int>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
-        Span<byte> pieceBytes = stackalloc byte[128];
+        Span<byte> pieceBytes = stackalloc byte[512];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
@@ -549,7 +561,7 @@ public class CoreBpe
         }
 
         var tokens = new List<int>();
-        Span<byte> pieceBytes = stackalloc byte[128];
+        Span<byte> pieceBytes = stackalloc byte[512];
 
 #if NET9_0_OR_GREATER
         var fastEncoderLookup = FastEncoder.GetAlternateLookup<ReadOnlySpan<char>>();
@@ -648,7 +660,7 @@ public class CoreBpe
         var values = new List<string>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
-        Span<byte> pieceBytes = stackalloc byte[128];
+        Span<byte> pieceBytes = stackalloc byte[512];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
@@ -767,7 +779,7 @@ public class CoreBpe
         var values = new List<UtfToken>();
 #if NET7_0_OR_GREATER
         var textSpan = text.AsSpan();
-        Span<byte> pieceBytes = stackalloc byte[128];
+        Span<byte> pieceBytes = stackalloc byte[512];
 #endif
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
         

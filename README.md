@@ -108,17 +108,17 @@ new FunctionParameter("address", "object", "Mailing address", properties: new Li
 
 Benchmarked on Apple M4 Max, .NET 10.0, o200k_base encoding. Tested with diverse inputs: short ASCII, multilingual (12 scripts + emoji), Python code, and long documents.
 
-#### CountTokens — zero allocation, fastest in class
+#### CountTokens — zero allocation on ASCII, fastest in class
 
-| Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Speedup** |
-|-------|-----------|---------------|-------------|-------------|:-----------:|
-| Hello, World! (13 chars) | 228 ns | 173 ns | 332 ns | **116 ns** | 1.5-2.9x |
-| Multilingual (245 chars, 12 scripts) | 15.0 us | 9.7 us | 5.3 us | **1.8 us** | 2.9-8.3x |
-| Python code (879 chars) | 13.7 us | 10.2 us | 22.5 us | **8.4 us** | 1.2-2.7x |
-| Multilingual long (2249 chars) | 308.6 us | 175.7 us | 77.5 us | **18.7 us** | 4.1-16.5x |
-| Bitcoin whitepaper (19866 chars) | 418.9 us | 277.3 us | 360.3 us | **189.7 us** | 1.5-2.2x |
+| Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Allocated** | **Speedup** |
+|-------|-----------|---------------|-------------|-------------|:------------:|:-----------:|
+| Hello, World! (13 chars) | 228 ns | 173 ns | 332 ns | **116 ns** | **0 B** | 1.5-2.9x |
+| Multilingual (245 chars, 12 scripts) | 15.0 us | 9.7 us | 5.3 us | **1.8 us** | 144 B | 2.9-8.3x |
+| Python code (879 chars) | 13.7 us | 10.2 us | 22.5 us | **8.4 us** | **0 B** | 1.2-2.7x |
+| Multilingual long (2249 chars) | 308.6 us | 175.7 us | 77.5 us | **18.7 us** | 2,712 B | 4.1-16.5x |
+| Bitcoin whitepaper (19866 chars) | 418.9 us | 277.3 us | 360.3 us | **189.7 us** | **0 B** | 1.5-2.2x |
 
-> Tiktoken's advantage is most pronounced on multilingual text — up to **16x faster** than competitors.
+> Tiktoken's advantage is most pronounced on multilingual text — up to **16x faster** than competitors. Zero allocation on ASCII-dominant inputs; small first-call cache allocation on multilingual text.
 
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 
