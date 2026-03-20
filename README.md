@@ -149,6 +149,15 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 > Same performance characteristics as CountTokens, with additional allocation for the output `int[]` array.
 
+#### Construction — encoder initialization
+
+| Encoding | Time | Description |
+|----------|------|-------------|
+| **o200k_base** | **58 ms** | GPT-4o (200K vocab, binary .ttkb format, parallel FrozenDictionary) |
+| **cl100k_base** | **30 ms** | GPT-3.5/4 (100K vocab) |
+
+> Encoder construction includes loading embedded binary data, building hash tables, and compiling regex. Decoder dictionaries are lazy-initialized on first `Decode()` call only. Reuse `Encoder` instances across calls for best performance.
+
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 
 <!--BENCHMARKS_END-->
