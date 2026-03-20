@@ -42,6 +42,7 @@ dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks/Tiktoken.Benc
 | `src/tests/Tiktoken.UnitTests/` | Unit tests (MSTest + AwesomeAssertions + Verify) |
 | `src/benchmarks/Tiktoken.Benchmarks/` | BenchmarkDotNet performance benchmarks |
 | `benchmarks/` | Historical benchmark result reports (Markdown) |
+| `data/` | Source-of-truth `.tiktoken` files from OpenAI + conversion/verification scripts |
 
 ### Supported Encodings
 
@@ -65,9 +66,32 @@ var parts = encoder.Explore(text);                 // ["hello", " world"]
 - **Target frameworks:** `net4.6.2`, `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0`
 - **Language:** C# with nullable reference types
 - **Unsafe code:** Enabled in Core for performance
-- **Encoding data:** Embedded as `.tiktoken` resources in `Tiktoken.Core/Encodings/`
+- **Encoding data:** Embedded as `.ttkb` binary resources in each `Tiktoken.Encodings.*` project (source `.tiktoken` text files in `data/`)
 - **Versioning:** Semantic versioning from git tags via MinVer
 - **Testing:** MSTest + AwesomeAssertions + Verify
+
+### Encoding Data Pipeline
+
+Source `.tiktoken` text files (from OpenAI) live in `data/`. Binary `.ttkb` files are mechanically derived and embedded in NuGet packages.
+
+```bash
+cd data && make    # Convert .tiktoken -> .ttkb, copy to encoding dirs, verify
+```
+
+See `data/README.md` for the binary format specification and provenance documentation.
+
+### Custom Encoding API (`EncodingLoader`)
+
+Key static methods in `Tiktoken.Encodings.EncodingLoader`:
+
+| Method | Description |
+|--------|-------------|
+| `LoadEncodingFromFile(path)` | Load from file, auto-detects `.ttkb` vs `.tiktoken` by extension |
+| `LoadEncodingFromFileAsync(path)` | Async variant with `CancellationToken` |
+| `LoadEncodingFromBinaryData(byte[])` | Load from binary byte array |
+| `LoadEncodingFromBinaryStream(stream)` | Load from binary stream |
+| `LoadEncodingFromLines(lines, name)` | Load from text lines (extension method on `IReadOnlyList<string>`) |
+| `WriteEncodingToBinaryStream(stream, dict)` | Write encoding dictionary to `.ttkb` binary format |
 
 ### CI/CD
 
