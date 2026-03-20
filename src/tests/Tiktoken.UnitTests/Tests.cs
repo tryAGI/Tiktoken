@@ -1164,4 +1164,56 @@ public partial class Tests
             File.Delete(tempPath);
         }
     }
+
+    [TestMethod]
+    public async Task LoadEncodingFromFileAsyncBinary()
+    {
+        var original = new Dictionary<byte[], int>(new ByteArrayComparer())
+        {
+            [new byte[] { 0x41 }] = 0,
+            [new byte[] { 0x42, 0x43 }] = 1,
+            [new byte[] { 0x44, 0x45, 0x46 }] = 2,
+        };
+
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.ttkb");
+        try
+        {
+            using (var fs = File.Create(tempPath))
+            {
+                EncodingLoader.WriteEncodingToBinaryStream(fs, original);
+            }
+
+            var loaded = await EncodingLoader.LoadEncodingFromFileAsync(tempPath);
+
+            loaded.Count.Should().Be(3);
+            loaded[new byte[] { 0x41 }].Should().Be(0);
+            loaded[new byte[] { 0x44, 0x45, 0x46 }].Should().Be(2);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
+    }
+
+    [TestMethod]
+    public async Task LoadEncodingFromFileAsyncText()
+    {
+        // Create a temp .tiktoken text file
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.tiktoken");
+        try
+        {
+            // "A" = base64 "QQ==", rank 0; "BC" = base64 "QkM=", rank 1
+            await File.WriteAllTextAsync(tempPath, "QQ== 0\nQkM= 1\n");
+
+            var loaded = await EncodingLoader.LoadEncodingFromFileAsync(tempPath);
+
+            loaded.Count.Should().Be(2);
+            loaded[new byte[] { 0x41 }].Should().Be(0);
+            loaded[new byte[] { 0x42, 0x43 }].Should().Be(1);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
+    }
 }

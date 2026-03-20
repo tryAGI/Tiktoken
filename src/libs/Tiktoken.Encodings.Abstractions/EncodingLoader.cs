@@ -203,6 +203,72 @@ public static class EncodingLoader
     }
 
     /// <summary>
+    /// Asynchronously loads encoding from a file path, auto-detecting format by extension.
+    /// Files ending in .ttkb are loaded as binary; all others are loaded as .tiktoken text.
+    /// </summary>
+    /// <param name="path">Path to the encoding file (.ttkb or .tiktoken).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static async Task<Dictionary<byte[], int>> LoadEncodingFromFileAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        path = path ?? throw new ArgumentNullException(nameof(path));
+
+        if (path.EndsWith(".ttkb", StringComparison.OrdinalIgnoreCase))
+        {
+            return await LoadEncodingFromBinaryFileAsync(path, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return await LoadEncodingFromTextFileAsync(path, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Asynchronously loads encoding from a binary .ttkb file.
+    /// </summary>
+    /// <param name="path">Path to the .ttkb file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static async Task<Dictionary<byte[], int>> LoadEncodingFromBinaryFileAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        path = path ?? throw new ArgumentNullException(nameof(path));
+
+#if NET6_0_OR_GREATER
+        var data = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+#else
+        var data = await Task.Run(() => File.ReadAllBytes(path), cancellationToken).ConfigureAwait(false);
+#endif
+        return LoadEncodingFromBinaryData(data);
+    }
+
+    /// <summary>
+    /// Asynchronously loads encoding from a .tiktoken text file.
+    /// </summary>
+    /// <param name="path">Path to the .tiktoken file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static async Task<Dictionary<byte[], int>> LoadEncodingFromTextFileAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        path = path ?? throw new ArgumentNullException(nameof(path));
+
+#if NET6_0_OR_GREATER
+        var lines = await File.ReadAllLinesAsync(path, cancellationToken).ConfigureAwait(false);
+#else
+        var lines = await Task.Run(() => File.ReadAllLines(path), cancellationToken).ConfigureAwait(false);
+#endif
+        return LoadEncodingFromLines(lines, Path.GetFileName(path));
+    }
+
+    /// <summary>
     ///
     /// </summary>
     /// <param name="lines"></param>
