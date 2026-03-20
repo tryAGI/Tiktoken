@@ -106,19 +106,35 @@ new FunctionParameter("address", "object", "Mailing address", properties: new Li
 
 ### Benchmarks
 
-Benchmarked on Apple M4 Max, .NET 10.0, o200k_base encoding. Tested with diverse inputs: short ASCII, multilingual (12 scripts + emoji), Python code, and long documents.
+Benchmarked on Apple M4 Max, .NET 10.0, o200k_base encoding. Tested with diverse inputs: short ASCII, multilingual (12 scripts + emoji), CJK-heavy, Python code, and long documents.
 
-#### CountTokens — zero allocation on ASCII, fastest in class
+#### CountTokens — zero allocation, fastest in class
 
-| Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Allocated** | **Speedup** |
-|-------|-----------|---------------|-------------|-------------|:------------:|:-----------:|
-| Hello, World! (13 chars) | 228 ns | 173 ns | 332 ns | **116 ns** | **0 B** | 1.5-2.9x |
-| Multilingual (245 chars, 12 scripts) | 15.0 us | 9.7 us | 5.3 us | **1.8 us** | 144 B | 2.9-8.3x |
-| Python code (879 chars) | 13.7 us | 10.2 us | 22.5 us | **8.4 us** | **0 B** | 1.2-2.7x |
-| Multilingual long (2249 chars) | 308.6 us | 175.7 us | 77.5 us | **18.7 us** | 2,712 B | 4.1-16.5x |
-| Bitcoin whitepaper (19866 chars) | 418.9 us | 277.3 us | 360.3 us | **189.7 us** | **0 B** | 1.5-2.2x |
+| Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Speedup** |
+|-------|-----------|---------------|-------------|-------------|:-----------:|
+| Hello, World! (13 chars) | 226 ns | 168 ns | 317 ns | **104 ns** | 1.6-3.0x |
+| Multilingual (245 chars, 12 scripts) | 15.3 us | 9.8 us | 5.2 us | **1.2 us** | 4.4-12.9x |
+| CJK-heavy (644 chars, 6 scripts) | 113.0 us | 68.9 us | 40.1 us | **2.8 us** | 14.5-40.8x |
+| Python code (879 chars) | 13.5 us | 10.2 us | 22.5 us | **6.6 us** | 1.5-3.4x |
+| Multilingual long (2249 chars) | 306.9 us | 170.3 us | 77.8 us | **9.7 us** | 8.0-31.6x |
+| Bitcoin whitepaper (19866 chars) | 425.9 us | 269.8 us | 343.8 us | **132.4 us** | 2.0-3.2x |
 
-> Tiktoken's advantage is most pronounced on multilingual text — up to **16x faster** than competitors. Zero allocation on ASCII-dominant inputs; small first-call cache allocation on multilingual text.
+> **Zero allocation** across all inputs (0 B). Tiktoken's advantage is most pronounced on multilingual/CJK text — up to **41x faster** than competitors.
+
+#### Cache effect on CountTokens
+
+Built-in token cache dramatically accelerates repeated non-ASCII patterns:
+
+| Input | No cache | Cached | Cache speedup |
+|-------|---------|--------|:-------------:|
+| Hello, World! (13 chars) | 108 ns | 109 ns | — |
+| Multilingual (245 chars) | 7.7 us | 1.2 us | **6.6x** |
+| CJK-heavy (644 chars) | 58.1 us | 2.7 us | **21.3x** |
+| Python code (879 chars) | 6.8 us | 7.2 us | — |
+| Multilingual long (2249 chars) | 165.8 us | 10.7 us | **15.5x** |
+| Bitcoin whitepaper (19866 chars) | 188.5 us | 169.6 us | 1.1x |
+
+> Cache has no effect on ASCII-dominant inputs (already on fast path). On multilingual/CJK text, cache provides **6-21x speedup** by skipping UTF-8 conversion and BPE on subsequent calls.
 
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 
