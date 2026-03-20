@@ -136,6 +136,19 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 > Cache has no effect on ASCII-dominant inputs (already on fast path). On multilingual/CJK text, cache provides **6-21x speedup** by skipping UTF-8 conversion and BPE on subsequent calls.
 
+#### Encode — returns token IDs
+
+| Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Speedup** |
+|-------|-----------|---------------|-------------|-------------|:-----------:|
+| Hello, World! (13 chars) | 218 ns | 168 ns | 322 ns | **128 ns** | 1.3-2.5x |
+| Multilingual (245 chars, 12 scripts) | 14.7 us | 9.6 us | 5.4 us | **1.4 us** | 3.9-10.5x |
+| CJK-heavy (644 chars, 6 scripts) | 111.6 us | 65.7 us | 37.9 us | **3.4 us** | 11.1-32.6x |
+| Python code (879 chars) | 13.5 us | 9.8 us | 22.3 us | **7.0 us** | 1.4-3.2x |
+| Multilingual long (2249 chars) | 294.2 us | 156.4 us | 72.5 us | **12.5 us** | 5.8-23.5x |
+| Bitcoin whitepaper (19866 chars) | 399.8 us | 257.0 us | 335.0 us | **142.4 us** | 1.8-2.8x |
+
+> Same performance characteristics as CountTokens, with additional allocation for the output `int[]` array.
+
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 
 <!--BENCHMARKS_END-->
