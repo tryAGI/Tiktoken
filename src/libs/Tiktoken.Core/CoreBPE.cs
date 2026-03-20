@@ -71,27 +71,45 @@ public class CoreBpe
         pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
 
 #if NET8_0_OR_GREATER
-        Encoder = encoder.ToFrozenDictionary(new ByteArrayComparer());
+        // Build FastEncoder and Decoder regular dicts in a single pass over encoder entries
+        var fastEncoderDict = new Dictionary<string, int>(encoder.Count, StringComparer.Ordinal);
+        var decoderDict = new Dictionary<int, byte[]>(encoder.Count);
+        Span<char> charBuf = stackalloc char[256];
+        foreach (var kvp in encoder)
+        {
+            var chars = kvp.Key.Length <= 256 ? charBuf[..kvp.Key.Length] : new char[kvp.Key.Length];
+            for (var i = 0; i < kvp.Key.Length; i++)
+            {
+                chars[i] = (char)kvp.Key[i];
+            }
+            fastEncoderDict[new string(chars)] = kvp.Value;
+            decoderDict[kvp.Value] = kvp.Key;
+        }
+
+        // Freeze all large dictionaries in parallel
+        var comparer = new ByteArrayComparer();
+        var frozenEncoderTask = System.Threading.Tasks.Task.Run(() => encoder.ToFrozenDictionary(comparer));
+        var frozenFastEncoderTask = System.Threading.Tasks.Task.Run(() => fastEncoderDict.ToFrozenDictionary(StringComparer.Ordinal));
+        var frozenDecoderTask = System.Threading.Tasks.Task.Run(() => decoderDict.ToFrozenDictionary());
+
+        // Build small dictionaries and compile regex while large dicts freeze in parallel
+        SpecialTokensEncoder = specialTokensEncoder.ToFrozenDictionary(StringComparer.Ordinal);
+        SpecialTokensDecoder = specialTokensEncoder
+            .ToFrozenDictionary(static x => x.Value, static x => x.Key);
+        SpecialTokensDecoderBytes = specialTokensEncoder
+            .ToFrozenDictionary(static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
+
+        Regex = compiledRegex ?? new Regex(pattern, RegexOptions.Compiled);
+        SpecialRegex = compiledSpecialRegex ?? new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
+
+        // Wait for parallel frozen dictionary construction
+        Encoder = frozenEncoderTask.Result;
+        FastEncoder = frozenFastEncoderTask.Result;
+        Decoder = frozenDecoderTask.Result;
 #else
         Encoder = encoder;
-#endif
 
-#if NET8_0_OR_GREATER
-        var fastEncoderDict = Encoder
-            .ToDictionary(
-                static x =>
-                {
-                    Span<char> chars = stackalloc char[x.Key.Length];
-                    for (var i = 0; i < x.Key.Length; i++)
-                    {
-                        chars[i] = (char)x.Key[i];
-                    }
-                    return new string(chars);
-                },
-                static x => x.Value,
-                StringComparer.Ordinal);
-        FastEncoder = fastEncoderDict.ToFrozenDictionary(StringComparer.Ordinal);
-#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         FastEncoder = Encoder
             .ToDictionary(
                 static x =>
@@ -113,41 +131,17 @@ public class CoreBpe
                 StringComparer.Ordinal);
 #endif
 
-#if NET8_0_OR_GREATER
-        SpecialTokensEncoder = specialTokensEncoder.ToFrozenDictionary(StringComparer.Ordinal);
-#else
         SpecialTokensEncoder = specialTokensEncoder;
-#endif
 
         Regex = compiledRegex ?? new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = compiledSpecialRegex ?? new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
 
-#if NET8_0_OR_GREATER
         Decoder = Encoder
-            .ToFrozenDictionary(
-                static x => x.Value,
-                static x => x.Key);
+            .ToDictionary(static x => x.Value, static x => x.Key);
         SpecialTokensDecoder = specialTokensEncoder
-            .ToFrozenDictionary(
-                static x => x.Value,
-                static x => x.Key);
+            .ToDictionary(static x => x.Value, static x => x.Key);
         SpecialTokensDecoderBytes = specialTokensEncoder
-            .ToFrozenDictionary(
-                static x => x.Value,
-                static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
-#else
-        Decoder = Encoder
-            .ToDictionary(
-                static x => x.Value,
-                static x => x.Key);
-        SpecialTokensDecoder = specialTokensEncoder
-            .ToDictionary(
-                static x => x.Value,
-                static x => x.Key);
-        SpecialTokensDecoderBytes = specialTokensEncoder
-            .ToDictionary(
-                static x => x.Value,
-                static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
+            .ToDictionary(static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key));
 #endif
     }
 

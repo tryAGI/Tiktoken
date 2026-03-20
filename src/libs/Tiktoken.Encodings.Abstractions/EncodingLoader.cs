@@ -21,7 +21,7 @@ public static class EncodingLoader
         string name)
     {
         assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
-        
+
         var resourcePath = assembly
             .GetManifestResourceNames()
             .Single(x => x.EndsWith(name, StringComparison.OrdinalIgnoreCase));
@@ -31,13 +31,44 @@ public static class EncodingLoader
             throw new InvalidOperationException("Resource not found.");
         using var reader = new StreamReader(stream);
 
-        var lines = new List<string>();
+        // Pre-allocate: ~17 bytes per line on average for .tiktoken files
+        var estimatedCapacity = stream.CanSeek ? (int)(stream.Length / 17) : 16384;
+        var dictionary = new Dictionary<byte[], int>(estimatedCapacity, new ByteArrayComparer());
+
+#if NET7_0_OR_GREATER
+        Span<Range> ranges = stackalloc Range[3];
+        Span<byte> bytes = stackalloc byte[256];
+#endif
+
         while (reader.ReadLine() is { } line)
         {
-            lines.Add(line);
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+#if NET7_0_OR_GREATER
+            var splitCount = line.AsSpan().Split(ranges, ' ');
+            if (splitCount != 2)
+            {
+                throw new FormatException($"Invalid file format: {name}");
+            }
+            Convert.TryFromBase64Chars(line.AsSpan(ranges[0]), bytes, out var bytesWritten);
+            var tokenBytes = bytes.Slice(0, bytesWritten).ToArray();
+            var rank = int.Parse(line.AsSpan(ranges[1]), CultureInfo.InvariantCulture);
+#else
+            var tokens = line.Split(' ');
+            if (tokens.Length != 2)
+            {
+                throw new FormatException($"Invalid file format: {name}");
+            }
+            var tokenBytes = Convert.FromBase64String(tokens[0]);
+            var rank = int.Parse(tokens[1], CultureInfo.InvariantCulture);
+#endif
+            dictionary[tokenBytes] = rank;
         }
 
-        return LoadEncodingFromLines(lines, name);
+        return dictionary;
     }
 
     /// <summary>
@@ -58,7 +89,7 @@ public static class EncodingLoader
         Span<Range> tokens = stackalloc Range[3];
         Span<byte> bytes = stackalloc byte[256];
 #endif
-        var dictionary = new Dictionary<byte[], int>(new ByteArrayComparer());
+        var dictionary = new Dictionary<byte[], int>(lines.Count, new ByteArrayComparer());
         foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line))
