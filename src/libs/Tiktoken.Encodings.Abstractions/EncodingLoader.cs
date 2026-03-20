@@ -1,5 +1,8 @@
 ﻿using System.Globalization;
 using System.Reflection;
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+using System.Buffers.Binary;
+#endif
 
 namespace Tiktoken.Encodings;
 
@@ -98,6 +101,35 @@ public static class EncodingLoader
     {
         stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        // Read entire stream into buffer for span-based parsing (one I/O call)
+        byte[] buffer;
+        if (stream is MemoryStream ms && ms.TryGetBuffer(out var segment))
+        {
+            // Zero-copy for MemoryStream (common for manifest resources)
+            return ParseBinaryEncoding(segment.AsSpan());
+        }
+
+        if (stream.CanSeek)
+        {
+            var remaining = (int)(stream.Length - stream.Position);
+            buffer = new byte[remaining];
+            var totalRead = 0;
+            while (totalRead < remaining)
+            {
+                var read = stream.Read(buffer, totalRead, remaining - totalRead);
+                if (read == 0) break;
+                totalRead += read;
+            }
+        }
+        else
+        {
+            using var tempMs = new MemoryStream();
+            stream.CopyTo(tempMs);
+            buffer = tempMs.ToArray();
+        }
+        return ParseBinaryEncoding(buffer.AsSpan());
+#else
         using var reader = new BinaryReader(stream);
 
         // Read and validate header
@@ -126,6 +158,7 @@ public static class EncodingLoader
         }
 
         return dictionary;
+#endif
     }
 
     /// <summary>
@@ -138,9 +171,49 @@ public static class EncodingLoader
     {
         data = data ?? throw new ArgumentNullException(nameof(data));
 
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        return ParseBinaryEncoding(data.AsSpan());
+#else
         using var stream = new MemoryStream(data, writable: false);
         return LoadEncodingFromBinaryStream(stream);
+#endif
     }
+
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+    private static Dictionary<byte[], int> ParseBinaryEncoding(ReadOnlySpan<byte> span)
+    {
+        // Validate header
+        if (span.Length < 12 ||
+            span[0] != (byte)'T' || span[1] != (byte)'T' ||
+            span[2] != (byte)'K' || span[3] != (byte)'B')
+        {
+            throw new FormatException("Invalid binary encoding file: bad magic.");
+        }
+
+        var version = BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(4));
+        if (version != 1)
+        {
+            throw new FormatException($"Unsupported binary encoding version: {version}");
+        }
+
+        var count = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(8));
+        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
+
+        var offset = 12;
+        for (var i = 0; i < count; i++)
+        {
+            var rank = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(offset));
+            offset += 4;
+            var tokenLength = span[offset];
+            offset += 1;
+            var tokenBytes = span.Slice(offset, tokenLength).ToArray();
+            offset += tokenLength;
+            dictionary[tokenBytes] = rank;
+        }
+
+        return dictionary;
+    }
+#endif
 
     /// <summary>
     /// Writes encoding data in binary .ttkb format to a stream.
