@@ -20,6 +20,9 @@ public class ByteArrayComparer : IEqualityComparer<byte[]>
         {
             return x == y;
         }
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        return x.AsSpan().SequenceEqual(y.AsSpan());
+#else
         if (x.Length != y.Length)
         {
             return false;
@@ -32,6 +35,7 @@ public class ByteArrayComparer : IEqualityComparer<byte[]>
             }
         }
         return true;
+#endif
     }
 
     /// <summary>

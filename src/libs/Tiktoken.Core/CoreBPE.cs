@@ -73,9 +73,8 @@ public class CoreBpe
         pattern = pattern ?? throw new ArgumentNullException(nameof(pattern));
 
 #if NET8_0_OR_GREATER
-        // Build FastEncoder and Decoder regular dicts in a single pass over encoder entries
+        // Build FastEncoder dict in a single pass over encoder entries
         var fastEncoderDict = new Dictionary<string, int>(encoder.Count, StringComparer.Ordinal);
-        var decoderDict = new Dictionary<int, byte[]>(encoder.Count);
         Span<char> charBuf = stackalloc char[256];
         foreach (var kvp in encoder)
         {
@@ -85,7 +84,6 @@ public class CoreBpe
                 chars[i] = (char)kvp.Key[i];
             }
             fastEncoderDict[new string(chars)] = kvp.Value;
-            decoderDict[kvp.Value] = kvp.Key;
         }
 
         // Freeze Encoder and FastEncoder in parallel
@@ -99,16 +97,18 @@ public class CoreBpe
         Regex = compiledRegex ?? new Regex(pattern, RegexOptions.Compiled);
         SpecialRegex = compiledSpecialRegex ?? new Regex("(" + string.Join("|", specialTokensEncoder.Keys.Select(Regex.Escape)) + ")", RegexOptions.Compiled);
 
+        // Wait for parallel frozen dictionary construction
+        Encoder = frozenEncoderTask.Result;
+        FastEncoder = frozenFastEncoderTask.Result;
+
         // Lazy-init Decoder and SpecialTokensDecoderBytes (only built on first Decode call)
-        _lazyDecoder = new Lazy<FrozenDictionary<int, byte[]>>(() => decoderDict.ToFrozenDictionary());
+        var capturedEncoder = Encoder;
+        _lazyDecoder = new Lazy<FrozenDictionary<int, byte[]>>(() =>
+            capturedEncoder.ToDictionary(static x => x.Value, static x => x.Key).ToFrozenDictionary());
         var capturedSpecialTokensEncoder = specialTokensEncoder;
         _lazySpecialTokensDecoderBytes = new Lazy<FrozenDictionary<int, byte[]>>(() =>
             capturedSpecialTokensEncoder.ToFrozenDictionary(
                 static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key)));
-
-        // Wait for parallel frozen dictionary construction
-        Encoder = frozenEncoderTask.Result;
-        FastEncoder = frozenFastEncoderTask.Result;
 #else
         Encoder = encoder;
 
