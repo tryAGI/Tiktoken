@@ -1014,4 +1014,154 @@ public partial class Tests
         var encoding = ModelToEncoding.TryForEncoding("nonexistent_encoding");
         encoding.Should().BeNull();
     }
+
+    [TestMethod]
+    public void BinaryRoundTrip()
+    {
+        // Create a small encoding dictionary
+        var original = new Dictionary<byte[], int>(new ByteArrayComparer())
+        {
+            [new byte[] { 0x48, 0x65, 0x6C, 0x6C, 0x6F }] = 0,  // "Hello"
+            [new byte[] { 0x20 }] = 1,                             // " "
+            [new byte[] { 0x57, 0x6F, 0x72, 0x6C, 0x64 }] = 2,  // "World"
+        };
+
+        // Write to binary
+        using var ms = new MemoryStream();
+        EncodingLoader.WriteEncodingToBinaryStream(ms, original);
+        var binaryData = ms.ToArray();
+
+        // Read back
+        var loaded = EncodingLoader.LoadEncodingFromBinaryData(binaryData);
+
+        loaded.Count.Should().Be(original.Count);
+        foreach (var kvp in original)
+        {
+            loaded.Should().ContainKey(kvp.Key);
+            loaded[kvp.Key].Should().Be(kvp.Value);
+        }
+    }
+
+    [TestMethod]
+    public void BinaryRoundTripEmptyDictionary()
+    {
+        var original = new Dictionary<byte[], int>(new ByteArrayComparer());
+
+        using var ms = new MemoryStream();
+        EncodingLoader.WriteEncodingToBinaryStream(ms, original);
+        var binaryData = ms.ToArray();
+
+        var loaded = EncodingLoader.LoadEncodingFromBinaryData(binaryData);
+
+        loaded.Count.Should().Be(0);
+    }
+
+    [TestMethod]
+    public void BinaryStreamBadMagicThrows()
+    {
+        var badData = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+        var act = () => EncodingLoader.LoadEncodingFromBinaryData(badData);
+
+        act.Should().Throw<FormatException>().WithMessage("*bad magic*");
+    }
+
+    [TestMethod]
+    public void BinaryStreamBadVersionThrows()
+    {
+        // TTKB magic + version 99
+        var badData = new byte[] { 0x54, 0x54, 0x4B, 0x42, 99, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+        var act = () => EncodingLoader.LoadEncodingFromBinaryData(badData);
+
+        act.Should().Throw<FormatException>().WithMessage("*version*");
+    }
+
+    [TestMethod]
+    public void WriteEncodingTokenTooLongThrows()
+    {
+        var dict = new Dictionary<byte[], int>(new ByteArrayComparer())
+        {
+            [new byte[256]] = 0,  // 256 bytes > max 255
+        };
+
+        using var ms = new MemoryStream();
+        var act = () => EncodingLoader.WriteEncodingToBinaryStream(ms, dict);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*256 bytes*");
+    }
+
+    [TestMethod]
+    public void BinaryRoundTripWithRealEncoding()
+    {
+        // Load cl100k_base via the normal path
+        var encoding = new Cl100KBase();
+        var original = encoding.MergeableRanks;
+
+        // Write to binary and read back
+        using var ms = new MemoryStream();
+        EncodingLoader.WriteEncodingToBinaryStream(ms, original);
+        var binaryData = ms.ToArray();
+
+        var loaded = EncodingLoader.LoadEncodingFromBinaryData(binaryData);
+
+        loaded.Count.Should().Be(original.Count);
+
+        // Spot-check a known token
+        var helloToken = System.Text.Encoding.UTF8.GetBytes("Hello");
+        loaded.Should().ContainKey(helloToken);
+        loaded[helloToken].Should().Be(original[helloToken]);
+    }
+
+    [TestMethod]
+    public void LoadEncodingFromFileText()
+    {
+        // Find the data/ directory with .tiktoken files
+        var dir = AppContext.BaseDirectory;
+        while (dir != null && !Directory.Exists(Path.Combine(dir, "data")))
+        {
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        if (dir == null || !File.Exists(Path.Combine(dir, "data", "r50k_base.tiktoken")))
+        {
+            Assert.Inconclusive("data/r50k_base.tiktoken not found (run from repo root)");
+            return;
+        }
+
+        var path = Path.Combine(dir, "data", "r50k_base.tiktoken");
+        var loaded = EncodingLoader.LoadEncodingFromFile(path);
+
+        loaded.Count.Should().Be(50256);
+    }
+
+    [TestMethod]
+    public void LoadEncodingFromFileBinary()
+    {
+        // Create a temp .ttkb file
+        var original = new Dictionary<byte[], int>(new ByteArrayComparer())
+        {
+            [new byte[] { 0x41 }] = 0,
+            [new byte[] { 0x42, 0x43 }] = 1,
+        };
+
+        var tempPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.ttkb");
+        try
+        {
+            using (var fs = File.Create(tempPath))
+            {
+                EncodingLoader.WriteEncodingToBinaryStream(fs, original);
+            }
+
+            var loaded = EncodingLoader.LoadEncodingFromFile(tempPath);
+
+            loaded.Count.Should().Be(2);
+            loaded[new byte[] { 0x41 }].Should().Be(0);
+            loaded[new byte[] { 0x42, 0x43 }].Should().Be(1);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
+    }
 }

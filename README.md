@@ -104,6 +104,29 @@ new FunctionParameter("address", "object", "Mailing address", properties: new Li
 });
 ```
 
+### Custom encodings
+
+Load encoding data from `.tiktoken` text files or `.ttkb` binary files:
+
+```csharp
+using Tiktoken.Encodings;
+
+// Load from file (auto-detects format by extension)
+var ranks = EncodingLoader.LoadEncodingFromFile("my_encoding.ttkb");
+var ranks = EncodingLoader.LoadEncodingFromFile("my_encoding.tiktoken");
+
+// Load from binary byte array (e.g., from embedded resource or network)
+byte[] binaryData = File.ReadAllBytes("my_encoding.ttkb");
+var ranks = EncodingLoader.LoadEncodingFromBinaryData(binaryData);
+
+// Convert text format to binary for faster loading
+var textRanks = EncodingLoader.LoadEncodingFromFile("my_encoding.tiktoken");
+using var output = File.Create("my_encoding.ttkb");
+EncodingLoader.WriteEncodingToBinaryStream(output, textRanks);
+```
+
+The `.ttkb` binary format loads ~30% faster than `.tiktoken` text (no base64 decoding) and is 34% smaller. See [`data/README.md`](data/README.md) for the format specification and conversion tools.
+
 ### Benchmarks
 
 Benchmarked on Apple M4 Max, .NET 10.0, o200k_base encoding. Tested with diverse inputs: short ASCII, multilingual (12 scripts + emoji), CJK-heavy, Python code, and long documents.

@@ -182,6 +182,27 @@ public static class EncodingLoader
     }
 
     /// <summary>
+    /// Loads encoding from a file path, auto-detecting format by extension.
+    /// Files ending in .ttkb are loaded as binary; all others are loaded as .tiktoken text.
+    /// </summary>
+    /// <param name="path">Path to the encoding file (.ttkb or .tiktoken).</param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static Dictionary<byte[], int> LoadEncodingFromFile(string path)
+    {
+        path = path ?? throw new ArgumentNullException(nameof(path));
+
+        if (path.EndsWith(".ttkb", StringComparison.OrdinalIgnoreCase))
+        {
+            using var stream = File.OpenRead(path);
+            return LoadEncodingFromBinaryStream(stream);
+        }
+
+        var lines = File.ReadAllLines(path);
+        return LoadEncodingFromLines(lines, Path.GetFileName(path));
+    }
+
+    /// <summary>
     ///
     /// </summary>
     /// <param name="lines"></param>
