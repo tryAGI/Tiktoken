@@ -184,18 +184,17 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 #### Cross-language context
 
-For reference, single-threaded throughput of BPE tokenizers in other languages. Rust numbers are from published benchmarks (different hardware/inputs); Python measured on same Apple M4 Max with identical inputs.
+All numbers below measured on **Apple M4 Max** with **identical inputs** and **o200k_base** encoding. See [`benchmarks/cross-language/results/`](benchmarks/cross-language/results/) for full reports.
 
-| Implementation | Language | Throughput | Notes |
-|---------------|----------|:----------:|-------|
-| GitHub [`bpe`](https://github.com/github/rust-gems) | Rust | ~400-500 MiB/s | Aho-Corasick, O(n) worst case |
-| [`TokenDagger`](https://github.com/M4THYOU/TokenDagger) | Rust | ~250-300 MiB/s | PCRE2 JIT |
-| **Tiktoken** | **.NET/C#** | **120-571 MiB/s** | **Cached multilingual peaks at 571 MiB/s** |
-| [`tiktoken`](https://lib.rs/crates/tiktoken) v3.1 | Rust | ~120-130 MiB/s | Pure Rust, arena-based |
-| [OpenAI tiktoken](https://github.com/openai/tiktoken) | Python | 7-20 MiB/s | Rust core, but Python FFI overhead (**measured**) |
-| tiktoken-go | Go | ~6-13 MiB/s | |
+| Implementation | Language | Encode Throughput | CountTokens Throughput | Notes |
+|---------------|----------|:-----------------:|:----------------------:|-------|
+| **Tiktoken** (cached) | **.NET/C#** | **97-467 MiB/s** | **119-577 MiB/s** | **Zero-alloc counting; cache gives 6-21x on multilingual** |
+| **Tiktoken** (no cache) | **.NET/C#** | **97-133 MiB/s** | **28-123 MiB/s** | **Cold/first-call — fairest comparison to Rust/Python** |
+| [`tiktoken`](https://lib.rs/crates/tiktoken) v3 | Rust | 34-88 MiB/s | — | Pure Rust, arena-based |
+| GitHub [`bpe`](https://github.com/github/rust-gems) v0.3 | Rust | 33-64 MiB/s | 29-66 MiB/s | Aho-Corasick, O(n) worst case |
+| [OpenAI tiktoken](https://github.com/openai/tiktoken) 0.12 | Python | 7-20 MiB/s | — | Rust core, but Python FFI overhead |
 
-> Our goal is to close the gap with GitHub's `bpe` crate — exploring Aho-Corasick pre-tokenization and SIMD-accelerated byte processing. Contributions welcome!
+> .NET Tiktoken's token cache makes it dramatically faster than native Rust on repeated/multilingual text. Even without the cache, .NET is competitive with or faster than both Rust crates on most inputs. Contributions welcome to further close the gap on cold-path multilingual text!
 
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 

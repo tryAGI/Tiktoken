@@ -51,7 +51,7 @@ fn load_inputs() -> Vec<Input> {
 
 fn bench_tiktoken(c: &mut Criterion) {
     let inputs = load_inputs();
-    let enc = tiktoken::EncodingFactory::o200k_base().unwrap();
+    let enc = tiktoken::get_encoding("o200k_base").unwrap();
 
     let mut group = c.benchmark_group("tiktoken_v3");
 
@@ -69,11 +69,11 @@ fn bench_tiktoken(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_bpe_openai(c: &mut Criterion) {
+fn bench_bpe_openai_count(c: &mut Criterion) {
     let inputs = load_inputs();
     let tokenizer = bpe_openai::o200k_base();
 
-    let mut group = c.benchmark_group("github_bpe");
+    let mut group = c.benchmark_group("github_bpe_count");
 
     for input in &inputs {
         group.throughput(Throughput::Bytes(input.bytes));
@@ -89,5 +89,25 @@ fn bench_bpe_openai(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_tiktoken, bench_bpe_openai);
+fn bench_bpe_openai_encode(c: &mut Criterion) {
+    let inputs = load_inputs();
+    let tokenizer = bpe_openai::o200k_base();
+
+    let mut group = c.benchmark_group("github_bpe_encode");
+
+    for input in &inputs {
+        group.throughput(Throughput::Bytes(input.bytes));
+        group.bench_with_input(
+            BenchmarkId::new(input.name, input.bytes),
+            &input.text,
+            |b, text| {
+                b.iter(|| tokenizer.encode(text));
+            },
+        );
+    }
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_tiktoken, bench_bpe_openai_count, bench_bpe_openai_encode);
 criterion_main!(benches);
