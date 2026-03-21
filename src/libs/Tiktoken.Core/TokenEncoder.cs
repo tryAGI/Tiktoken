@@ -220,6 +220,114 @@ internal sealed class TokenEncoder : IReadOnlyDictionary<byte[], int>
     public bool ContainsKeyAscii(ReadOnlySpan<char> asciiKey)
         => TryGetValueAscii(asciiKey, out _);
 
+    // UTF-16 span lookups — inline UTF-16→UTF-8 encoding + FNV-1a hash in a single pass.
+    // Avoids intermediate UTF-8 buffer allocation for single-token non-ASCII lookups.
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetValueUtf16(ReadOnlySpan<char> key, out int rank)
+    {
+        // Phase 1: Compute FNV-1a hash and UTF-8 byte count in single pass
+        var hash = 2166136261u;
+        var utf8Len = 0;
+        for (var i = 0; i < key.Length; i++)
+        {
+            var c = (uint)key[i];
+            if (c < 0x80)
+            {
+                hash ^= c;
+                hash *= 16777619u;
+                utf8Len++;
+            }
+            else if (c < 0x800)
+            {
+                hash ^= 0xC0u | (c >> 6); hash *= 16777619u;
+                hash ^= 0x80u | (c & 0x3Fu); hash *= 16777619u;
+                utf8Len += 2;
+            }
+            else if (c >= 0xD800 && c <= 0xDBFF && i + 1 < key.Length)
+            {
+                // Surrogate pair → 4 UTF-8 bytes
+                var low = (uint)key[++i];
+                var cp = 0x10000u + ((c - 0xD800u) << 10) + (low - 0xDC00u);
+                hash ^= 0xF0u | (cp >> 18); hash *= 16777619u;
+                hash ^= 0x80u | ((cp >> 12) & 0x3Fu); hash *= 16777619u;
+                hash ^= 0x80u | ((cp >> 6) & 0x3Fu); hash *= 16777619u;
+                hash ^= 0x80u | (cp & 0x3Fu); hash *= 16777619u;
+                utf8Len += 4;
+            }
+            else
+            {
+                // BMP non-ASCII → 3 UTF-8 bytes
+                hash ^= 0xE0u | (c >> 12); hash *= 16777619u;
+                hash ^= 0x80u | ((c >> 6) & 0x3Fu); hash *= 16777619u;
+                hash ^= 0x80u | (c & 0x3Fu); hash *= 16777619u;
+                utf8Len += 3;
+            }
+        }
+
+        // Phase 2: Probe hash table
+        var bucket = (int)(hash & (uint)_mask);
+        var step = 1;
+        while (true)
+        {
+            var idx = _buckets[bucket];
+            if (idx == -1) { rank = 0; return false; }
+            if (_tokenLengths[idx] == utf8Len)
+            {
+                // Phase 3: Compare by re-walking UTF-16 chars against stored UTF-8 bytes
+                if (CompareUtf16ToUtf8(key, _data.AsSpan(_offsets[idx], _tokenLengths[idx])))
+                {
+                    rank = _ranks[idx];
+                    return true;
+                }
+            }
+            bucket = (bucket + step) & _mask;
+            step++;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ContainsKeyUtf16(ReadOnlySpan<char> key)
+        => TryGetValueUtf16(key, out _);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool CompareUtf16ToUtf8(ReadOnlySpan<char> chars, ReadOnlySpan<byte> utf8)
+    {
+        var bi = 0;
+        for (var ci = 0; ci < chars.Length; ci++)
+        {
+            var c = (uint)chars[ci];
+            if (c < 0x80)
+            {
+                if (bi >= utf8.Length || utf8[bi++] != (byte)c) return false;
+            }
+            else if (c < 0x800)
+            {
+                if (bi + 1 >= utf8.Length) return false;
+                if (utf8[bi++] != (byte)(0xC0 | (c >> 6))) return false;
+                if (utf8[bi++] != (byte)(0x80 | (c & 0x3F))) return false;
+            }
+            else if (c >= 0xD800 && c <= 0xDBFF && ci + 1 < chars.Length)
+            {
+                var low = (uint)chars[++ci];
+                var cp = 0x10000u + ((c - 0xD800u) << 10) + (low - 0xDC00u);
+                if (bi + 3 >= utf8.Length) return false;
+                if (utf8[bi++] != (byte)(0xF0 | (cp >> 18))) return false;
+                if (utf8[bi++] != (byte)(0x80 | ((cp >> 12) & 0x3F))) return false;
+                if (utf8[bi++] != (byte)(0x80 | ((cp >> 6) & 0x3F))) return false;
+                if (utf8[bi++] != (byte)(0x80 | (cp & 0x3F))) return false;
+            }
+            else
+            {
+                if (bi + 2 >= utf8.Length) return false;
+                if (utf8[bi++] != (byte)(0xE0 | (c >> 12))) return false;
+                if (utf8[bi++] != (byte)(0x80 | ((c >> 6) & 0x3F))) return false;
+                if (utf8[bi++] != (byte)(0x80 | (c & 0x3F))) return false;
+            }
+        }
+        return bi == utf8.Length;
+    }
+
     public int this[ReadOnlySpan<byte> key]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

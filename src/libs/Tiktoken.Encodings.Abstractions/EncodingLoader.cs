@@ -57,7 +57,7 @@ public static class EncodingLoader
         var estimatedCapacity = stream.CanSeek ? (int)(stream.Length / 17) : 16384;
         var dictionary = new Dictionary<byte[], int>(estimatedCapacity, new ByteArrayComparer());
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         Span<Range> ranges = stackalloc Range[3];
         Span<byte> bytes = stackalloc byte[256];
 #endif
@@ -69,7 +69,7 @@ public static class EncodingLoader
                 continue;
             }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var splitCount = line.AsSpan().Split(ranges, ' ');
             if (splitCount != 2)
             {
@@ -591,7 +591,7 @@ public static class EncodingLoader
     {
         lines = lines ?? throw new ArgumentNullException(nameof(lines));
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         Span<Range> tokens = stackalloc Range[3];
         Span<byte> bytes = stackalloc byte[256];
 #endif
@@ -603,7 +603,7 @@ public static class EncodingLoader
                 continue;
             }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var splitCount = line.AsSpan().Split(tokens, ' ');
             if (splitCount != 2)
             {
@@ -617,7 +617,7 @@ public static class EncodingLoader
             }
 #endif
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             Convert.TryFromBase64Chars(line.AsSpan(tokens[0]), bytes, out var bytesWritten);
             var tokenBytes = bytes.Slice(0, bytesWritten).ToArray();
             var rank = int.Parse(line.AsSpan(tokens[1]), CultureInfo.InvariantCulture);

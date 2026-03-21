@@ -43,7 +43,7 @@ public class Encoder
         return _corePbe.CountTokensNative(text);
     }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Counts tokens from a span without requiring a string allocation.
     /// Does not take into account special tokens.
@@ -91,7 +91,7 @@ public class Encoder
         return EncodeWithAllDisallowedSpecial(text);
     }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Encodes text from a span without string allocation (on NET9+ uses zero-copy dictionary lookups).
     /// </summary>
@@ -159,7 +159,7 @@ public class Encoder
     /// <exception cref="InvalidOperationException"></exception>
     public IReadOnlyCollection<int> EncodeWithAllDisallowedSpecial(string text)
     {
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         return _corePbe.EncodeNativeAllDisallowed(text.AsSpan(), _specialTokensSet);
 #else
         return _corePbe.EncodeNative(

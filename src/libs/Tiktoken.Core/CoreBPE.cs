@@ -168,7 +168,7 @@ public class CoreBpe
     {
         text = text ?? throw new ArgumentNullException(nameof(text));
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         return CountTokensNative(text.AsSpan());
 #else
         var tokens = 0;
@@ -212,7 +212,7 @@ public class CoreBpe
 #endif
     }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Counts tokens using span-based input to avoid string allocation.
     /// </summary>
@@ -240,8 +240,7 @@ public class CoreBpe
                 continue;
             }
 
-            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-            if (Encoder.ContainsKey(pieceSpan))
+            if (Encoder.ContainsKeyUtf16(fastKey))
             {
                 tokens++;
                 if (EnableCache)
@@ -251,6 +250,7 @@ public class CoreBpe
                 continue;
             }
 
+            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
             var numberOfTokens = BytePairEncoding.BytePairEncodeCountTokens(pieceSpan, Encoder);
             tokens += numberOfTokens;
 
@@ -259,7 +259,7 @@ public class CoreBpe
                 fastCacheCountLookup[fastKey] = numberOfTokens;
             }
         }
-#elif NET8_0_OR_GREATER
+#else
         foreach (var match in Regex.EnumerateMatches(text))
         {
             var fastKey = text.Slice(match.Index, match.Length);
@@ -275,8 +275,7 @@ public class CoreBpe
                 continue;
             }
 
-            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-            if (Encoder.ContainsKey(pieceSpan))
+            if (Encoder.ContainsKeyUtf16(fastKey))
             {
                 tokens++;
                 if (EnableCache)
@@ -286,6 +285,7 @@ public class CoreBpe
                 continue;
             }
 
+            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
             var numberOfTokens = BytePairEncoding.BytePairEncodeCountTokens(pieceSpan, Encoder);
             tokens += numberOfTokens;
 
@@ -294,48 +294,13 @@ public class CoreBpe
                 FastCacheCounts[new string(fastKey)] = numberOfTokens;
             }
         }
-#else
-        foreach (var match in Regex.EnumerateMatches(text))
-        {
-            var fastKey = new string(text.Slice(match.Index, match.Length));
-
-            if (IsAscii(fastKey) && FastEncoder.ContainsKey(fastKey))
-            {
-                tokens++;
-                continue;
-            }
-            if (EnableCache && FastCacheCounts.TryGetValue(fastKey, out var fastNumberOfTokens))
-            {
-                tokens += fastNumberOfTokens;
-                continue;
-            }
-
-            var piece = GetUtf8Bytes(text.Slice(match.Index, match.Length), pieceBytes);
-            if (Encoder.ContainsKey(piece))
-            {
-                tokens++;
-                if (EnableCache)
-                {
-                    FastCacheCounts[fastKey] = 1;
-                }
-                continue;
-            }
-
-            var numberOfTokens = BytePairEncoding.BytePairEncodeCountTokens(piece, Encoder);
-            tokens += numberOfTokens;
-
-            if (EnableCache)
-            {
-                FastCacheCounts[fastKey] = numberOfTokens;
-            }
-        }
 #endif
 
         return tokens;
     }
 #endif
     
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Counts tokens from UTF-8 bytes, converting to chars internally using stackalloc/ArrayPool.
     /// </summary>
@@ -422,13 +387,13 @@ public class CoreBpe
         disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
         
         var tokens = new List<int>();
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var textSpan = text.AsSpan();
         Span<byte> pieceBytes = stackalloc byte[512];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
         {
             var value = textSpan.Slice(start: match.Index, length: match.Length).ToString();
@@ -474,13 +439,13 @@ public class CoreBpe
                     continue;
                 }
 
-                var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-                if (Encoder.TryGetValue(pieceSpan, out var token))
+                if (Encoder.TryGetValueUtf16(fastKey, out var token))
                 {
                     tokens.Add(token);
                     continue;
                 }
 
+                var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
                 if (EnableCache)
                 {
                     var pair = BytePairEncoding.BytePairEncodeToArray(pieceSpan, Encoder);
@@ -508,13 +473,13 @@ public class CoreBpe
                     continue;
                 }
 
-                var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-                if (Encoder.TryGetValue(pieceSpan, out var token))
+                if (Encoder.TryGetValueUtf16(fastKey, out var token))
                 {
                     tokens.Add(token);
                     continue;
                 }
 
+                var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
                 if (EnableCache)
                 {
                     var pair = BytePairEncoding.BytePairEncodeToArray(pieceSpan, Encoder);
@@ -524,40 +489,6 @@ public class CoreBpe
                 else
                 {
                     BytePairEncoding.BytePairEncode(pieceSpan, Encoder, tokens);
-                }
-            }
-#elif NET7_0_OR_GREATER
-            foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
-            {
-                var fastKey = new string(textSpan.Slice(match.Index, match.Length));
-
-                if (IsAscii(fastKey) && FastEncoder.TryGetValue(fastKey, out var fastToken))
-                {
-                    tokens.Add(fastToken);
-                    continue;
-                }
-                if (EnableCache && FastCache.TryGetValue(fastKey, out var fastTokens))
-                {
-                    tokens.AddRange(fastTokens);
-                    continue;
-                }
-
-                var piece = GetUtf8Bytes(textSpan.Slice(match.Index, match.Length), pieceBytes);
-                if (Encoder.TryGetValue(piece, out var token))
-                {
-                    tokens.Add(token);
-                    continue;
-                }
-
-                if (EnableCache)
-                {
-                    var pair = BytePairEncoding.BytePairEncodeToArray(piece, Encoder);
-                    tokens.AddRange(pair);
-                    FastCache[fastKey] = pair;
-                }
-                else
-                {
-                    BytePairEncoding.BytePairEncode(piece, Encoder, tokens);
                 }
             }
 #else
@@ -601,7 +532,7 @@ public class CoreBpe
             {
                 start = specialStart + specialLength;
                 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 var piece = new string(textSpan.Slice(specialStart, specialLength));
 #else
                 var piece = text.Substring(specialStart, specialLength);
@@ -614,7 +545,7 @@ public class CoreBpe
         return tokens;
     }
     
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Optimized encode path for the common case where all special tokens are disallowed.
     /// Accepts ReadOnlySpan&lt;char&gt; to avoid string allocation when input is already a span.
@@ -654,13 +585,13 @@ public class CoreBpe
                 continue;
             }
 
-            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-            if (Encoder.TryGetValue(pieceSpan, out var token))
+            if (Encoder.TryGetValueUtf16(fastKey, out var token))
             {
                 tokens.Add(token);
                 continue;
             }
 
+            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
             if (EnableCache)
             {
                 var pair = BytePairEncoding.BytePairEncodeToArray(pieceSpan, Encoder);
@@ -672,7 +603,7 @@ public class CoreBpe
                 BytePairEncoding.BytePairEncode(pieceSpan, Encoder, tokens);
             }
         }
-#elif NET8_0_OR_GREATER
+#else
         foreach (var match in Regex.EnumerateMatches(text))
         {
             var fastKey = text.Slice(match.Index, match.Length);
@@ -688,13 +619,13 @@ public class CoreBpe
                 continue;
             }
 
-            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
-            if (Encoder.TryGetValue(pieceSpan, out var token))
+            if (Encoder.TryGetValueUtf16(fastKey, out var token))
             {
                 tokens.Add(token);
                 continue;
             }
 
+            var pieceSpan = GetUtf8Span(fastKey, pieceBytes);
             if (EnableCache)
             {
                 var pair = BytePairEncoding.BytePairEncodeToArray(pieceSpan, Encoder);
@@ -704,40 +635,6 @@ public class CoreBpe
             else
             {
                 BytePairEncoding.BytePairEncode(pieceSpan, Encoder, tokens);
-            }
-        }
-#else
-        foreach (var match in Regex.EnumerateMatches(text))
-        {
-            var fastKey = new string(text.Slice(match.Index, match.Length));
-
-            if (IsAscii(fastKey) && FastEncoder.TryGetValue(fastKey, out var fastToken))
-            {
-                tokens.Add(fastToken);
-                continue;
-            }
-            if (EnableCache && FastCache.TryGetValue(fastKey, out var fastTokens))
-            {
-                tokens.AddRange(fastTokens);
-                continue;
-            }
-
-            var piece = GetUtf8Bytes(text.Slice(match.Index, match.Length), pieceBytes);
-            if (Encoder.TryGetValue(piece, out var token))
-            {
-                tokens.Add(token);
-                continue;
-            }
-
-            if (EnableCache)
-            {
-                var pair = BytePairEncoding.BytePairEncodeToArray(piece, Encoder);
-                tokens.AddRange(pair);
-                FastCache[fastKey] = pair;
-            }
-            else
-            {
-                BytePairEncoding.BytePairEncode(piece, Encoder, tokens);
             }
         }
 #endif
@@ -763,13 +660,13 @@ public class CoreBpe
         disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
         
         var values = new List<string>();
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var textSpan = text.AsSpan();
         Span<byte> pieceBytes = stackalloc byte[512];
 #endif
 
         var specialTokens = new List<(int Index, int Length)>(capacity: 32);
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
         {
             var value = textSpan.Slice(start: match.Index, length: match.Length).ToString();
@@ -802,30 +699,14 @@ public class CoreBpe
                 var matchSpan = textSpan.Slice(match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
+                if (Encoder.ContainsKeyUtf16(matchSpan))
+                {
+                    values.Add(fastKey);
+                    continue;
+                }
+
                 var pieceSpan = GetUtf8Span(matchSpan, pieceBytes);
-                if (Encoder.ContainsKey(pieceSpan))
-                {
-                    values.Add(fastKey);
-                    continue;
-                }
-
                 var pair = BytePairEncoding.BytePairExplore(pieceSpan, Encoder);
-                AddExploredParts(pair, values);
-            }
-#elif NET7_0_OR_GREATER
-            foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
-            {
-                var matchSpan = textSpan.Slice(match.Index, match.Length);
-                var fastKey = new string(matchSpan);
-
-                var piece = GetUtf8Bytes(matchSpan, pieceBytes);
-                if (Encoder.ContainsKey(piece))
-                {
-                    values.Add(fastKey);
-                    continue;
-                }
-
-                var pair = BytePairEncoding.BytePairExplore(piece, Encoder);
                 AddExploredParts(pair, values);
             }
 #else
@@ -850,7 +731,7 @@ public class CoreBpe
             {
                 start = specialStart + specialLength;
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 var piece = new string(textSpan.Slice(specialStart, specialLength));
 #else
                 var piece = text.Substring(specialStart, specialLength);
@@ -879,7 +760,7 @@ public class CoreBpe
         disallowedSpecial = disallowedSpecial ?? throw new ArgumentNullException(nameof(disallowedSpecial));
         
         var values = new List<UtfToken>();
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var textSpan = text.AsSpan();
         Span<byte> pieceBytes = stackalloc byte[512];
 #endif
@@ -890,7 +771,7 @@ public class CoreBpe
         int surrogateCount = 0;
         string highSurrogatePair = string.Empty;
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         foreach (var match in SpecialRegex.EnumerateMatches(textSpan))
         {
             var value = textSpan.Slice(start: match.Index, length: match.Length).ToString();
@@ -931,30 +812,15 @@ public class CoreBpe
                 var matchSpan = textSpan.Slice(match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
+                if (Encoder.ContainsKeyUtf16(matchSpan))
+                {
+                    FlushHighSurrogate(values, ref highSurrogate, ref highSurrogatePair, ref surrogateCount);
+                    values.Add(new UtfToken(fastKey, 1));
+                    continue;
+                }
+
                 var pieceSpan = GetUtf8Span(matchSpan, pieceBytes);
-                if (Encoder.ContainsKey(pieceSpan))
-                {
-                    FlushHighSurrogate(values, ref highSurrogate, ref highSurrogatePair, ref surrogateCount);
-                    values.Add(new UtfToken(fastKey, 1));
-                    continue;
-                }
-
                 var pair = BytePairEncoding.BytePairExplore(pieceSpan, Encoder);
-#elif NET7_0_OR_GREATER
-            foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
-            {
-                var matchSpan = textSpan.Slice(match.Index, match.Length);
-                var fastKey = new string(matchSpan);
-
-                var piece = GetUtf8Bytes(matchSpan, pieceBytes);
-                if (Encoder.ContainsKey(piece))
-                {
-                    FlushHighSurrogate(values, ref highSurrogate, ref highSurrogatePair, ref surrogateCount);
-                    values.Add(new UtfToken(fastKey, 1));
-                    continue;
-                }
-
-                var pair = BytePairEncoding.BytePairExplore(piece, Encoder);
 #else
             foreach (Match match in Regex.Matches(text[start..specialStart]))
             {
@@ -1051,7 +917,7 @@ public class CoreBpe
             {
                 start = specialStart + specialLength;
                 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 var piece = new string(textSpan.Slice(specialStart, specialLength));
 #else
                 var piece = text.Substring(specialStart, specialLength);
@@ -1269,16 +1135,6 @@ public class CoreBpe
 #if NET8_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAscii(ReadOnlySpan<char> text) => System.Text.Ascii.IsValid(text);
-#elif NET7_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsAscii(ReadOnlySpan<char> text)
-    {
-        for (var i = 0; i < text.Length; i++)
-        {
-            if (text[i] > 127) return false;
-        }
-        return true;
-    }
 #else
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAscii(string text)
@@ -1312,22 +1168,6 @@ public class CoreBpe
             highSurrogate = false;
         }
     }
-
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte[] GetUtf8Bytes(ReadOnlySpan<char> text, Span<byte> scratch)
-    {
-        // check if text can be decoded into the buffer; each UTF-16 char can become at most 3 UTF-8 bytes
-        if (text.Length * 3 < scratch.Length)
-        {
-            return scratch[..System.Text.Encoding.UTF8.GetBytes(text, scratch)].ToArray();
-        }
-        else
-        {
-            return System.Text.Encoding.UTF8.GetBytes(text.ToArray());
-        }
-    }
-#endif
 
 #if NET8_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
