@@ -1,4 +1,8 @@
-//! Cross-language benchmark: Rust (tiktoken crate v3).
+//! Cross-language benchmark: Rust tokenizers.
+//!
+//! Compares:
+//! - tiktoken crate v3 (pure Rust, arena-based)
+//! - bpe-openai crate (GitHub's Aho-Corasick based, O(n) worst case)
 //!
 //! Uses o200k_base encoding to match the .NET benchmarks.
 //! Reads inputs from ../inputs/ directory (run export_inputs.py first).
@@ -8,7 +12,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::fs;
 use std::path::PathBuf;
-use tiktoken::EncodingFactory;
 
 struct Input {
     name: &'static str,
@@ -46,11 +49,11 @@ fn load_inputs() -> Vec<Input> {
         .collect()
 }
 
-fn bench_encode(c: &mut Criterion) {
+fn bench_tiktoken(c: &mut Criterion) {
     let inputs = load_inputs();
-    let enc = EncodingFactory::o200k_base().unwrap();
+    let enc = tiktoken::EncodingFactory::o200k_base().unwrap();
 
-    let mut group = c.benchmark_group("encode_o200k");
+    let mut group = c.benchmark_group("tiktoken_v3");
 
     for input in &inputs {
         group.throughput(Throughput::Bytes(input.bytes));
@@ -66,5 +69,25 @@ fn bench_encode(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_encode);
+fn bench_bpe_openai(c: &mut Criterion) {
+    let inputs = load_inputs();
+    let tokenizer = bpe_openai::o200k_base();
+
+    let mut group = c.benchmark_group("github_bpe");
+
+    for input in &inputs {
+        group.throughput(Throughput::Bytes(input.bytes));
+        group.bench_with_input(
+            BenchmarkId::new(input.name, input.bytes),
+            &input.text,
+            |b, text| {
+                b.iter(|| tokenizer.count(text));
+            },
+        );
+    }
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_tiktoken, bench_bpe_openai);
 criterion_main!(benches);

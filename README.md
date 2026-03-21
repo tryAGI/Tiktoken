@@ -184,7 +184,7 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 #### Cross-language context
 
-For reference, approximate single-threaded throughput of BPE tokenizers in other languages (different hardware/inputs — not directly comparable):
+For reference, single-threaded throughput of BPE tokenizers in other languages. Rust numbers are from published benchmarks (different hardware/inputs); Python measured on same Apple M4 Max with identical inputs.
 
 | Implementation | Language | Throughput | Notes |
 |---------------|----------|:----------:|-------|
@@ -192,8 +192,7 @@ For reference, approximate single-threaded throughput of BPE tokenizers in other
 | [`TokenDagger`](https://github.com/M4THYOU/TokenDagger) | Rust | ~250-300 MiB/s | PCRE2 JIT |
 | **Tiktoken** | **.NET/C#** | **120-571 MiB/s** | **Cached multilingual peaks at 571 MiB/s** |
 | [`tiktoken`](https://lib.rs/crates/tiktoken) v3.1 | Rust | ~120-130 MiB/s | Pure Rust, arena-based |
-| [OpenAI tiktoken](https://github.com/openai/tiktoken) | Rust+Python | ~80-120 MiB/s | Python wrapper overhead |
-| [HuggingFace tokenizers](https://github.com/huggingface/tokenizers) | Rust+Python | ~50 MiB/s | Optimized for batch |
+| [OpenAI tiktoken](https://github.com/openai/tiktoken) | Python | 7-20 MiB/s | Rust core, but Python FFI overhead (**measured**) |
 | tiktoken-go | Go | ~6-13 MiB/s | |
 
 > Our goal is to close the gap with GitHub's `bpe` crate — exploring Aho-Corasick pre-tokenization and SIMD-accelerated byte processing. Contributions welcome!
