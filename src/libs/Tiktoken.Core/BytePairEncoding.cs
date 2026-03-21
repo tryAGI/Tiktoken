@@ -6,6 +6,9 @@ using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
 #if NET9_0_OR_GREATER
 using System.Collections.Frozen;
 #endif
+#if NET8_0_OR_GREATER
+using Tiktoken.Core;
+#endif
 
 namespace Tiktoken.Core;
 
@@ -115,13 +118,13 @@ public static class BytePairEncoding
         return count;
     }
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
     private static unsafe int GetRank(
         int startIdx,
         int* partsIndexes,
         int count,
         ReadOnlySpan<byte> pieceSpan,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup,
+        TokenEncoder encoder,
         int length)
     {
         if (startIdx + length < count)
@@ -129,7 +132,7 @@ public static class BytePairEncoding
             var from = partsIndexes[startIdx];
             var to = partsIndexes[startIdx + length];
             var span = pieceSpan.Slice(from, to - from);
-            if (lookup.TryGetValue(span, out var rank))
+            if (encoder.TryGetValue(span, out var rank))
             {
                 return rank;
             }
@@ -143,7 +146,7 @@ public static class BytePairEncoding
         int* partsIndexes,
         int* partsRanks,
         int partsLength,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+        TokenEncoder encoder)
     {
         for (var i = 0; i < partsLength; i++)
         {
@@ -152,7 +155,7 @@ public static class BytePairEncoding
         }
         for (var i = 0; i < partsLength - 2; i++)
         {
-            partsRanks[i] = GetRank(i, partsIndexes, partsLength, pieceSpan, lookup, length: 2);
+            partsRanks[i] = GetRank(i, partsIndexes, partsLength, pieceSpan, encoder, length: 2);
         }
 
         var count = partsLength - 1;
@@ -163,10 +166,10 @@ public static class BytePairEncoding
                 break;
             }
 
-            partsRanks[i] = GetRank(i, partsIndexes, count + 1, pieceSpan, lookup, length: 3);
+            partsRanks[i] = GetRank(i, partsIndexes, count + 1, pieceSpan, encoder, length: 3);
             if (i > 0)
             {
-                partsRanks[i - 1] = GetRank(i - 1, partsIndexes, count + 1, pieceSpan, lookup, length: 3);
+                partsRanks[i - 1] = GetRank(i - 1, partsIndexes, count + 1, pieceSpan, encoder, length: 3);
             }
             for (var j = i + 1; j < count; j++)
             {
@@ -212,10 +215,10 @@ public static class BytePairEncoding
         }
     }
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
     internal static unsafe void BytePairEncode(
         ReadOnlySpan<byte> pieceSpan,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup,
+        TokenEncoder encoder,
         List<int> outList)
     {
         var partsLength = pieceSpan.Length + 1;
@@ -224,11 +227,11 @@ public static class BytePairEncoding
         {
             var partsIndexes = stackalloc int[partsLength];
             var partsRanks = stackalloc int[partsLength];
-            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
             for (var i = 0; i < count; i++)
             {
-                outList.Add(lookup[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])]);
+                outList.Add(encoder[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])]);
             }
         }
         else
@@ -238,11 +241,11 @@ public static class BytePairEncoding
             fixed (int* partsIndexes = heapIndexes)
             fixed (int* partsRanks = heapRanks)
             {
-                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
                 for (var i = 0; i < count; i++)
                 {
-                    outList.Add(lookup[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])]);
+                    outList.Add(encoder[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])]);
                 }
             }
         }
@@ -285,10 +288,10 @@ public static class BytePairEncoding
         }
     }
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
     internal static unsafe int[] BytePairEncodeToArray(
         ReadOnlySpan<byte> pieceSpan,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+        TokenEncoder encoder)
     {
         var partsLength = pieceSpan.Length + 1;
 
@@ -296,12 +299,12 @@ public static class BytePairEncoding
         {
             var partsIndexes = stackalloc int[partsLength];
             var partsRanks = stackalloc int[partsLength];
-            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
             var result = new int[count];
             for (var i = 0; i < count; i++)
             {
-                result[i] = lookup[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])];
+                result[i] = encoder[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])];
             }
             return result;
         }
@@ -312,12 +315,12 @@ public static class BytePairEncoding
             fixed (int* partsIndexes = heapIndexes)
             fixed (int* partsRanks = heapRanks)
             {
-                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
                 var result = new int[count];
                 for (var i = 0; i < count; i++)
                 {
-                    result[i] = lookup[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])];
+                    result[i] = encoder[pieceSpan.Slice(partsIndexes[i], partsIndexes[i + 1] - partsIndexes[i])];
                 }
                 return result;
             }
@@ -361,10 +364,10 @@ public static class BytePairEncoding
         }
     }
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
     internal static unsafe List<byte[]> BytePairExplore(
         ReadOnlySpan<byte> pieceSpan,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+        TokenEncoder encoder)
     {
         var partsLength = pieceSpan.Length + 1;
 
@@ -372,7 +375,7 @@ public static class BytePairEncoding
         {
             var partsIndexes = stackalloc int[partsLength];
             var partsRanks = stackalloc int[partsLength];
-            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+            var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
             var outList = new List<byte[]>(count);
             for (var i = 0; i < count; i++)
@@ -388,7 +391,7 @@ public static class BytePairEncoding
             fixed (int* partsIndexes = heapIndexes)
             fixed (int* partsRanks = heapRanks)
             {
-                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+                var count = FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
 
                 var outList = new List<byte[]>(count);
                 for (var i = 0; i < count; i++)
@@ -423,10 +426,10 @@ public static class BytePairEncoding
         }
     }
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
     internal static unsafe int BytePairEncodeCountTokens(
         ReadOnlySpan<byte> pieceSpan,
-        FrozenDictionary<byte[], int>.AlternateLookup<ReadOnlySpan<byte>> lookup)
+        TokenEncoder encoder)
     {
         var partsLength = pieceSpan.Length + 1;
 
@@ -434,7 +437,7 @@ public static class BytePairEncoding
         {
             var partsIndexes = stackalloc int[partsLength];
             var partsRanks = stackalloc int[partsLength];
-            return FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+            return FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
         }
         else
         {
@@ -443,7 +446,7 @@ public static class BytePairEncoding
             fixed (int* partsIndexes = heapIndexes)
             fixed (int* partsRanks = heapRanks)
             {
-                return FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, lookup);
+                return FindParts(pieceSpan, partsIndexes, partsRanks, partsLength, encoder);
             }
         }
     }

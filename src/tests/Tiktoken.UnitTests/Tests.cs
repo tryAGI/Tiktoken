@@ -1069,8 +1069,17 @@ public partial class Tests
     [TestMethod]
     public void BinaryStreamBadVersionThrows()
     {
-        // TTKB magic + version 99
-        var badData = new byte[] { 0x54, 0x54, 0x4B, 0x42, 99, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        // TTKB magic + version 99 + padding to 28-byte header
+        var badData = new byte[]
+        {
+            0x54, 0x54, 0x4B, 0x42, // magic "TTKB"
+            99, 0x00, 0x00, 0x00,   // version 99
+            0x00, 0x00, 0x00, 0x00, // count
+            0x00, 0x00, 0x00, 0x00, // tableSize
+            0x00, 0x00, 0x00, 0x00, // mask
+            0x00, 0x00, 0x00, 0x00, // keyBlobSize
+            0x00, 0x00, 0x00, 0x00, // flags
+        };
 
         var act = () => EncodingLoader.LoadEncodingFromBinaryData(badData);
 
@@ -1111,6 +1120,57 @@ public partial class Tests
         var helloToken = System.Text.Encoding.UTF8.GetBytes("Hello");
         loaded.Should().ContainKey(helloToken);
         loaded[helloToken].Should().Be(original[helloToken]);
+    }
+
+    [TestMethod]
+    [DataRow("o200k_base")]
+    [DataRow("cl100k_base")]
+    public void BinaryRoundTripProducesIdenticalEncoding(string encodingName)
+    {
+        // Load encoding and build original encoder
+        Encoding encoding = encodingName switch
+        {
+            "o200k_base" => new O200KBase(),
+            "cl100k_base" => new Cl100KBase(),
+            _ => throw new ArgumentOutOfRangeException(nameof(encodingName))
+        };
+        var originalEncoder = new Encoder(encoding);
+
+        // Write to binary and read back
+        using var ms = new MemoryStream();
+        EncodingLoader.WriteEncodingToBinaryStream(ms, encoding.MergeableRanks);
+        var binaryData = ms.ToArray();
+        var roundTripped = EncodingLoader.LoadEncodingFromBinaryData(binaryData);
+
+        // Build encoder from round-tripped data
+        var roundTrippedEncoding = new Encoding(
+            encoding.Name,
+            encoding.Patterns,
+            roundTripped,
+            encoding.SpecialTokens);
+        var roundTrippedEncoder = new Encoder(roundTrippedEncoding);
+
+        // Verify identical encoding on diverse sample texts
+        var texts = new[]
+        {
+            Strings.HelloWorld,
+            Strings.Chinese,
+            Strings.Multilingual,
+            Strings.Code,
+            Strings.MultilingualLong,
+        };
+
+        foreach (var text in texts)
+        {
+            var originalTokens = originalEncoder.Encode(text);
+            var roundTrippedTokens = roundTrippedEncoder.Encode(text);
+
+            roundTrippedTokens.Should().BeEquivalentTo(originalTokens,
+                $"Round-tripped {encodingName} should produce identical tokens for '{(text.Length > 40 ? text[..40] + "..." : text)}'");
+
+            roundTrippedEncoder.CountTokens(text).Should().Be(originalEncoder.CountTokens(text));
+            roundTrippedEncoder.Decode(roundTrippedTokens.ToList()).Should().Be(text);
+        }
     }
 
     [TestMethod]

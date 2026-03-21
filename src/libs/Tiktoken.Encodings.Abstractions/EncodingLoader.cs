@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Reflection;
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 using System.Buffers.Binary;
@@ -7,19 +7,19 @@ using System.Buffers.Binary;
 namespace Tiktoken.Encodings;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public static class EncodingLoader
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="assembly"></param>
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="FormatException"></exception>
-    public static Dictionary<byte[], int> LoadEncodingFromManifestResource(
+    public static IReadOnlyDictionary<byte[], int> LoadEncodingFromManifestResource(
         this Assembly assembly,
         string name)
     {
@@ -94,10 +94,10 @@ public static class EncodingLoader
     }
 
     /// <summary>
-    /// Loads encoding from a binary .ttkb stream (compact format: no base64 decoding overhead).
-    /// Format: [TTKB magic 4B][version uint32 LE][count uint32 LE][entries: rank int32 LE + len byte + token bytes]
+    /// Loads encoding from a binary .ttkb stream.
+    /// Format: header (28B) + buckets + ranks + offsets + lengths + key blob.
     /// </summary>
-    public static Dictionary<byte[], int> LoadEncodingFromBinaryStream(Stream stream)
+    public static IReadOnlyDictionary<byte[], int> LoadEncodingFromBinaryStream(Stream stream)
     {
         stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
@@ -107,7 +107,11 @@ public static class EncodingLoader
         if (stream is MemoryStream ms && ms.TryGetBuffer(out var segment))
         {
             // Zero-copy for MemoryStream (common for manifest resources)
+#if NET8_0_OR_GREATER
+            return ParseBinaryEncodingToArrays(segment.AsSpan());
+#else
             return ParseBinaryEncoding(segment.AsSpan());
+#endif
         }
 
         if (stream.CanSeek)
@@ -128,11 +132,15 @@ public static class EncodingLoader
             stream.CopyTo(tempMs);
             buffer = tempMs.ToArray();
         }
+#if NET8_0_OR_GREATER
+        return ParseBinaryEncodingToArrays(buffer.AsSpan());
+#else
         return ParseBinaryEncoding(buffer.AsSpan());
+#endif
 #else
         using var reader = new BinaryReader(stream);
 
-        // Read and validate header
+        // Read and validate header (28 bytes)
         var magic = reader.ReadBytes(4);
         if (magic.Length < 4 || magic[0] != (byte)'T' || magic[1] != (byte)'T' ||
             magic[2] != (byte)'K' || magic[3] != (byte)'B')
@@ -147,14 +155,37 @@ public static class EncodingLoader
         }
 
         var count = (int)reader.ReadUInt32();
-        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
+        var tableSize = (int)reader.ReadUInt32();
+        reader.ReadUInt32(); // mask (unused on pre-NET8)
+        var keyBlobSize = (int)reader.ReadUInt32();
+        reader.ReadUInt32(); // flags
 
+        // Skip buckets (pre-NET8 doesn't use them)
+        reader.ReadBytes(tableSize * 4);
+
+        // Read ranks
+        var ranks = new int[count];
+        for (var i = 0; i < count; i++)
+            ranks[i] = reader.ReadInt32();
+
+        // Read key offsets
+        var keyOffsets = new int[count];
+        for (var i = 0; i < count; i++)
+            keyOffsets[i] = reader.ReadInt32();
+
+        // Read key lengths
+        var keyLengths = reader.ReadBytes(count);
+
+        // Read key blob
+        var keyBlob = reader.ReadBytes(keyBlobSize);
+
+        // Build dictionary
+        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
         for (var i = 0; i < count; i++)
         {
-            var rank = reader.ReadInt32();
-            var tokenLength = reader.ReadByte();
-            var tokenBytes = reader.ReadBytes(tokenLength);
-            dictionary[tokenBytes] = rank;
+            var tokenBytes = new byte[keyLengths[i]];
+            Array.Copy(keyBlob, keyOffsets[i], tokenBytes, 0, keyLengths[i]);
+            dictionary[tokenBytes] = ranks[i];
         }
 
         return dictionary;
@@ -167,11 +198,13 @@ public static class EncodingLoader
     /// <param name="data">Binary .ttkb data.</param>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public static Dictionary<byte[], int> LoadEncodingFromBinaryData(byte[] data)
+    public static IReadOnlyDictionary<byte[], int> LoadEncodingFromBinaryData(byte[] data)
     {
         data = data ?? throw new ArgumentNullException(nameof(data));
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
+        return ParseBinaryEncodingToArrays(data.AsSpan());
+#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         return ParseBinaryEncoding(data.AsSpan());
 #else
         using var stream = new MemoryStream(data, writable: false);
@@ -179,11 +212,11 @@ public static class EncodingLoader
 #endif
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#if (NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER) && !NET8_0_OR_GREATER
     private static Dictionary<byte[], int> ParseBinaryEncoding(ReadOnlySpan<byte> span)
     {
-        // Validate header
-        if (span.Length < 12 ||
+        // Validate header (28 bytes)
+        if (span.Length < 28 ||
             span[0] != (byte)'T' || span[1] != (byte)'T' ||
             span[2] != (byte)'K' || span[3] != (byte)'B')
         {
@@ -197,21 +230,92 @@ public static class EncodingLoader
         }
 
         var count = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(8));
-        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
+        var tableSize = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(12));
+        var keyBlobSize = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(20));
 
-        var offset = 12;
+        // Skip header + buckets
+        var off = 28 + tableSize * 4;
+
+        // Read ranks
+        var ranks = new int[count];
         for (var i = 0; i < count; i++)
         {
-            var rank = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(offset));
-            offset += 4;
-            var tokenLength = span[offset];
-            offset += 1;
-            var tokenBytes = span.Slice(offset, tokenLength).ToArray();
-            offset += tokenLength;
-            dictionary[tokenBytes] = rank;
+            ranks[i] = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(off));
+            off += 4;
+        }
+
+        // Read key offsets
+        var keyOffsets = new int[count];
+        for (var i = 0; i < count; i++)
+        {
+            keyOffsets[i] = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(off));
+            off += 4;
+        }
+
+        // Key lengths and blob
+        var keyLengths = span.Slice(off, count);
+        off += count;
+        var keyBlob = span.Slice(off, keyBlobSize);
+
+        // Build dictionary
+        var dictionary = new Dictionary<byte[], int>(count, new ByteArrayComparer());
+        for (var i = 0; i < count; i++)
+        {
+            dictionary[keyBlob.Slice(keyOffsets[i], keyLengths[i]).ToArray()] = ranks[i];
         }
 
         return dictionary;
+    }
+#endif
+
+#if NET8_0_OR_GREATER
+    private static EncodingData ParseBinaryEncodingToArrays(ReadOnlySpan<byte> span)
+    {
+        // Validate header (28 bytes)
+        if (span.Length < 28 ||
+            span[0] != (byte)'T' || span[1] != (byte)'T' ||
+            span[2] != (byte)'K' || span[3] != (byte)'B')
+        {
+            throw new FormatException("Invalid binary encoding file: bad magic.");
+        }
+
+        var version = BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(4));
+        if (version != 1)
+        {
+            throw new FormatException($"Unsupported binary encoding version: {version}");
+        }
+
+        var count = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(8));
+        var tableSize = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(12));
+        var mask = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(16));
+        var keyBlobSize = (int)BinaryPrimitives.ReadUInt32LittleEndian(span.Slice(20));
+
+        var off = 28;
+
+        // Bulk-copy pre-computed hash table buckets
+        var buckets = System.Runtime.InteropServices.MemoryMarshal
+            .Cast<byte, int>(span.Slice(off, tableSize * 4)).ToArray();
+        off += tableSize * 4;
+
+        // Bulk-copy ranks
+        var ranks = System.Runtime.InteropServices.MemoryMarshal
+            .Cast<byte, int>(span.Slice(off, count * 4)).ToArray();
+        off += count * 4;
+
+        // Bulk-copy key offsets
+        var offsets = new int[count];
+        System.Runtime.InteropServices.MemoryMarshal
+            .Cast<byte, int>(span.Slice(off, count * 4)).CopyTo(offsets);
+        off += count * 4;
+
+        // Bulk-copy key lengths
+        var tokenLengths = span.Slice(off, count).ToArray();
+        off += count;
+
+        // Bulk-copy key blob
+        var data = span.Slice(off, keyBlobSize).ToArray();
+
+        return new EncodingData(data, offsets, tokenLengths, ranks, buckets, mask);
     }
 #endif
 
@@ -229,17 +333,35 @@ public static class EncodingLoader
         stream = stream ?? throw new ArgumentNullException(nameof(stream));
         encoder = encoder ?? throw new ArgumentNullException(nameof(encoder));
 
-        using var writer = new BinaryWriter(stream);
+#if NET8_0_OR_GREATER
+        // Fast path: if input is EncodingData, use its flat arrays directly (zero enumeration)
+        if (encoder is EncodingData encodingData)
+        {
+            WriteFromFlatArrays(
+                stream,
+                encodingData._data, encodingData._offsets, encodingData._tokenLengths,
+                encodingData._ranks, encodingData.Count);
+            return;
+        }
+#endif
 
-        // Header
-        writer.Write((byte)'T');
-        writer.Write((byte)'T');
-        writer.Write((byte)'K');
-        writer.Write((byte)'B');
-        writer.Write((uint)1);             // version
-        writer.Write((uint)encoder.Count);  // count
+        var count = encoder.Count;
 
-        // Entries
+        // Single pass: validate, compute total size, and copy data
+        // Use List<byte> for key blob since we don't know total size upfront
+        var totalKeyBytes = 0;
+        foreach (var kvp in encoder)
+        {
+            totalKeyBytes += kvp.Key.Length;
+        }
+
+        var keyBlobArray = new byte[totalKeyBytes];
+        var keyOffsets = new int[count];
+        var keyLengths = new byte[count];
+        var ranks = new int[count];
+
+        var idx = 0;
+        var blobOffset = 0;
         foreach (var kvp in encoder)
         {
             if (kvp.Key.Length > 255)
@@ -248,10 +370,124 @@ public static class EncodingLoader
                     $"Token at rank {kvp.Value} is {kvp.Key.Length} bytes (max 255).");
             }
 
-            writer.Write(kvp.Value);            // rank (int32 LE)
-            writer.Write((byte)kvp.Key.Length);  // token length (uint8)
-            writer.Write(kvp.Key);               // raw token bytes
+            keyOffsets[idx] = blobOffset;
+            keyLengths[idx] = (byte)kvp.Key.Length;
+            ranks[idx] = kvp.Value;
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+            kvp.Key.AsSpan().CopyTo(keyBlobArray.AsSpan(blobOffset));
+#else
+            Array.Copy(kvp.Key, 0, keyBlobArray, blobOffset, kvp.Key.Length);
+#endif
+            blobOffset += kvp.Key.Length;
+            idx++;
         }
+
+        WriteFlatLayoutToStream(stream, keyBlobArray, keyOffsets, keyLengths, ranks, count);
+    }
+
+#if NET8_0_OR_GREATER
+    private static void WriteFromFlatArrays(
+        Stream stream,
+        byte[] data, int[] offsets, byte[] tokenLengths, int[] ranks, int count)
+    {
+        // Validate token lengths
+        for (var i = 0; i < count; i++)
+        {
+            if (tokenLengths[i] > 255)
+            {
+                throw new ArgumentException(
+                    $"Token at rank {ranks[i]} is {tokenLengths[i]} bytes (max 255).");
+            }
+        }
+
+        WriteFlatLayoutToStream(stream, data, offsets, tokenLengths, ranks, count);
+    }
+#endif
+
+    private static void WriteFlatLayoutToStream(
+        Stream stream,
+        byte[] keyBlobArray, int[] keyOffsets, byte[] keyLengths, int[] ranks, int count)
+    {
+        // Build hash table (FNV-1a + triangular probing)
+        var tableSize = RoundUpPowerOf2((uint)(count * 3 / 2));
+        if (tableSize < 16) tableSize = 16;
+        var mask = (int)(tableSize - 1);
+        var buckets = new int[tableSize];
+        for (var i = 0; i < buckets.Length; i++) buckets[i] = -1;
+
+        for (var i = 0; i < count; i++)
+        {
+            var bucket = (int)(FnvHash(keyBlobArray, keyOffsets[i], keyLengths[i]) & (uint)mask);
+            var step = 1;
+            while (buckets[bucket] != -1)
+            {
+                bucket = (bucket + step) & mask;
+                step++;
+            }
+            buckets[bucket] = i;
+        }
+
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+        // Header (28 bytes)
+        Span<byte> header = stackalloc byte[28];
+        header[0] = (byte)'T'; header[1] = (byte)'T'; header[2] = (byte)'K'; header[3] = (byte)'B';
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(4), 1);                         // version
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(8), (uint)count);               // entryCount
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(12), (uint)tableSize);          // tableSize
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(16), (uint)mask);               // mask
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(20), (uint)keyBlobArray.Length); // keyBlobSize
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(24), 0);                        // flags
+        stream.Write(header);
+
+        // Bulk-write int arrays as raw bytes
+        stream.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(buckets.AsSpan()));
+        stream.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(ranks.AsSpan()));
+        stream.Write(System.Runtime.InteropServices.MemoryMarshal.AsBytes(keyOffsets.AsSpan()));
+        stream.Write(keyLengths);
+        stream.Write(keyBlobArray);
+#else
+        using var writer = new BinaryWriter(stream);
+
+        // Header (28 bytes)
+        writer.Write((byte)'T'); writer.Write((byte)'T'); writer.Write((byte)'K'); writer.Write((byte)'B');
+        writer.Write((uint)1);                   // version
+        writer.Write((uint)count);               // entryCount
+        writer.Write((uint)tableSize);           // tableSize
+        writer.Write((uint)mask);                // mask
+        writer.Write((uint)keyBlobArray.Length);  // keyBlobSize
+        writer.Write((uint)0);                   // flags
+
+        // Per-element write (no MemoryMarshal on older targets)
+        foreach (var b in buckets) writer.Write(b);
+        foreach (var r in ranks) writer.Write(r);
+        foreach (var o in keyOffsets) writer.Write(o);
+        writer.Write(keyLengths);
+        writer.Write(keyBlobArray);
+#endif
+    }
+
+    // FNV-1a hash — matches C# TokenEncoder.FnvHash and Python convert_to_ttkb.py
+    private static uint FnvHash(byte[] data, int offset, int length)
+    {
+        var hash = 2166136261u;
+        for (var i = 0; i < length; i++)
+        {
+            hash ^= data[offset + i];
+            hash *= 16777619u;
+        }
+        return hash;
+    }
+
+    private static uint RoundUpPowerOf2(uint value)
+    {
+        if (value <= 1) return 1;
+        value--;
+        value |= value >> 1;
+        value |= value >> 2;
+        value |= value >> 4;
+        value |= value >> 8;
+        value |= value >> 16;
+        return value + 1;
     }
 
     /// <summary>
@@ -261,7 +497,7 @@ public static class EncodingLoader
     /// <param name="path">Path to the encoding file (.ttkb or .tiktoken).</param>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public static Dictionary<byte[], int> LoadEncodingFromFile(string path)
+    public static IReadOnlyDictionary<byte[], int> LoadEncodingFromFile(string path)
     {
         path = path ?? throw new ArgumentNullException(nameof(path));
 
@@ -283,7 +519,7 @@ public static class EncodingLoader
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public static async Task<Dictionary<byte[], int>> LoadEncodingFromFileAsync(
+    public static async Task<IReadOnlyDictionary<byte[], int>> LoadEncodingFromFileAsync(
         string path,
         CancellationToken cancellationToken = default)
     {
@@ -306,7 +542,7 @@ public static class EncodingLoader
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public static async Task<Dictionary<byte[], int>> LoadEncodingFromBinaryFileAsync(
+    public static async Task<IReadOnlyDictionary<byte[], int>> LoadEncodingFromBinaryFileAsync(
         string path,
         CancellationToken cancellationToken = default)
     {
@@ -327,7 +563,7 @@ public static class EncodingLoader
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     /// <exception cref="FormatException"></exception>
-    public static async Task<Dictionary<byte[], int>> LoadEncodingFromTextFileAsync(
+    public static async Task<IReadOnlyDictionary<byte[], int>> LoadEncodingFromTextFileAsync(
         string path,
         CancellationToken cancellationToken = default)
     {
@@ -349,7 +585,7 @@ public static class EncodingLoader
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="FormatException"></exception>
-    public static Dictionary<byte[], int> LoadEncodingFromLines(
+    public static IReadOnlyDictionary<byte[], int> LoadEncodingFromLines(
         this IReadOnlyList<string> lines,
         string name)
     {

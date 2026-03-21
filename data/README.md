@@ -32,49 +32,49 @@ The `.ttkb` files in the encoding project directories (`src/libs/Tiktoken.Encodi
 
 | | `.tiktoken` (text) | `.ttkb` (binary) |
 |---|---|---|
-| **Size** | 3.4 MB (o200k) | 2.3 MB (o200k) — **34% smaller** |
-| **Loading** | Line-by-line + base64 decode | BinaryReader sequential read |
-| **Allocation** | String + byte[] per line | byte[] per entry only |
-| **Pre-allocation** | Estimated from stream length | Exact count in header |
+| **Construction** | ~100ms | **<1ms** (pre-computed hash table) |
+| **Loading** | Line-by-line + base64 decode | `MemoryMarshal.Cast` bulk copy |
+| **Allocation** | String + byte[] per line | 5 bulk array copies only |
 
-### Binary format specification (version 1)
+### Binary format specification
 
 ```
-Offset  Size    Type        Description
-──────  ──────  ──────────  ───────────────────────────
-0       4       byte[4]     Magic: "TTKB" (0x54 0x54 0x4B 0x42)
-4       4       uint32 LE   Version (1)
-8       4       uint32 LE   Entry count (N)
-12      ...     entries     N entries, each:
-                              4 bytes   int32 LE    rank
-                              1 byte    uint8       token byte length (max 255)
-                              L bytes   byte[L]     raw token bytes
+Header (28 bytes):
+  [0..4]    "TTKB" magic (0x54 0x54 0x4B 0x42)
+  [4..8]    version = 1 (uint32 LE)
+  [8..12]   entryCount (uint32 LE)
+  [12..16]  tableSize (uint32 LE, power of 2)
+  [16..20]  mask (uint32 LE, tableSize - 1)
+  [20..24]  keyBlobSize (uint32 LE)
+  [24..28]  flags (uint32 LE, reserved = 0)
+
+Sections (contiguous, bulk-copyable):
+  Buckets:    int32[tableSize]     — pre-computed FNV-1a hash table (-1 = empty)
+  Ranks:      int32[entryCount]    — token ranks
+  KeyOffsets: int32[entryCount]    — byte offset of each key in KeyBlob (uint32)
+  KeyLengths: uint8[entryCount]    — byte length of each key
+  KeyBlob:    byte[keyBlobSize]    — concatenated raw token bytes
 ```
+
+The hash table uses FNV-1a (32-bit) hashing with triangular number probing. The Python converter (`convert_to_ttkb.py`) is bit-exact with the C# `TokenEncoder` implementation.
 
 ## How to regenerate `.ttkb` files
 
 ```bash
-# From this directory:
-python convert_to_ttkb.py
+# From this directory — converts all .tiktoken files, copies to encoding dirs, verifies:
+make
 
-# Copy to encoding project directories:
-cp o200k_base.ttkb ../src/libs/Tiktoken.Encodings.o200k/
-cp cl100k_base.ttkb ../src/libs/Tiktoken.Encodings.cl100k/
-cp r50k_base.ttkb ../src/libs/Tiktoken.Encodings.r50k/
-cp p50k_base.ttkb ../src/libs/Tiktoken.Encodings.p50k/
+# Or step by step:
+make convert   # .tiktoken -> .ttkb
+make copy      # Copy to src/libs/Tiktoken.Encodings.*/
+make verify    # Verify entries + hash table correctness
 ```
 
 ## How to verify
 
 ```bash
-# Copy .ttkb files here for verification:
-cp ../src/libs/Tiktoken.Encodings.o200k/o200k_base.ttkb .
-cp ../src/libs/Tiktoken.Encodings.cl100k/cl100k_base.ttkb .
-cp ../src/libs/Tiktoken.Encodings.r50k/r50k_base.ttkb .
-cp ../src/libs/Tiktoken.Encodings.p50k/p50k_base.ttkb .
-
-# Verify binary files match text sources:
+# Verify all .ttkb files in this directory against .tiktoken sources:
 python verify_ttkb.py
 ```
 
-This confirms every rank and token byte sequence in the binary file matches the original text file exactly.
+This confirms every rank and token byte sequence matches, and that the pre-computed hash table is correct.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Verify that .ttkb binary files are byte-for-byte equivalent to their .tiktoken source files.
+Verify that .ttkb binary files match their .tiktoken source files.
+Validates entries and hash table correctness.
 
 Usage:
     python verify_ttkb.py                         # Verify all pairs in this directory
@@ -13,6 +14,18 @@ import base64
 import struct
 import sys
 from pathlib import Path
+
+# FNV-1a constants (must match convert_to_ttkb.py and C# TokenEncoder)
+FNV_OFFSET_BASIS = 2166136261
+FNV_PRIME = 16777619
+MASK_32 = 0xFFFFFFFF
+
+
+def fnv_hash(key: bytes) -> int:
+    h = FNV_OFFSET_BASIS
+    for b in key:
+        h = ((h ^ b) * FNV_PRIME) & MASK_32
+    return h
 
 
 def verify(ttkb_path: Path) -> bool:
@@ -34,30 +47,53 @@ def verify(ttkb_path: Path) -> bool:
             rank = int(rank_str)
             text_entries[rank] = token_bytes
 
-    # Load binary entries
-    binary_entries = {}
+    # Load binary
     with open(ttkb_path, "rb") as f:
-        magic = f.read(4)
-        if magic != b"TTKB":
-            print(f"  FAIL {ttkb_path.name}: bad magic {magic!r}")
-            return False
-        (version,) = struct.unpack("<I", f.read(4))
-        if version != 1:
-            print(f"  FAIL {ttkb_path.name}: unsupported version {version}")
-            return False
-        (count,) = struct.unpack("<I", f.read(4))
-        for _ in range(count):
-            (rank,) = struct.unpack("<i", f.read(4))
-            (token_len,) = struct.unpack("B", f.read(1))
-            token_bytes = f.read(token_len)
-            binary_entries[rank] = token_bytes
-        # Ensure we consumed the entire file
-        trailing = f.read()
-        if trailing:
-            print(f"  FAIL {ttkb_path.name}: {len(trailing)} trailing bytes")
-            return False
+        data = f.read()
 
-    # Compare
+    if len(data) < 28:
+        print(f"  FAIL {ttkb_path.name}: file too small ({len(data)} bytes)")
+        return False
+
+    magic = data[:4]
+    if magic != b"TTKB":
+        print(f"  FAIL {ttkb_path.name}: bad magic {magic!r}")
+        return False
+
+    (version,) = struct.unpack_from("<I", data, 4)
+    if version != 1:
+        print(f"  FAIL {ttkb_path.name}: unsupported version {version}")
+        return False
+
+    count, table_size, mask, key_blob_size, flags = struct.unpack_from("<5I", data, 8)
+
+    if mask != table_size - 1:
+        print(f"  FAIL {ttkb_path.name}: mask mismatch ({mask} != {table_size - 1})")
+        return False
+
+    # Parse sections
+    off = 28
+    buckets = list(struct.unpack_from(f"<{table_size}i", data, off))
+    off += table_size * 4
+    ranks = list(struct.unpack_from(f"<{count}i", data, off))
+    off += count * 4
+    key_offsets = list(struct.unpack_from(f"<{count}I", data, off))
+    off += count * 4
+    key_lengths = list(struct.unpack_from(f"{count}B", data, off))
+    off += count
+    key_blob = data[off : off + key_blob_size]
+    off += key_blob_size
+
+    if off != len(data):
+        print(f"  FAIL {ttkb_path.name}: {len(data) - off} trailing bytes")
+        return False
+
+    # Reconstruct entries and compare
+    binary_entries = {}
+    for i in range(count):
+        token_bytes = key_blob[key_offsets[i] : key_offsets[i] + key_lengths[i]]
+        binary_entries[ranks[i]] = token_bytes
+
     if len(text_entries) != len(binary_entries):
         print(
             f"  FAIL {ttkb_path.name}: count mismatch"
@@ -73,7 +109,32 @@ def verify(ttkb_path: Path) -> bool:
             print(f"  FAIL {ttkb_path.name}: rank {rank} bytes differ")
             return False
 
-    print(f"  OK   {ttkb_path.name} ({len(binary_entries)} entries match)")
+    # Verify hash table correctness
+    for i in range(count):
+        token_bytes = key_blob[key_offsets[i] : key_offsets[i] + key_lengths[i]]
+        bucket = fnv_hash(token_bytes) & mask
+        step = 1
+        found = False
+        while True:
+            idx = buckets[bucket]
+            if idx == -1:
+                break
+            if idx == i:
+                found = True
+                break
+            bucket = (bucket + step) & mask
+            step += 1
+        if not found:
+            print(
+                f"  FAIL {ttkb_path.name}: entry {i} (rank {ranks[i]})"
+                f" not found via hash table lookup"
+            )
+            return False
+
+    print(
+        f"  OK   {ttkb_path.name} ({count} entries, table={table_size},"
+        f" hash table verified)"
+    )
     return True
 
 
