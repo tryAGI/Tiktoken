@@ -74,6 +74,18 @@ public class Benchmarks
     public IReadOnlyCollection<int> NonAsciiLookup_Encode() => _noCacheEncoder.Encode("Привет мир!");
 
 
+    // BPE fallback: string with rare byte sequences that force multi-token BPE splitting
+    // (no single-token match in o200k_base vocabulary)
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("BpeFallback")]
+    public int BpeFallback_CountTokens() => _noCacheEncoder.CountTokens("xzqjvwplfmgk xzqjvwplfmgk");
+
+    // Single-token comparison: common words that hit single-token matches
+    [Benchmark]
+    [BenchmarkCategory("BpeFallback")]
+    public int SingleToken_CountTokens() => _noCacheEncoder.CountTokens("the the the the the the the");
+
+
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("WriteToBinary")]
     public MemoryStream Tiktoken_WriteToBinary_o200k()
