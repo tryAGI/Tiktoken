@@ -182,6 +182,44 @@ internal sealed class TokenEncoder : IReadOnlyDictionary<byte[], int>
         }
     }
 
+    // ASCII span lookups — compute FNV-1a hash directly from chars (cast to byte).
+    // Caller must guarantee all chars are ASCII (0-127), where byte == (byte)char.
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetValueAscii(ReadOnlySpan<char> asciiKey, out int rank)
+    {
+        var hash = 2166136261u;
+        for (var i = 0; i < asciiKey.Length; i++)
+        {
+            hash ^= (byte)asciiKey[i];
+            hash *= 16777619u;
+        }
+        var bucket = (int)(hash & (uint)_mask);
+        var step = 1;
+        while (true)
+        {
+            var idx = _buckets[bucket];
+            if (idx == -1) { rank = 0; return false; }
+            var tokenLen = _tokenLengths[idx];
+            if (tokenLen == asciiKey.Length)
+            {
+                var tokenData = _data.AsSpan(_offsets[idx], tokenLen);
+                var match = true;
+                for (var j = 0; j < tokenLen; j++)
+                {
+                    if (tokenData[j] != (byte)asciiKey[j]) { match = false; break; }
+                }
+                if (match) { rank = _ranks[idx]; return true; }
+            }
+            bucket = (bucket + step) & _mask;
+            step++;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ContainsKeyAscii(ReadOnlySpan<char> asciiKey)
+        => TryGetValueAscii(asciiKey, out _);
+
     public int this[ReadOnlySpan<byte> key]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

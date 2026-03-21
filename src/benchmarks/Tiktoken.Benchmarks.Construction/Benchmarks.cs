@@ -14,11 +14,17 @@ public class Benchmarks
     private IReadOnlyDictionary<byte[], int> _o200kDict = null!;
     private IReadOnlyDictionary<byte[], int> _cl100kDict = null!;
 
+    // Pre-warmed encoder for ASCII lookup benchmarks (cache disabled to isolate lookup path)
+    private Encoder _noCacheEncoder = null!;
+
     [GlobalSetup]
     public void Setup()
     {
         _o200kDict = new O200KBase().MergeableRanks;
         _cl100kDict = new Cl100KBase().MergeableRanks;
+        _noCacheEncoder = new Encoder(new O200KBase()) { EnableCache = false };
+        // Warm up to ensure no first-call effects
+        _noCacheEncoder.CountTokens("warmup");
     }
 
     [Benchmark(Baseline = true)]
@@ -45,6 +51,27 @@ public class Benchmarks
         var encoder = new Encoder(new O200KBase());
         return encoder.Encode(Strings.Code);
     }
+
+
+    // ASCII fast-path: short ASCII string hits TokenEncoder.TryGetValueAscii directly
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("AsciiLookup")]
+    public int AsciiLookup_CountTokens() => _noCacheEncoder.CountTokens("Hello, World!");
+
+    // Non-ASCII comparison: forces UTF-8 byte path (no ASCII fast-path)
+    [Benchmark]
+    [BenchmarkCategory("AsciiLookup")]
+    public int NonAsciiLookup_CountTokens() => _noCacheEncoder.CountTokens("Привет мир!");
+
+    // ASCII encode: measures per-token ASCII lookup via Encode
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("AsciiEncode")]
+    public IReadOnlyCollection<int> AsciiLookup_Encode() => _noCacheEncoder.Encode("Hello, World!");
+
+    // Non-ASCII encode comparison
+    [Benchmark]
+    [BenchmarkCategory("AsciiEncode")]
+    public IReadOnlyCollection<int> NonAsciiLookup_Encode() => _noCacheEncoder.Encode("Привет мир!");
 
 
     [Benchmark(Baseline = true)]
