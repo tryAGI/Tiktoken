@@ -177,8 +177,8 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 | Encoding | Time | Description |
 |----------|------|-------------|
-| **o200k_base** | **1 ms** | GPT-4o (200K vocab, pre-computed hash table, lazy FastEncoder) |
-| **cl100k_base** | **0.3 ms** | GPT-3.5/4 (100K vocab) |
+| **o200k_base** | **0.78 ms** | GPT-4o (200K vocab, pre-computed hash table, lazy FastEncoder) |
+| **cl100k_base** | **0.46 ms** | GPT-3.5/4 (100K vocab) |
 
 > Encoder construction includes loading embedded binary data, building hash tables, and compiling regex. FastEncoder and Decoder dictionaries are lazy-initialized on first use only. Reuse `Encoder` instances across calls for best performance.
 
