@@ -1,0 +1,14 @@
+[package]
+name = "tiktoken-cross-bench"
+version = "0.1.0"
+edition = "2021"
+
+[[bench]]
+name = "encode"
+harness = false
+
+[dependencies]
+tiktoken = "3"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
