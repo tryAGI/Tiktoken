@@ -28,6 +28,10 @@ dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.Decode/Tiktok
 dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.CountTokens/Tiktoken.Benchmarks.CountTokens.csproj
 dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.EncodingComparison/Tiktoken.Benchmarks.EncodingComparison.csproj
 dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.Explore/Tiktoken.Benchmarks.Explore.csproj
+dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.ColdPath/Tiktoken.Benchmarks.ColdPath.csproj
+
+# Quick perf smoke test (checks cache speedup ratios, ~30s, machine-independent)
+dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.SmokeTest/Tiktoken.Benchmarks.SmokeTest.csproj
 ```
 
 ## Architecture
@@ -45,7 +49,7 @@ dotnet run -c Release --project src/benchmarks/Tiktoken.Benchmarks.Explore/Tikto
 | `src/libs/Tiktoken.Encodings.r50k/` | `r50k_base` encoding |
 | `src/libs/Tiktoken.Encodings.Tokenizer/` | Load HuggingFace `tokenizer.json` files (GPT-2, Llama 3, Qwen2, etc.) |
 | `src/tests/Tiktoken.UnitTests/` | Unit tests (MSTest + AwesomeAssertions + Verify) |
-| `src/benchmarks/Tiktoken.Benchmarks.*/` | BenchmarkDotNet benchmarks split by concern (Construction, Encode, Decode, CountTokens, EncodingComparison, Explore) |
+| `src/benchmarks/Tiktoken.Benchmarks.*/` | BenchmarkDotNet benchmarks split by concern (Construction, Encode, Decode, CountTokens, ColdPath, EncodingComparison, Explore) |
 | `src/benchmarks/Tiktoken.Benchmarks.Shared/` | Shared test strings (MSBuild shared project) |
 | `benchmarks/` | Historical benchmark result reports (Markdown) |
 | `data/` | Source-of-truth `.tiktoken` files from OpenAI + conversion/verification scripts |

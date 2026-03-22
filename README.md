@@ -4,10 +4,10 @@
 [![dotnet](https://github.com/tryAGI/Tiktoken/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/tryAGI/Tiktoken/actions/workflows/dotnet.yml)
 [![License: MIT](https://img.shields.io/github/license/tryAGI/Tiktoken)](https://github.com/tryAGI/Tiktoken/blob/main/LICENSE.txt)
 [![Discord](https://img.shields.io/discord/1115206893015662663?label=Discord&logo=discord&logoColor=white&color=d82679)](https://discord.gg/Ca2xhfBf3v)
-[![Throughput](https://img.shields.io/badge/throughput-571_MiB%2Fs-brightgreen)](https://github.com/tryAGI/Tiktoken#benchmarks)
+[![Throughput](https://img.shields.io/badge/throughput-618_MiB%2Fs-brightgreen)](https://github.com/tryAGI/Tiktoken#benchmarks)
 
 One of the fastest BPE tokenizers in any language — the fastest in .NET, competitive with pure Rust implementations.
-Zero-allocation token counting, built-in multilingual cache, and up to **41x faster** than other .NET tokenizers.
+Zero-allocation token counting, built-in multilingual cache, and up to **42x faster** than other .NET tokenizers.
 We will be happy to accept any PR.
 
 ### Implemented encodings
@@ -136,14 +136,14 @@ Benchmarked on Apple M4 Max, .NET 10.0, o200k_base encoding. Tested with diverse
 
 | Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Throughput** | **Speedup** |
 |-------|-----------|---------------|-------------|-------------|:-----------:|:-----------:|
-| Hello, World! (13 B) | 226 ns | 168 ns | 317 ns | **104 ns** | 119 MiB/s | 1.6-3.0x |
-| Multilingual (382 B, 12 scripts) | 15.3 us | 9.8 us | 5.2 us | **1.2 us** | 304 MiB/s | 4.4-12.9x |
-| CJK-heavy (1,676 B, 6 scripts) | 113.0 us | 68.9 us | 40.1 us | **2.8 us** | 571 MiB/s | 14.5-40.8x |
-| Python code (879 B) | 13.5 us | 10.2 us | 22.5 us | **6.6 us** | 127 MiB/s | 1.5-3.4x |
-| Multilingual long (4,312 B) | 306.9 us | 170.3 us | 77.8 us | **9.7 us** | 424 MiB/s | 8.0-31.6x |
-| Bitcoin whitepaper (19,884 B) | 425.9 us | 269.8 us | 343.8 us | **132.4 us** | 143 MiB/s | 2.0-3.2x |
+| Hello, World! (13 B) | 217 ns | 164 ns | 319 ns | **88 ns** | 141 MiB/s | 1.9-3.6x |
+| Multilingual (382 B, 12 scripts) | 14.7 us | 9.5 us | 5.1 us | **1.1 us** | 339 MiB/s | 4.7-13.6x |
+| CJK-heavy (1,676 B, 6 scripts) | 109.4 us | 65.6 us | 37.0 us | **2.6 us** | 618 MiB/s | 14.3-42.3x |
+| Python code (879 B) | 13.1 us | 9.7 us | 21.6 us | **5.5 us** | 153 MiB/s | 1.8-4.0x |
+| Multilingual long (4,312 B) | 283.1 us | 155.7 us | 71.0 us | **9.0 us** | 458 MiB/s | 7.9-31.6x |
+| Bitcoin whitepaper (19,884 B) | 400.3 us | 255.4 us | 321.3 us | **105.1 us** | 180 MiB/s | 2.4-3.8x |
 
-> **Zero allocation** across all inputs (0 B). Tiktoken's advantage is most pronounced on multilingual/CJK text — up to **41x faster** than competitors. Throughput on cached multilingual text reaches **571 MiB/s**, competitive with the fastest Rust tokenizers.
+> **Zero allocation** across all inputs (0 B). Tiktoken's advantage is most pronounced on multilingual/CJK text — up to **42x faster** than competitors. Throughput on cached multilingual text reaches **618 MiB/s**, competitive with the fastest Rust tokenizers.
 
 #### Cache effect on CountTokens
 
@@ -151,25 +151,25 @@ Built-in token cache dramatically accelerates repeated non-ASCII patterns:
 
 | Input | No cache | Cached | Cache speedup |
 |-------|---------|--------|:-------------:|
-| Hello, World! (13 B) | 108 ns | 109 ns | — |
-| Multilingual (382 B) | 7.7 us | 1.2 us | **6.6x** |
-| CJK-heavy (1,676 B) | 58.1 us | 2.7 us | **21.3x** |
-| Python code (879 B) | 6.8 us | 7.2 us | — |
-| Multilingual long (4,312 B) | 165.8 us | 10.7 us | **15.5x** |
-| Bitcoin whitepaper (19,884 B) | 188.5 us | 169.6 us | 1.1x |
+| Hello, World! (13 B) | 88 ns | 86 ns | — |
+| Multilingual (382 B) | 5.4 us | 1.1 us | **4.9x** |
+| CJK-heavy (1,676 B) | 33.7 us | 2.6 us | **13.1x** |
+| Python code (879 B) | 5.6 us | 5.5 us | — |
+| Multilingual long (4,312 B) | 78.0 us | 9.0 us | **8.6x** |
+| Bitcoin whitepaper (19,884 B) | 122.7 us | 104.9 us | 1.2x |
 
-> Cache has no effect on ASCII-dominant inputs (already on fast path). On multilingual/CJK text, cache provides **6-21x speedup** by skipping UTF-8 conversion and BPE on subsequent calls.
+> Cache has no effect on ASCII-dominant inputs (already on fast path). On multilingual/CJK text, cache provides **5-13x speedup** by skipping UTF-8 conversion and BPE on subsequent calls. Cold-path performance was significantly improved by the O(n log n) min-heap BPE merge optimization.
 
 #### Encode — returns token IDs
 
 | Input | SharpToken | TiktokenSharp | Microsoft.ML | **Tiktoken** | **Throughput** | **Speedup** |
 |-------|-----------|---------------|-------------|-------------|:-----------:|:-----------:|
-| Hello, World! (13 B) | 218 ns | 168 ns | 322 ns | **128 ns** | 97 MiB/s | 1.3-2.5x |
-| Multilingual (382 B, 12 scripts) | 14.7 us | 9.6 us | 5.4 us | **1.4 us** | 260 MiB/s | 3.9-10.5x |
-| CJK-heavy (1,676 B, 6 scripts) | 111.6 us | 65.7 us | 37.9 us | **3.4 us** | 470 MiB/s | 11.1-32.6x |
-| Python code (879 B) | 13.5 us | 9.8 us | 22.3 us | **7.0 us** | 120 MiB/s | 1.4-3.2x |
-| Multilingual long (4,312 B) | 294.2 us | 156.4 us | 72.5 us | **12.5 us** | 329 MiB/s | 5.8-23.5x |
-| Bitcoin whitepaper (19,884 B) | 399.8 us | 257.0 us | 335.0 us | **142.4 us** | 133 MiB/s | 1.8-2.8x |
+| Hello, World! (13 B) | 214 ns | 163 ns | 316 ns | **109 ns** | 114 MiB/s | 1.5-2.9x |
+| Multilingual (382 B, 12 scripts) | 14.5 us | 9.4 us | 5.2 us | **1.3 us** | 287 MiB/s | 4.1-11.4x |
+| CJK-heavy (1,676 B, 6 scripts) | 107.9 us | 64.7 us | 37.0 us | **3.3 us** | 484 MiB/s | 11.2-32.7x |
+| Python code (879 B) | 13.1 us | 9.7 us | 23.6 us | **5.8 us** | 145 MiB/s | 1.7-4.1x |
+| Multilingual long (4,312 B) | 276.4 us | 151.3 us | 70.7 us | **10.9 us** | 376 MiB/s | 6.5-25.2x |
+| Bitcoin whitepaper (19,884 B) | 366.1 us | 245.5 us | 317.7 us | **111.8 us** | 170 MiB/s | 2.2-3.3x |
 
 > Same performance characteristics as CountTokens, with additional allocation for the output `int[]` array.
 
@@ -188,13 +188,13 @@ All numbers below measured on **Apple M4 Max** with **identical inputs** and **o
 
 | Implementation | Language | Encode Throughput | CountTokens Throughput | Notes |
 |---------------|----------|:-----------------:|:----------------------:|-------|
-| **Tiktoken** (cached) | **.NET/C#** | **97-467 MiB/s** | **119-577 MiB/s** | **Zero-alloc counting; cache gives 6-21x on multilingual** |
-| **Tiktoken** (no cache) | **.NET/C#** | **97-133 MiB/s** | **28-123 MiB/s** | **Cold/first-call — fairest comparison to Rust/Python** |
+| **Tiktoken** (cached) | **.NET/C#** | **114-484 MiB/s** | **141-618 MiB/s** | **Zero-alloc counting; cache gives 5-13x on multilingual** |
+| **Tiktoken** (no cache) | **.NET/C#** | **44-145 MiB/s** | **47-155 MiB/s** | **Cold/first-call with O(n log n) min-heap BPE merge** |
 | [`tiktoken`](https://lib.rs/crates/tiktoken) v3 | Rust | 34-88 MiB/s | — | Pure Rust, arena-based |
 | GitHub [`bpe`](https://github.com/github/rust-gems) v0.3 | Rust | 33-64 MiB/s | 29-66 MiB/s | Aho-Corasick, O(n) worst case |
 | [OpenAI tiktoken](https://github.com/openai/tiktoken) 0.12 | Python | 7-20 MiB/s | — | Rust core, but Python FFI overhead |
 
-> .NET Tiktoken's token cache makes it dramatically faster than native Rust on repeated/multilingual text. Even without the cache, .NET is competitive with or faster than both Rust crates on most inputs. Contributions welcome to further close the gap on cold-path multilingual text!
+> .NET Tiktoken's token cache makes it dramatically faster than native Rust on repeated/multilingual text — up to **7x faster** than the fastest Rust tokenizer on CJK text. Even without the cache, .NET is competitive with or faster than both Rust crates on most inputs thanks to the O(n log n) min-heap BPE merge optimization.
 
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 

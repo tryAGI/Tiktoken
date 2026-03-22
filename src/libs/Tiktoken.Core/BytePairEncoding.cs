@@ -119,6 +119,10 @@ public static class BytePairEncoding
     }
 
 #if NET8_0_OR_GREATER
+    // Threshold: pieces with fewer parts use linear scan (lower overhead).
+    // Pieces with more parts use heap-based merge (O(n log n) vs O(n²)).
+    private const int HeapThreshold = 32;
+
     private static unsafe int GetRank(
         int startIdx,
         int* partsIndexes,
@@ -148,6 +152,11 @@ public static class BytePairEncoding
         int partsLength,
         TokenEncoder encoder)
     {
+        if (partsLength >= HeapThreshold)
+        {
+            return FindPartsHeap(pieceSpan, partsIndexes, partsLength, encoder);
+        }
+
         for (var i = 0; i < partsLength; i++)
         {
             partsIndexes[i] = i;
@@ -180,6 +189,244 @@ public static class BytePairEncoding
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// Heap-based BPE merge: O(n log n) instead of O(n²).
+    /// Uses a linked list to avoid O(n) array shifts per merge,
+    /// and a binary min-heap for O(log n) minimum rank extraction.
+    /// </summary>
+    private static unsafe int FindPartsHeap(
+        ReadOnlySpan<byte> pieceSpan,
+        int* resultIndexes,
+        int partsLength,
+        TokenEncoder encoder)
+    {
+        // n = number of boundaries (byte offsets 0..n-1, where boundary i = byte offset i)
+        var n = partsLength;
+
+        // Linked list: next[i]/prev[i] chain remaining boundaries
+        var next = stackalloc int[n];
+        var prev = stackalloc int[n];
+        // rank[i] = merge rank for pair starting at boundary i (boundary i merged with next[i])
+        var ranks = stackalloc int[n];
+        // Binary min-heap of boundary indices, ordered by ranks[boundary]
+        var heap = stackalloc int[n];
+        // heapPos[boundary] = index in heap (-1 if not in heap)
+        var heapPos = stackalloc int[n];
+
+        // Initialize linked list: 0 → 1 → 2 → ... → n-1
+        for (var i = 0; i < n; i++)
+        {
+            next[i] = i + 1;
+            prev[i] = i - 1;
+            ranks[i] = int.MaxValue;
+            heapPos[i] = -1;
+        }
+        next[n - 1] = n; // sentinel (past-end)
+
+        // Compute initial ranks for all adjacent pairs and build heap
+        var heapSize = 0;
+        for (var i = 0; i < n - 2; i++)
+        {
+            var j = next[i]; // i+1
+            var k = next[j]; // i+2
+            var span = pieceSpan.Slice(i, k - i);
+            if (encoder.TryGetValue(span, out var r))
+            {
+                ranks[i] = r;
+            }
+            heap[heapSize] = i;
+            heapPos[i] = heapSize;
+            heapSize++;
+        }
+
+        // Heapify (build heap in O(n))
+        for (var i = heapSize / 2 - 1; i >= 0; i--)
+        {
+            HeapSiftDown(heap, heapPos, ranks, heapSize, i);
+        }
+
+        var count = n - 1; // number of parts
+
+        while (heapSize > 0)
+        {
+            var minBoundary = heap[0];
+            if (ranks[minBoundary] == int.MaxValue)
+            {
+                break;
+            }
+
+            // The boundary to remove is the one after minBoundary
+            var removed = next[minBoundary];
+            if (removed >= n)
+            {
+                break;
+            }
+
+            // Remove 'removed' from linked list
+            var afterRemoved = next[removed];
+            next[minBoundary] = afterRemoved;
+            if (afterRemoved < n)
+            {
+                prev[afterRemoved] = minBoundary;
+            }
+
+            // Remove 'removed' from heap (if present)
+            if (heapPos[removed] >= 0)
+            {
+                HeapRemove(heap, heapPos, ranks, ref heapSize, removed);
+            }
+
+            // Recompute rank for minBoundary: span from minBoundary to 2 boundaries ahead
+            ranks[minBoundary] = int.MaxValue;
+            var nn = next[minBoundary];
+            if (nn < n)
+            {
+                var nnn = next[nn];
+                if (nnn < n) // nnn must be a valid boundary (not the past-end sentinel)
+                {
+                    var span = pieceSpan.Slice(minBoundary, nnn - minBoundary);
+                    if (encoder.TryGetValue(span, out var r))
+                    {
+                        ranks[minBoundary] = r;
+                    }
+                }
+            }
+            HeapUpdate(heap, heapPos, ranks, heapSize, minBoundary);
+
+            // Recompute rank for left neighbor
+            var p = prev[minBoundary];
+            if (p >= 0)
+            {
+                ranks[p] = int.MaxValue;
+                var pNext = next[p]; // = minBoundary
+                if (pNext < n)
+                {
+                    var pNextNext = next[pNext];
+                    if (pNextNext < n)
+                    {
+                        var span = pieceSpan.Slice(p, pNextNext - p);
+                        if (encoder.TryGetValue(span, out var r))
+                        {
+                            ranks[p] = r;
+                        }
+                    }
+                }
+                HeapUpdate(heap, heapPos, ranks, heapSize, p);
+            }
+
+            count--;
+        }
+
+        // Traverse linked list to produce output (remaining boundary byte offsets)
+        var idx = 0;
+        var cur = 0;
+        while (cur < n)
+        {
+            resultIndexes[idx++] = cur;
+            cur = next[cur];
+        }
+
+        return count;
+    }
+
+    // --- Min-heap helpers (inline for performance) ---
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private static unsafe void HeapSwap(int* heap, int* heapPos, int a, int b)
+    {
+        var tmp = heap[a];
+        heap[a] = heap[b];
+        heap[b] = tmp;
+        heapPos[heap[a]] = a;
+        heapPos[heap[b]] = b;
+    }
+
+    private static unsafe void HeapSiftUp(int* heap, int* heapPos, int* ranks, int idx)
+    {
+        while (idx > 0)
+        {
+            var parent = (idx - 1) >> 1;
+            if (ranks[heap[idx]] < ranks[heap[parent]] ||
+                (ranks[heap[idx]] == ranks[heap[parent]] && heap[idx] < heap[parent]))
+            {
+                HeapSwap(heap, heapPos, idx, parent);
+                idx = parent;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private static unsafe void HeapSiftDown(int* heap, int* heapPos, int* ranks, int heapSize, int idx)
+    {
+        while (true)
+        {
+            var smallest = idx;
+            var left = 2 * idx + 1;
+            var right = 2 * idx + 2;
+
+            if (left < heapSize &&
+                (ranks[heap[left]] < ranks[heap[smallest]] ||
+                 (ranks[heap[left]] == ranks[heap[smallest]] && heap[left] < heap[smallest])))
+            {
+                smallest = left;
+            }
+            if (right < heapSize &&
+                (ranks[heap[right]] < ranks[heap[smallest]] ||
+                 (ranks[heap[right]] == ranks[heap[smallest]] && heap[right] < heap[smallest])))
+            {
+                smallest = right;
+            }
+
+            if (smallest != idx)
+            {
+                HeapSwap(heap, heapPos, idx, smallest);
+                idx = smallest;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private static unsafe void HeapRemove(int* heap, int* heapPos, int* ranks, ref int heapSize, int boundary)
+    {
+        var idx = heapPos[boundary];
+        if (idx < 0 || idx >= heapSize)
+        {
+            return;
+        }
+
+        heapSize--;
+        if (idx == heapSize)
+        {
+            heapPos[boundary] = -1;
+            return;
+        }
+
+        heap[idx] = heap[heapSize];
+        heapPos[heap[idx]] = idx;
+        heapPos[boundary] = -1;
+
+        HeapSiftDown(heap, heapPos, ranks, heapSize, idx);
+        HeapSiftUp(heap, heapPos, ranks, idx);
+    }
+
+    private static unsafe void HeapUpdate(int* heap, int* heapPos, int* ranks, int heapSize, int boundary)
+    {
+        var idx = heapPos[boundary];
+        if (idx < 0 || idx >= heapSize)
+        {
+            return;
+        }
+
+        HeapSiftDown(heap, heapPos, ranks, heapSize, idx);
+        HeapSiftUp(heap, heapPos, ranks, idx);
     }
 #endif
 

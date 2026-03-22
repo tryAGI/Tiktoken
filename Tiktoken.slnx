@@ -6,6 +6,8 @@
     <Project Path="src/benchmarks/Tiktoken.Benchmarks.CountTokens/Tiktoken.Benchmarks.CountTokens.csproj" />
     <Project Path="src/benchmarks/Tiktoken.Benchmarks.EncodingComparison/Tiktoken.Benchmarks.EncodingComparison.csproj" />
     <Project Path="src/benchmarks/Tiktoken.Benchmarks.Explore/Tiktoken.Benchmarks.Explore.csproj" />
+    <Project Path="src/benchmarks/Tiktoken.Benchmarks.ColdPath/Tiktoken.Benchmarks.ColdPath.csproj" />
+    <Project Path="src/benchmarks/Tiktoken.Benchmarks.SmokeTest/Tiktoken.Benchmarks.SmokeTest.csproj" />
   </Folder>
   <Folder Name="/libs/">
     <File Path="src/libs/Directory.Build.props" />

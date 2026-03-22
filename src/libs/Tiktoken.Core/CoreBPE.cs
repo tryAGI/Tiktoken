@@ -229,7 +229,7 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (Encoder.ContainsKeyUtf16(fastKey))
+            if (IsAscii(fastKey) && Encoder.ContainsKeyAscii(fastKey))
             {
                 tokens++;
                 continue;
@@ -237,6 +237,16 @@ public class CoreBpe
             if (EnableCache && fastCacheCountLookup.TryGetValue(fastKey, out var fastNumberOfTokens))
             {
                 tokens += fastNumberOfTokens;
+                continue;
+            }
+
+            if (Encoder.ContainsKeyUtf16(fastKey))
+            {
+                tokens++;
+                if (EnableCache)
+                {
+                    fastCacheCountLookup[fastKey] = 1;
+                }
                 continue;
             }
 
@@ -254,7 +264,7 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (Encoder.ContainsKeyUtf16(fastKey))
+            if (IsAscii(fastKey) && Encoder.ContainsKeyAscii(fastKey))
             {
                 tokens++;
                 continue;
@@ -262,6 +272,16 @@ public class CoreBpe
             if (EnableCache && FastCacheCounts.TryGetValue(new string(fastKey), out var fastNumberOfTokens))
             {
                 tokens += fastNumberOfTokens;
+                continue;
+            }
+
+            if (Encoder.ContainsKeyUtf16(fastKey))
+            {
+                tokens++;
+                if (EnableCache)
+                {
+                    FastCacheCounts[new string(fastKey)] = 1;
+                }
                 continue;
             }
 
@@ -408,14 +428,20 @@ public class CoreBpe
             {
                 var fastKey = textSpan.Slice(match.Index, match.Length);
 
-                if (Encoder.TryGetValueUtf16(fastKey, out var token))
+                if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
                 {
-                    tokens.Add(token);
+                    tokens.Add(asciiToken);
                     continue;
                 }
                 if (EnableCache && fastCacheLookup.TryGetValue(fastKey, out var fastTokens))
                 {
                     tokens.AddRange(fastTokens);
+                    continue;
+                }
+
+                if (Encoder.TryGetValueUtf16(fastKey, out var token))
+                {
+                    tokens.Add(token);
                     continue;
                 }
 
@@ -436,14 +462,20 @@ public class CoreBpe
             {
                 var fastKey = textSpan.Slice(match.Index, match.Length);
 
-                if (Encoder.TryGetValueUtf16(fastKey, out var token))
+                if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
                 {
-                    tokens.Add(token);
+                    tokens.Add(asciiToken);
                     continue;
                 }
                 if (EnableCache && FastCache.TryGetValue(new string(fastKey), out var fastTokens))
                 {
                     tokens.AddRange(fastTokens);
+                    continue;
+                }
+
+                if (Encoder.TryGetValueUtf16(fastKey, out var token))
+                {
+                    tokens.Add(token);
                     continue;
                 }
 
@@ -542,14 +574,20 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (Encoder.TryGetValueUtf16(fastKey, out var token))
+            if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
             {
-                tokens.Add(token);
+                tokens.Add(asciiToken);
                 continue;
             }
             if (EnableCache && fastCacheLookup.TryGetValue(fastKey, out var fastTokens))
             {
                 tokens.AddRange(fastTokens);
+                continue;
+            }
+
+            if (Encoder.TryGetValueUtf16(fastKey, out var token))
+            {
+                tokens.Add(token);
                 continue;
             }
 
@@ -570,14 +608,20 @@ public class CoreBpe
         {
             var fastKey = text.Slice(match.Index, match.Length);
 
-            if (Encoder.TryGetValueUtf16(fastKey, out var token))
+            if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
             {
-                tokens.Add(token);
+                tokens.Add(asciiToken);
                 continue;
             }
             if (EnableCache && FastCache.TryGetValue(new string(fastKey), out var fastTokens))
             {
                 tokens.AddRange(fastTokens);
+                continue;
+            }
+
+            if (Encoder.TryGetValueUtf16(fastKey, out var token))
+            {
+                tokens.Add(token);
                 continue;
             }
 
@@ -655,7 +699,8 @@ public class CoreBpe
                 var matchSpan = textSpan.Slice(match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
-                if (Encoder.ContainsKeyUtf16(matchSpan))
+                if ((IsAscii(matchSpan) && Encoder.ContainsKeyAscii(matchSpan)) ||
+                    Encoder.ContainsKeyUtf16(matchSpan))
                 {
                     values.Add(fastKey);
                     continue;
@@ -768,7 +813,8 @@ public class CoreBpe
                 var matchSpan = textSpan.Slice(match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
-                if (Encoder.ContainsKeyUtf16(matchSpan))
+                if ((IsAscii(matchSpan) && Encoder.ContainsKeyAscii(matchSpan)) ||
+                    Encoder.ContainsKeyUtf16(matchSpan))
                 {
                     FlushHighSurrogate(values, ref highSurrogate, ref highSurrogatePair, ref surrogateCount);
                     values.Add(new UtfToken(fastKey, 1));
@@ -1085,8 +1131,13 @@ public class CoreBpe
     }
 #endif
 
-#if !NET8_0_OR_GREATER
-    // ASCII fast-path for pre-NET8: used with FastEncoder dictionary lookups.
+    // ASCII fast-path: for ASCII-only strings, (byte)char == the raw byte value,
+    // so we can look up directly in TokenEncoder without UTF-8 conversion.
+    // Non-ASCII chars (U+0080+) would produce false matches, so IsAscii guards the path.
+#if NET8_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsAscii(ReadOnlySpan<char> text) => System.Text.Ascii.IsValid(text);
+#else
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsAscii(string text)
     {
