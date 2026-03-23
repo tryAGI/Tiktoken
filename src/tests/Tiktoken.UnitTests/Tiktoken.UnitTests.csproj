@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\cli\Tiktoken.Cli\IO\GitignoreMatcher.cs" Link="IO\GitignoreMatcher.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Resources\gpt2.tokenizer.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

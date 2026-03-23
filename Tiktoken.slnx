@@ -29,6 +29,9 @@
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Packages.props" />
   </Folder>
+  <Folder Name="/cli/">
+    <Project Path="src/cli/Tiktoken.Cli/Tiktoken.Cli.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="src/tests/Tiktoken.UnitTests/Tiktoken.UnitTests.csproj" />
   </Folder>

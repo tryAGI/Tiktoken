@@ -1,0 +1,236 @@
+name: Publish Native CLI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CLI_PROJECT: src/cli/Tiktoken.Cli/Tiktoken.Cli.csproj
+
+jobs:
+  # Validate install scripts (runs in parallel with builds)
+  validate-scripts:
+    name: Validate install scripts
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: install.sh (Ubuntu)
+            shell: bash
+            script: bash install.sh --dry-run
+          - os: windows-latest
+            name: install.ps1 (Windows)
+            shell: pwsh
+            script: |
+              $env:TTOK_DRY_RUN = '1'
+              . ./install.ps1
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate ${{ matrix.name }}
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.script }}
+
+  # Build the pointer (RID-agnostic) NuGet package + CoreCLR fallback
+  pack-pointer:
+    name: Pack pointer + any
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack pointer package
+        run: dotnet pack ${{ env.CLI_PROJECT }} -c Release -o nupkgs
+
+      - name: Pack CoreCLR fallback (any)
+        run: dotnet pack ${{ env.CLI_PROJECT }} -c Release -r any -p:PublishAot=false -o nupkgs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs-pointer
+          path: nupkgs/*.nupkg
+
+  # Build NativeAOT RID-specific packages (must run on matching OS)
+  pack-native:
+    name: Pack ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            can-smoke-test: true
+          - os: ubuntu-latest
+            rid: linux-musl-x64
+            can-smoke-test: false
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
+            can-smoke-test: true
+          - os: ubuntu-24.04-arm
+            rid: linux-musl-arm64
+            can-smoke-test: false
+          - os: macos-13
+            rid: osx-x64
+            can-smoke-test: true
+          - os: macos-latest
+            rid: osx-arm64
+            can-smoke-test: true
+          - os: windows-latest
+            rid: win-x64
+            can-smoke-test: true
+          - os: windows-latest
+            rid: win-arm64
+            can-smoke-test: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack NativeAOT (${{ matrix.rid }})
+        run: dotnet pack ${{ env.CLI_PROJECT }} -c Release -r ${{ matrix.rid }} -o nupkgs
+
+      # Smoke test: verify the AOT binary works (skipped for cross-compiled targets)
+      - name: Smoke test (Linux/macOS)
+        if: matrix.can-smoke-test && runner.os != 'Windows'
+        run: |
+          echo "Hello world" | src/cli/Tiktoken.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/Tiktoken.Cli
+          echo "Hello world" | src/cli/Tiktoken.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/Tiktoken.Cli | grep -q "3"
+
+      - name: Smoke test (Windows)
+        if: matrix.can-smoke-test && runner.os == 'Windows'
+        run: |
+          echo Hello world | src\cli\Tiktoken.Cli\bin\Release\net10.0\${{ matrix.rid }}\publish\Tiktoken.Cli.exe
+
+      - name: Prepare release binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cp src/cli/Tiktoken.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/Tiktoken.Cli ttok
+          chmod +x ttok
+          tar czf ttok-${{ matrix.rid }}.tar.gz ttok
+
+      - name: Prepare release binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          copy src\cli\Tiktoken.Cli\bin\Release\net10.0\${{ matrix.rid }}\publish\Tiktoken.Cli.exe ttok.exe
+          Compress-Archive -Path ttok.exe -DestinationPath ttok-${{ matrix.rid }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs-${{ matrix.rid }}
+          path: nupkgs/*.nupkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: ttok-${{ matrix.rid }}.*
+
+  # Push NuGet packages (prerelease on main, stable on tags)
+  publish-nuget:
+    name: Publish to NuGet
+    needs: [pack-pointer, pack-native]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all nupkgs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nupkgs-*
+          merge-multiple: true
+          path: nupkgs
+
+      - name: Push RID-specific packages first
+        run: |
+          for pkg in nupkgs/*linux* nupkgs/*osx* nupkgs/*win* nupkgs/*any*; do
+            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
+          done
+
+      - name: Push pointer package
+        run: |
+          for pkg in nupkgs/Tiktoken.Cli.[0-9]*.nupkg; do
+            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
+          done
+
+  # Create GitHub Release with standalone binaries (only on tags)
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: pack-native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: sha256sum ttok-* > checksums-sha256.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ttok-linux-x64.tar.gz
+            ttok-linux-musl-x64.tar.gz
+            ttok-linux-arm64.tar.gz
+            ttok-linux-musl-arm64.tar.gz
+            ttok-osx-x64.tar.gz
+            ttok-osx-arm64.tar.gz
+            ttok-win-x64.zip
+            ttok-win-arm64.zip
+            checksums-sha256.txt
+
+      - name: Update Homebrew formula
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA256_OSX_ARM64=$(sha256sum ttok-osx-arm64.tar.gz | cut -d' ' -f1)
+          SHA256_OSX_X64=$(sha256sum ttok-osx-x64.tar.gz | cut -d' ' -f1)
+          SHA256_LINUX_ARM64=$(sha256sum ttok-linux-arm64.tar.gz | cut -d' ' -f1)
+          SHA256_LINUX_X64=$(sha256sum ttok-linux-x64.tar.gz | cut -d' ' -f1)
+
+          sed -e "s/VERSION/$VERSION/g" \
+              -e "s/SHA256_OSX_ARM64/$SHA256_OSX_ARM64/g" \
+              -e "s/SHA256_OSX_X64/$SHA256_OSX_X64/g" \
+              -e "s/SHA256_LINUX_ARM64/$SHA256_LINUX_ARM64/g" \
+              -e "s/SHA256_LINUX_X64/$SHA256_LINUX_X64/g" \
+              .github/ttok.rb.template > ttok.rb
+
+          # Audit the formula
+          brew tap tryAGI/tap .github/homebrew-tap-tmp
+          mkdir -p .github/homebrew-tap-tmp/Formula
+          cp ttok.rb .github/homebrew-tap-tmp/Formula/ttok.rb
+          brew audit --formula tryAGI/tap/ttok || true
+
+          # Push to homebrew-tap repo
+          TMPDIR=$(mktemp -d)
+          gh repo clone tryAGI/homebrew-tap "$TMPDIR"
+          mkdir -p "$TMPDIR/Formula"
+          cp ttok.rb "$TMPDIR/Formula/ttok.rb"
+          cd "$TMPDIR"
+          git add Formula/ttok.rb
+          git diff --cached --quiet || \
+            (git -c user.name="github-actions" -c user.email="github-actions@github.com" \
+              commit -m "ttok $VERSION" && git push)

@@ -8,8 +8,19 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+    <PropertyGroup Label="Versioning">
+        <MinVerTagPrefix>v</MinVerTagPrefix>
+        <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup Label="Versioning">
+        <PackageReference Include="MinVer">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
     <PropertyGroup Label="Nuget">
-        <Version>3.0.0</Version>
         <Description>The fastest tokenizer for GPT-3.5 and GPT-4 inspired by Tiktoken.</Description>
         <PackageTags>chatgpt;openai;tiktoken;tokens;gpt-4;gpt-3.5-turbo;cl100k_base;p50k_base</PackageTags>
         <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>

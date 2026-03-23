@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <NoWarn>$(NoWarn);CS8002</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Tool">
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>ttok</ToolCommandName>
+        <PackageId>Tiktoken.Cli</PackageId>
+        <Description>CLI tool for counting, encoding, decoding, and exploring BPE tokens. Powered by the fastest .NET tokenizer.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup Label="Package content">
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <PropertyGroup Label="NativeAOT">
+        <PublishAot>true</PublishAot>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishDocumentationFiles>false</PublishDocumentationFiles>
+        <ToolPackageRuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64;osx-x64;osx-arm64;any</ToolPackageRuntimeIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\libs\Tiktoken\Tiktoken.csproj" />
+    </ItemGroup>
+
+    <PropertyGroup Label="Versioning">
+        <MinVerTagPrefix>v</MinVerTagPrefix>
+        <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="System.CommandLine" />
+    </ItemGroup>
+
+</Project>
