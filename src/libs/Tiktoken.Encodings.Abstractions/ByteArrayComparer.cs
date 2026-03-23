@@ -3,7 +3,7 @@ namespace Tiktoken.Encodings;
 /// <summary>
 ///
 /// </summary>
-public class ByteArrayComparer : IEqualityComparer<byte[]>
+public sealed class ByteArrayComparer : IEqualityComparer<byte[]>
 #if NET9_0_OR_GREATER
     , IAlternateEqualityComparer<ReadOnlySpan<byte>, byte[]>
 #endif

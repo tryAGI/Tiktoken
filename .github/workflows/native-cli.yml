@@ -57,7 +57,7 @@ jobs:
       - name: Pack CoreCLR fallback (any)
         run: dotnet pack ${{ env.CLI_PROJECT }} -c Release -r any -p:PublishAot=false -o nupkgs
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: nupkgs-pointer
           path: nupkgs/*.nupkg
@@ -134,12 +134,12 @@ jobs:
           copy src\cli\Tiktoken.Cli\bin\Release\net10.0\${{ matrix.rid }}\publish\Tiktoken.Cli.exe ttok.exe
           Compress-Archive -Path ttok.exe -DestinationPath ttok-${{ matrix.rid }}.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: nupkgs-${{ matrix.rid }}
           path: nupkgs/*.nupkg
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: release-${{ matrix.rid }}
           path: ttok-${{ matrix.rid }}.*
@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all nupkgs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: nupkgs-*
           merge-multiple: true
@@ -179,7 +179,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: release-*
           merge-multiple: true
