@@ -18,28 +18,24 @@ env:
 
 jobs:
   # Validate install scripts (runs in parallel with builds)
-  validate-scripts:
-    name: Validate install scripts
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: install.sh (Ubuntu)
-            shell: bash
-            script: bash install.sh --dry-run
-          - os: windows-latest
-            name: install.ps1 (Windows)
-            shell: pwsh
-            script: |
-              $env:TTOK_DRY_RUN = '1'
-              . ./install.ps1
-    runs-on: ${{ matrix.os }}
+  validate-install-sh:
+    name: Validate install.sh
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Dry-run install.sh
+        run: bash install.sh --dry-run
 
-      - name: Validate ${{ matrix.name }}
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.script }}
+  validate-install-ps1:
+    name: Validate install.ps1
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Dry-run install.ps1
+        shell: pwsh
+        run: |
+          $env:TTOK_DRY_RUN = '1'
+          . ./install.ps1
 
   # Build the pointer (RID-agnostic) NuGet package + CoreCLR fallback
   pack-pointer:
@@ -234,3 +230,4 @@ jobs:
           git diff --cached --quiet || \
             (git -c user.name="github-actions" -c user.email="github-actions@github.com" \
               commit -m "ttok $VERSION" && git push)
+
