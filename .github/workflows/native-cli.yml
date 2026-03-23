@@ -214,12 +214,6 @@ jobs:
               -e "s/SHA256_LINUX_X64/$SHA256_LINUX_X64/g" \
               .github/ttok.rb.template > ttok.rb
 
-          # Audit the formula
-          brew tap tryAGI/tap .github/homebrew-tap-tmp
-          mkdir -p .github/homebrew-tap-tmp/Formula
-          cp ttok.rb .github/homebrew-tap-tmp/Formula/ttok.rb
-          brew audit --formula tryAGI/tap/ttok || true
-
           # Push to homebrew-tap repo
           TMPDIR=$(mktemp -d)
           gh repo clone tryAGI/homebrew-tap "$TMPDIR"
