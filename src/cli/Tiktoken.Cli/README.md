@@ -5,11 +5,12 @@ The fastest .NET CLI tool for counting, encoding, decoding, and exploring BPE to
 ## Install
 
 ```bash
-# Homebrew (macOS/Linux)
+# Homebrew (macOS — always installs latest release)
 brew install tryAGI/tap/ttok
 
 # Shell script (macOS/Linux — auto-detects OS/arch)
 curl -fsSL https://raw.githubusercontent.com/tryAGI/Tiktoken/main/install.sh | sh
+# Recommended for Linux — Homebrew cask is macOS-only
 
 # PowerShell (Windows — auto-detects arch)
 irm https://raw.githubusercontent.com/tryAGI/Tiktoken/main/install.ps1 | iex

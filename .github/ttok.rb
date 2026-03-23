@@ -2,6 +2,7 @@ cask "ttok" do
   name "ttok"
   desc "The fastest CLI tool for counting, encoding, decoding, and exploring BPE tokens"
   homepage "https://github.com/tryAGI/Tiktoken"
+  version :latest
 
   arch arm: "osx-arm64", intel: "osx-x64"
 

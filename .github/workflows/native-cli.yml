@@ -117,6 +117,10 @@ jobs:
         run: |
           echo Hello world | src\cli\Tiktoken.Cli\bin\Release\net10.0\${{ matrix.rid }}\publish\Tiktoken.Cli.exe
 
+      - name: Codesign binary (macOS)
+        if: runner.os == 'macOS'
+        run: codesign --sign - --force src/cli/Tiktoken.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/Tiktoken.Cli
+
       - name: Prepare release binary (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
