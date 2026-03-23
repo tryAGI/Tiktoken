@@ -133,6 +133,7 @@ ttok . --max-tokens 50000
 | `--no-gitignore` | Disable .gitignore processing |
 | `--progress` | Show progress to stderr |
 | `--stats` | Show scan statistics to stderr |
+| `--version` | Show version information |
 
 ## Supported models
 

@@ -198,6 +198,27 @@ All numbers below measured on **Apple M4 Max** with **identical inputs** and **o
 
 You can view the full raw BenchmarkDotNet reports for each version [here](benchmarks).
 
+## CLI Tool
+
+**ttok** is a standalone CLI for counting, encoding, decoding, and exploring tokens — powered by this library. NativeAOT-compiled for instant startup.
+
+```bash
+# Install (macOS)
+brew install tryAGI/tap/ttok
+
+# Install (macOS/Linux)
+curl -fsSL https://raw.githubusercontent.com/tryAGI/Tiktoken/main/install.sh | sh
+
+# Install (.NET global tool)
+dotnet tool install -g Tiktoken.Cli
+
+# Usage
+echo "Hello world" | ttok        # 3
+ttok src/ --include "*.cs"       # count tokens in files
+```
+
+See the full [CLI documentation](src/cli/Tiktoken.Cli/README.md) for all options and install methods.
+
 ## Support
 
 Priority place for bugs: https://github.com/tryAGI/LangChain/issues  
