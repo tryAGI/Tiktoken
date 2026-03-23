@@ -216,7 +216,7 @@ jobs:
 
           # Push to homebrew-tap repo
           TMPDIR=$(mktemp -d)
-          gh repo clone tryAGI/homebrew-tap "$TMPDIR"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/tryAGI/homebrew-tap.git" "$TMPDIR"
           mkdir -p "$TMPDIR/Formula"
           cp ttok.rb "$TMPDIR/Formula/ttok.rb"
           cd "$TMPDIR"
