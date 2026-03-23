@@ -198,31 +198,3 @@ jobs:
             ttok-win-arm64.zip
             checksums-sha256.txt
 
-      - name: Update Homebrew formula
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          SHA256_OSX_ARM64=$(sha256sum ttok-osx-arm64.tar.gz | cut -d' ' -f1)
-          SHA256_OSX_X64=$(sha256sum ttok-osx-x64.tar.gz | cut -d' ' -f1)
-          SHA256_LINUX_ARM64=$(sha256sum ttok-linux-arm64.tar.gz | cut -d' ' -f1)
-          SHA256_LINUX_X64=$(sha256sum ttok-linux-x64.tar.gz | cut -d' ' -f1)
-
-          sed -e "s/VERSION/$VERSION/g" \
-              -e "s/SHA256_OSX_ARM64/$SHA256_OSX_ARM64/g" \
-              -e "s/SHA256_OSX_X64/$SHA256_OSX_X64/g" \
-              -e "s/SHA256_LINUX_ARM64/$SHA256_LINUX_ARM64/g" \
-              -e "s/SHA256_LINUX_X64/$SHA256_LINUX_X64/g" \
-              .github/ttok.rb.template > ttok.rb
-
-          # Push to homebrew-tap repo
-          TMPDIR=$(mktemp -d)
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/tryAGI/homebrew-tap.git" "$TMPDIR"
-          mkdir -p "$TMPDIR/Formula"
-          cp ttok.rb "$TMPDIR/Formula/ttok.rb"
-          cd "$TMPDIR"
-          git add Formula/ttok.rb
-          git diff --cached --quiet || \
-            (git -c user.name="github-actions" -c user.email="github-actions@github.com" \
-              commit -m "ttok $VERSION" && git push)
-
