@@ -47,6 +47,8 @@ internal sealed class FileScanner
             "coverage", ".nyc_output",
             // macOS / filesystem metadata
             ".Spotlight-V100", ".fseventsd", ".TemporaryItems",
+            // App bundles with recursive symlink structures
+            "Steam.AppBundle",
         ], StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -55,7 +57,13 @@ internal sealed class FileScanner
     /// </summary>
     private static readonly FrozenSet<string> MacOsExcludedDirs = OperatingSystem.IsMacOS()
         ? FrozenSet.ToFrozenSet(
-            ["Library", "Applications", "Movies", "Music", "Pictures"],
+            [
+                "Library", "Applications", "Movies", "Music", "Pictures",
+                // Inside ~/Library — excluded as a second line of defense if Library itself
+                // is not excluded (e.g. --no-default-excludes, or scanning inside ~/Library)
+                "Developer", "Application Support", "Containers", "Group Containers",
+                "Caches", "Logs", "Saved Application State", "WebKit",
+            ],
             StringComparer.OrdinalIgnoreCase)
         : FrozenSet<string>.Empty;
 
@@ -257,8 +265,9 @@ internal sealed class FileScanner
             effectiveHasFileRules = anyHasFileRules;
         }
 
-        // Guard against symlink loops and extremely deep paths
-        if (depth > 64)
+        // Guard against symlink loops, recursive .app bundles, and extremely deep paths
+        // that would cause PathTooLongException. 40 levels is far beyond any real source tree.
+        if (depth > 40)
         {
             localStats.DirsErrored++;
             return;
@@ -426,20 +435,27 @@ internal sealed class FileScanner
                     {
                         ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, localResults, localSubStats, depth + 1, cancellationToken);
                     }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+                    catch (OperationCanceledException)
                     {
+                        throw; // Let cancellation propagate to Parallel.ForEach
+                    }
+                    catch (Exception)
+                    {
+                        // Catch ALL exceptions including AggregateException from nested
+                        // Parallel.ForEach, IOException, PathTooLongException, etc.
                         localSubStats.DirsErrored++;
                     }
                     bags.Add((localResults, localSubStats));
                 });
             }
-            catch (AggregateException ae)
+            catch (OperationCanceledException)
             {
-                // If any worker threw an unhandled exception, count it and continue
-                foreach (var _ in ae.InnerExceptions)
-                {
-                    localStats.DirsErrored++;
-                }
+                throw;
+            }
+            catch (Exception)
+            {
+                // AggregateException or any other exception from Parallel.ForEach
+                localStats.DirsErrored++;
             }
 
             foreach (var (subResults, subStats) in bags)
@@ -456,7 +472,11 @@ internal sealed class FileScanner
                 {
                     ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, results, localStats, depth + 1, cancellationToken);
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception)
                 {
                     localStats.DirsErrored++;
                 }

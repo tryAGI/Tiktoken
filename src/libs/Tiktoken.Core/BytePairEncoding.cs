@@ -7,6 +7,7 @@ using Bytes = System.Collections.Generic.IReadOnlyCollection<byte>;
 using System.Collections.Frozen;
 #endif
 #if NET8_0_OR_GREATER
+using System.Buffers;
 using Tiktoken.Core;
 #endif
 
@@ -204,22 +205,35 @@ public static class BytePairEncoding
     {
         var n = partsLength;
 
-        // For large pieces, heap-allocate to avoid stack overflow on thread pool threads.
+        // For large pieces, rent from ArrayPool to avoid stack overflow on thread pool
+        // threads and reduce GC pressure on repeated large-file tokenizations.
         // 5 arrays × n × 4 bytes each — for n > 512 this exceeds safe stackalloc limits.
         if (n > MaxStackAllocLength)
         {
-            var nextArr = new int[n];
-            var prevArr = new int[n];
-            var ranksArr = new int[n];
-            var heapArr = new int[n];
-            var heapPosArr = new int[n];
-            fixed (int* next = nextArr)
-            fixed (int* prev = prevArr)
-            fixed (int* ranks = ranksArr)
-            fixed (int* heap = heapArr)
-            fixed (int* heapPos = heapPosArr)
+            var pool = ArrayPool<int>.Shared;
+            var nextArr = pool.Rent(n);
+            var prevArr = pool.Rent(n);
+            var ranksArr = pool.Rent(n);
+            var heapArr = pool.Rent(n);
+            var heapPosArr = pool.Rent(n);
+            try
             {
-                return FindPartsHeapCore(pieceSpan, resultIndexes, n, encoder, next, prev, ranks, heap, heapPos);
+                fixed (int* next = nextArr)
+                fixed (int* prev = prevArr)
+                fixed (int* ranks = ranksArr)
+                fixed (int* heap = heapArr)
+                fixed (int* heapPos = heapPosArr)
+                {
+                    return FindPartsHeapCore(pieceSpan, resultIndexes, n, encoder, next, prev, ranks, heap, heapPos);
+                }
+            }
+            finally
+            {
+                pool.Return(heapPosArr);
+                pool.Return(heapArr);
+                pool.Return(ranksArr);
+                pool.Return(prevArr);
+                pool.Return(nextArr);
             }
         }
         else
