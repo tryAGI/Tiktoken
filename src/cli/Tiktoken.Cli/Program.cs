@@ -338,6 +338,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
               Files binary:        {s.FilesBinary:N0}
               Dirs default-excl:   {s.DirsDefaultExcluded:N0}
               Dirs gitignored:     {s.DirsGitignored:N0}
+              Dirs errored:        {s.DirsErrored:N0}
             Timing:
               Scan:                {scanElapsed.TotalSeconds:F2}s
                 Gitignore match:   {s.GitignoreMatchTime.TotalSeconds:F3}s (CPU)

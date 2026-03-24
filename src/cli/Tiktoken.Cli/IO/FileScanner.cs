@@ -167,120 +167,147 @@ internal sealed class FileScanner
             effectiveHasFileRules = anyHasFileRules;
         }
 
+        // Guard against symlink loops and extremely deep paths
+        if (depth > 64)
+        {
+            localStats.DirsErrored++;
+            return;
+        }
+
         List<string>? subDirs = null;
 
         // SINGLE PASS: enumerate files and directories together
-        foreach (var entry in EnumerateEntries(dirPath))
+        IEnumerable<DirEntry> entries;
+        try
         {
-            if (entry.IsDirectory)
+            entries = EnumerateEntries(dirPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+        {
+            localStats.DirsErrored++;
+            return;
+        }
+
+        try
+        {
+            foreach (var entry in entries)
             {
-                var dirName = Path.GetFileName(entry.FullPath);
-
-                if (!_noDefaultExcludes && DefaultExcludedDirs.Contains(dirName))
+                if (entry.IsDirectory)
                 {
-                    localStats.DirsDefaultExcluded++;
-                    continue;
+                    var dirName = Path.GetFileName(entry.FullPath);
+
+                    if (!_noDefaultExcludes && DefaultExcludedDirs.Contains(dirName))
+                    {
+                        localStats.DirsDefaultExcluded++;
+                        continue;
+                    }
+
+                    // Always check directory gitignore (directory-only rules are common)
+                    if (effectiveIgnores.Count > 0)
+                    {
+                        var relDir = entry.FullPath.Length >= rootPrefixLen
+                            ? entry.FullPath.Substring(rootPrefixLen)
+                            : Path.GetRelativePath(rootPath, entry.FullPath);
+
+                        if (s_isWindows)
+                        {
+                            relDir = relDir.Replace('\\', '/');
+                        }
+
+                        var t0 = Stopwatch.GetTimestamp();
+                        var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir + "/") ||
+                            IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir);
+                        localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
+
+                        if (ignored)
+                        {
+                            localStats.DirsGitignored++;
+                            continue;
+                        }
+                    }
+
+                    subDirs ??= [];
+                    subDirs.Add(entry.FullPath);
                 }
-
-                // Always check directory gitignore (directory-only rules are common)
-                if (effectiveIgnores.Count > 0)
+                else
                 {
-                    var relDir = entry.FullPath.Length >= rootPrefixLen
+                    localStats.FilesExamined++;
+
+                    var relativePath = entry.FullPath.Length >= rootPrefixLen
                         ? entry.FullPath.Substring(rootPrefixLen)
                         : Path.GetRelativePath(rootPath, entry.FullPath);
 
                     if (s_isWindows)
                     {
-                        relDir = relDir.Replace('\\', '/');
+                        relativePath = relativePath.Replace('\\', '/');
                     }
 
-                    var t0 = Stopwatch.GetTimestamp();
-                    var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir + "/") ||
-                        IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir);
-                    localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
-
-                    if (ignored)
+                    // Directory-level cache: skip per-file gitignore check when no rules
+                    // in the effective set can match files (only directory-only rules exist).
+                    if (effectiveHasFileRules)
                     {
-                        localStats.DirsGitignored++;
+                        var t0 = Stopwatch.GetTimestamp();
+                        var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relativePath);
+                        localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
+                        if (ignored)
+                        {
+                            localStats.FilesGitignored++;
+                            continue;
+                        }
+                    }
+
+                    if (_includePatterns.Count > 0 &&
+                        !_includePatterns.Any(p => MatchesPattern(relativePath, p)))
+                    {
+                        localStats.FilesFilteredOut++;
                         continue;
                     }
-                }
 
-                subDirs ??= [];
-                subDirs.Add(entry.FullPath);
-            }
-            else
-            {
-                localStats.FilesExamined++;
-
-                var relativePath = entry.FullPath.Length >= rootPrefixLen
-                    ? entry.FullPath.Substring(rootPrefixLen)
-                    : Path.GetRelativePath(rootPath, entry.FullPath);
-
-                if (s_isWindows)
-                {
-                    relativePath = relativePath.Replace('\\', '/');
-                }
-
-                // Directory-level cache: skip per-file gitignore check when no rules
-                // in the effective set can match files (only directory-only rules exist).
-                if (effectiveHasFileRules)
-                {
-                    var t0 = Stopwatch.GetTimestamp();
-                    var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relativePath);
-                    localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
-                    if (ignored)
+                    if (_excludePatterns.Any(p => MatchesPattern(relativePath, p)))
                     {
-                        localStats.FilesGitignored++;
+                        localStats.FilesFilteredOut++;
                         continue;
                     }
-                }
 
-                if (_includePatterns.Count > 0 &&
-                    !_includePatterns.Any(p => MatchesPattern(relativePath, p)))
-                {
-                    localStats.FilesFilteredOut++;
-                    continue;
-                }
-
-                if (_excludePatterns.Any(p => MatchesPattern(relativePath, p)))
-                {
-                    localStats.FilesFilteredOut++;
-                    continue;
-                }
-
-                // Defer stat() until after gitignore/filter checks pass.
-                var tStat = Stopwatch.GetTimestamp();
-                long fileSize;
-                try
-                {
-                    fileSize = new FileInfo(entry.FullPath).Length;
-                }
-                catch (IOException)
-                {
+                    // Defer stat() until after gitignore/filter checks pass.
+                    var tStat = Stopwatch.GetTimestamp();
+                    long fileSize;
+                    try
+                    {
+                        fileSize = new FileInfo(entry.FullPath).Length;
+                    }
+                    catch (IOException)
+                    {
+                        localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
+                        continue;
+                    }
                     localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
-                    continue;
+
+                    if (fileSize > _maxFileSize)
+                    {
+                        localStats.FilesTooLarge++;
+                        continue;
+                    }
+
+                    var tBin = Stopwatch.GetTimestamp();
+                    var isBin = IsBinary(entry.FullPath, fileSize);
+                    localStats.TicksBinaryDetect += Stopwatch.GetTimestamp() - tBin;
+
+                    if (isBin)
+                    {
+                        localStats.FilesBinary++;
+                        continue;
+                    }
+
+                    results.Add(entry.FullPath);
                 }
-                localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
-
-                if (fileSize > _maxFileSize)
-                {
-                    localStats.FilesTooLarge++;
-                    continue;
-                }
-
-                var tBin = Stopwatch.GetTimestamp();
-                var isBin = IsBinary(entry.FullPath, fileSize);
-                localStats.TicksBinaryDetect += Stopwatch.GetTimestamp() - tBin;
-
-                if (isBin)
-                {
-                    localStats.FilesBinary++;
-                    continue;
-                }
-
-                results.Add(entry.FullPath);
             }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+        {
+            // Enumeration can fail mid-iteration on problematic paths (symlink loops,
+            // network mounts timing out, paths exceeding OS limits). Skip this directory.
+            localStats.DirsErrored++;
         }
 
         if (subDirs is null)
@@ -563,6 +590,7 @@ internal sealed class ScanStats
     public long FilesBinary;
     public long DirsDefaultExcluded;
     public long DirsGitignored;
+    public long DirsErrored;
 
     // Sub-phase timing (Stopwatch ticks — accumulated across parallel workers)
     public long TicksGitignoreMatch;
@@ -585,6 +613,7 @@ internal sealed class ScanStats
         FilesBinary += other.FilesBinary;
         DirsDefaultExcluded += other.DirsDefaultExcluded;
         DirsGitignored += other.DirsGitignored;
+        DirsErrored += other.DirsErrored;
         TicksGitignoreMatch += other.TicksGitignoreMatch;
         TicksBinaryDetect += other.TicksBinaryDetect;
         TicksStatSize += other.TicksStatSize;
