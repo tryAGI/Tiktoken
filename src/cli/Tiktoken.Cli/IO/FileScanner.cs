@@ -331,13 +331,31 @@ internal sealed class FileScanner
         if (depth <= 1 && subDirs.Count > 1)
         {
             var bags = new ConcurrentBag<(List<string> Results, ScanStats Stats)>();
-            Parallel.ForEach(subDirs, subDir =>
+            try
             {
-                var localResults = new List<string>();
-                var localSubStats = new ScanStats();
-                ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, localResults, localSubStats, depth + 1);
-                bags.Add((localResults, localSubStats));
-            });
+                Parallel.ForEach(subDirs, subDir =>
+                {
+                    var localResults = new List<string>();
+                    var localSubStats = new ScanStats();
+                    try
+                    {
+                        ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, localResults, localSubStats, depth + 1);
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+                    {
+                        localSubStats.DirsErrored++;
+                    }
+                    bags.Add((localResults, localSubStats));
+                });
+            }
+            catch (AggregateException ae)
+            {
+                // If any worker threw an unhandled exception, count it and continue
+                foreach (var _ in ae.InnerExceptions)
+                {
+                    localStats.DirsErrored++;
+                }
+            }
 
             foreach (var (subResults, subStats) in bags)
             {
@@ -349,7 +367,14 @@ internal sealed class FileScanner
         {
             foreach (var subDir in subDirs)
             {
-                ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, results, localStats, depth + 1);
+                try
+                {
+                    ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, results, localStats, depth + 1);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
+                {
+                    localStats.DirsErrored++;
+                }
             }
         }
     }
