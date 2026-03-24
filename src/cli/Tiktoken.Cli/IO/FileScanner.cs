@@ -12,6 +12,7 @@ internal sealed class FileScanner
     private readonly long _maxFileSize;
     private readonly bool _noDefaultExcludes;
     private readonly bool _noGitignore;
+    private readonly bool _followSymlinks;
 
     private static readonly FrozenSet<string> DefaultExcludedDirs =
         FrozenSet.ToFrozenSet(
@@ -61,13 +62,15 @@ internal sealed class FileScanner
         IEnumerable<string>? excludePatterns = null,
         long maxFileSize = 50 * 1024 * 1024,
         bool noDefaultExcludes = false,
-        bool noGitignore = false)
+        bool noGitignore = false,
+        bool followSymlinks = false)
     {
         _includePatterns = includePatterns?.ToList() ?? [];
         _excludePatterns = excludePatterns?.ToList() ?? [];
         _maxFileSize = maxFileSize;
         _noDefaultExcludes = noDefaultExcludes;
         _noGitignore = noGitignore;
+        _followSymlinks = followSymlinks;
     }
 
     public IReadOnlyList<string> Scan(string rootPath)
@@ -197,7 +200,7 @@ internal sealed class FileScanner
                 {
                     // Skip symlink directories to avoid traversing into virtual/mounted
                     // filesystems, symlink loops, and paths like Steam.app recursive bundles
-                    if (entry.IsSymlink)
+                    if (!_followSymlinks && entry.IsSymlink)
                     {
                         continue;
                     }

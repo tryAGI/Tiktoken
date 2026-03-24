@@ -131,6 +131,7 @@ ttok . --max-tokens 50000
 | `-q, --quiet` | Suppress summary footer |
 | `--no-default-excludes` | Include `bin/`, `obj/`, `node_modules/`, etc. |
 | `--no-gitignore` | Disable .gitignore processing |
+| `--follow-symlinks` | Follow symbolic link directories (skipped by default) |
 | `--progress` | Show progress to stderr |
 | `--stats` | Show scan statistics to stderr |
 | `--version` | Show version information |

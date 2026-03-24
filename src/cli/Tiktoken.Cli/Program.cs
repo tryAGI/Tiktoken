@@ -100,6 +100,11 @@ var noGitignoreOption = new Option<bool>("--no-gitignore")
     Description = "Disable .gitignore processing (include all non-binary files).",
 };
 
+var followSymlinksOption = new Option<bool>("--follow-symlinks")
+{
+    Description = "Follow symbolic link directories (skipped by default to avoid loops).",
+};
+
 var quietOption = new Option<bool>("--quiet", ["-q"])
 {
     Description = "Suppress the summary footer (separator + total line).",
@@ -135,6 +140,7 @@ var rootCommand = new RootCommand("Count, encode, decode, and explore BPE tokens
     topOption,
     noDefaultExcludesOption,
     noGitignoreOption,
+    followSymlinksOption,
     quietOption,
     progressOption,
     statsOption,
@@ -160,6 +166,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     var top = parseResult.GetValue(topOption);
     var noDefaultExcludes = parseResult.GetValue(noDefaultExcludesOption);
     var noGitignore = parseResult.GetValue(noGitignoreOption);
+    var followSymlinks = parseResult.GetValue(followSymlinksOption);
     var quiet = parseResult.GetValue(quietOption);
     var progress = parseResult.GetValue(progressOption);
     var stats = parseResult.GetValue(statsOption);
@@ -216,7 +223,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     {
         if (Directory.Exists(path))
         {
-            var scanner = new FileScanner(include, exclude, maxFileSize, noDefaultExcludes, noGitignore);
+            var scanner = new FileScanner(include, exclude, maxFileSize, noDefaultExcludes, noGitignore, followSymlinks);
             var files = scanner.Scan(path);
             lastScanner = scanner;
             var root = Path.GetFullPath(path);
