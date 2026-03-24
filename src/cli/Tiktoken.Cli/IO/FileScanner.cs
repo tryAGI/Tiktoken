@@ -113,7 +113,7 @@ internal sealed class FileScanner
     /// Length is NOT included because on macOS/Linux it triggers an extra stat() syscall
     /// per entry. We defer the stat call to after gitignore/filter checks pass.
     /// </summary>
-    private readonly record struct DirEntry(string FullPath, bool IsDirectory);
+    private readonly record struct DirEntry(string FullPath, bool IsDirectory, bool IsSymlink);
 
     /// <summary>
     /// Enumerates all entries (files + directories) in a single readdir pass using
@@ -126,7 +126,8 @@ internal sealed class FileScanner
             dirPath,
             static (ref FileSystemEntry entry) => new DirEntry(
                 entry.ToFullPath(),
-                entry.IsDirectory),
+                entry.IsDirectory,
+                entry.Attributes.HasFlag(FileAttributes.ReparsePoint)),
             new EnumerationOptions
             {
                 IgnoreInaccessible = true,
@@ -194,6 +195,13 @@ internal sealed class FileScanner
             {
                 if (entry.IsDirectory)
                 {
+                    // Skip symlink directories to avoid traversing into virtual/mounted
+                    // filesystems, symlink loops, and paths like Steam.app recursive bundles
+                    if (entry.IsSymlink)
+                    {
+                        continue;
+                    }
+
                     var dirName = Path.GetFileName(entry.FullPath);
 
                     if (!_noDefaultExcludes && DefaultExcludedDirs.Contains(dirName))
