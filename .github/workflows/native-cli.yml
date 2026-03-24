@@ -23,7 +23,7 @@ jobs:
     name: Validate install.sh
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Dry-run install.sh
         run: bash install.sh --dry-run
 
@@ -31,7 +31,7 @@ jobs:
     name: Validate install.ps1
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Dry-run install.ps1
         shell: pwsh
         run: |
@@ -43,7 +43,7 @@ jobs:
     name: Pack pointer + any
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -57,7 +57,7 @@ jobs:
       - name: Pack CoreCLR fallback (any)
         run: dotnet pack ${{ env.CLI_PROJECT }} -c Release -r any -p:PublishAot=false -o nupkgs
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: nupkgs-pointer
           path: nupkgs/*.nupkg
@@ -94,7 +94,7 @@ jobs:
             rid: win-arm64
             can-smoke-test: false
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -134,12 +134,12 @@ jobs:
           copy src\cli\Tiktoken.Cli\bin\Release\net10.0\${{ matrix.rid }}\publish\Tiktoken.Cli.exe ttok.exe
           Compress-Archive -Path ttok.exe -DestinationPath ttok-${{ matrix.rid }}.zip
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: nupkgs-${{ matrix.rid }}
           path: nupkgs/*.nupkg
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.rid }}
           path: ttok-${{ matrix.rid }}.*
@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all nupkgs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: nupkgs-*
           merge-multiple: true
@@ -176,10 +176,10 @@ jobs:
     needs: pack-native
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: release-*
           merge-multiple: true
