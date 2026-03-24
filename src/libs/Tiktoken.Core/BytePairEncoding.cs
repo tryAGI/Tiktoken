@@ -202,19 +202,48 @@ public static class BytePairEncoding
         int partsLength,
         TokenEncoder encoder)
     {
-        // n = number of boundaries (byte offsets 0..n-1, where boundary i = byte offset i)
         var n = partsLength;
 
-        // Linked list: next[i]/prev[i] chain remaining boundaries
-        var next = stackalloc int[n];
-        var prev = stackalloc int[n];
-        // rank[i] = merge rank for pair starting at boundary i (boundary i merged with next[i])
-        var ranks = stackalloc int[n];
-        // Binary min-heap of boundary indices, ordered by ranks[boundary]
-        var heap = stackalloc int[n];
-        // heapPos[boundary] = index in heap (-1 if not in heap)
-        var heapPos = stackalloc int[n];
+        // For large pieces, heap-allocate to avoid stack overflow on thread pool threads.
+        // 5 arrays × n × 4 bytes each — for n > 512 this exceeds safe stackalloc limits.
+        if (n > MaxStackAllocLength)
+        {
+            var nextArr = new int[n];
+            var prevArr = new int[n];
+            var ranksArr = new int[n];
+            var heapArr = new int[n];
+            var heapPosArr = new int[n];
+            fixed (int* next = nextArr)
+            fixed (int* prev = prevArr)
+            fixed (int* ranks = ranksArr)
+            fixed (int* heap = heapArr)
+            fixed (int* heapPos = heapPosArr)
+            {
+                return FindPartsHeapCore(pieceSpan, resultIndexes, n, encoder, next, prev, ranks, heap, heapPos);
+            }
+        }
+        else
+        {
+            var next = stackalloc int[n];
+            var prev = stackalloc int[n];
+            var ranks = stackalloc int[n];
+            var heap = stackalloc int[n];
+            var heapPos = stackalloc int[n];
+            return FindPartsHeapCore(pieceSpan, resultIndexes, n, encoder, next, prev, ranks, heap, heapPos);
+        }
+    }
 
+    private static unsafe int FindPartsHeapCore(
+        ReadOnlySpan<byte> pieceSpan,
+        int* resultIndexes,
+        int n,
+        TokenEncoder encoder,
+        int* next,
+        int* prev,
+        int* ranks,
+        int* heap,
+        int* heapPos)
+    {
         // Initialize linked list: 0 → 1 → 2 → ... → n-1
         for (var i = 0; i < n; i++)
         {

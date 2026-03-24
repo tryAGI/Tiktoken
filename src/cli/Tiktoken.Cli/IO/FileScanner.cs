@@ -13,33 +13,101 @@ internal sealed class FileScanner
     private readonly bool _noDefaultExcludes;
     private readonly bool _noGitignore;
     private readonly bool _followSymlinks;
+    private readonly bool _trackStats;
+    private long _dirsVisited;
 
     private static readonly FrozenSet<string> DefaultExcludedDirs =
         FrozenSet.ToFrozenSet(
-            [".git", ".hg", ".svn", "node_modules", "__pycache__", "bin", "obj"],
-            StringComparer.OrdinalIgnoreCase);
+        [
+            // Version control
+            ".git", ".hg", ".svn",
+            // Build output
+            "bin", "obj", "node_modules", "__pycache__",
+            // Package manager caches
+            ".npm", ".nuget", ".cargo", ".rustup", ".gradle", ".m2",
+            ".pnpm-store", "bower_components",
+            ".bun", ".deno", ".gem", ".cocoapods", ".pub-cache",
+            // Language runtimes / version managers (multi-GB, never contain source)
+            ".nvm", ".dotnet", ".local", ".conda", ".virtualenvs", ".venvs",
+            ".android", ".sdkman", ".jabba", ".swiftly",
+            // Python virtual environments / caches
+            "venv", ".venv", ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+            // IDE / editor state
+            ".idea", ".vs", ".fleet",
+            ".vscode", ".vscode-insiders", ".cursor", ".windsurf",
+            // AI / ML tool caches (model weights, multi-GB)
+            ".ollama", ".lmstudio", ".keras", ".matplotlib",
+            ".claude", ".codex", ".cline", ".aider", ".copilot",
+            // Container / cloud / infra
+            ".docker", ".minikube", ".kube",
+            ".terraform", ".pulumi",
+            // Misc caches and generated dirs
+            ".cache", ".Trash", ".Trashes",
+            ".next", ".turbo", ".angular", ".parcel-cache",
+            "coverage", ".nyc_output",
+            // macOS / filesystem metadata
+            ".Spotlight-V100", ".fseventsd", ".TemporaryItems",
+        ], StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Directories excluded only on macOS — system/app directories that never contain
+    /// user source code but can have tens of thousands of subdirectories.
+    /// </summary>
+    private static readonly FrozenSet<string> MacOsExcludedDirs = OperatingSystem.IsMacOS()
+        ? FrozenSet.ToFrozenSet(
+            ["Library", "Applications", "Movies", "Music", "Pictures"],
+            StringComparer.OrdinalIgnoreCase)
+        : FrozenSet<string>.Empty;
 
     private static readonly FrozenSet<string> KnownBinaryExtensions =
         FrozenSet.ToFrozenSet(
         [
-            ".exe", ".dll", ".pdb", ".obj", ".bin", ".so", ".dylib",
+            // Executables / libraries
+            ".exe", ".dll", ".pdb", ".obj", ".bin", ".so", ".dylib", ".framework",
+            // Images
             ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".webp", ".svg",
-            ".mp3", ".mp4", ".wav", ".avi", ".mkv", ".mov", ".flac", ".ogg",
-            ".zip", ".gz", ".tar", ".7z", ".rar", ".bz2", ".xz", ".zst",
+            ".tiff", ".tif", ".heic", ".heif", ".avif", ".raw", ".cr2", ".nef",
+            // Audio
+            ".mp3", ".wav", ".flac", ".ogg", ".aac", ".wma", ".m4a", ".opus",
+            // Video
+            ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".webm", ".m4v", ".ts",
+            // Archives
+            ".zip", ".gz", ".tar", ".7z", ".rar", ".bz2", ".xz", ".zst", ".lz4",
+            ".cab", ".dmg", ".iso", ".img", ".pkg", ".deb", ".rpm",
+            // Documents (binary formats)
             ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+            ".odt", ".ods", ".odp", ".pages", ".numbers", ".keynote",
+            // Fonts
             ".woff", ".woff2", ".ttf", ".otf", ".eot",
-            ".nupkg", ".snupkg", ".ttkb",
-            ".class", ".pyc", ".o", ".a", ".lib",
+            // .NET / Java
+            ".nupkg", ".snupkg", ".ttkb", ".class", ".jar", ".war", ".ear",
+            // Compiled objects
+            ".pyc", ".pyo", ".o", ".a", ".lib", ".ko",
+            // Databases
+            ".db", ".sqlite", ".sqlite3", ".mdb", ".ldb",
+            // Misc binary
+            ".dat", ".DS_Store", ".localized",
         ], StringComparer.OrdinalIgnoreCase);
 
     private static readonly FrozenSet<string> KnownTextExtensions =
         FrozenSet.ToFrozenSet(
         [
+            // .NET
             ".cs", ".csx", ".fs", ".fsx", ".vb",
-            ".json", ".jsonl", ".xml", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
+            ".sln", ".slnx", ".csproj", ".fsproj", ".vbproj", ".props", ".targets",
+            ".razor", ".cshtml",
+            // Data / Config
+            ".json", ".jsonl", ".jsonc", ".xml", ".yaml", ".yml", ".toml",
+            ".ini", ".cfg", ".conf", ".config", ".properties",
+            ".env", ".lock", ".plist",
+            // Markup / Documentation
             ".md", ".mdx", ".txt", ".text", ".log", ".csv", ".tsv",
-            ".html", ".htm", ".css", ".scss", ".sass", ".less",
+            ".rst", ".adoc", ".tex", ".latex",
+            // Web
+            ".html", ".htm", ".css", ".scss", ".sass", ".less", ".styl",
             ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts",
+            ".vue", ".svelte", ".astro",
+            // Languages
             ".py", ".pyi", ".rb", ".go", ".rs", ".java", ".kt", ".kts", ".scala",
             ".c", ".h", ".cpp", ".hpp", ".cc", ".hh", ".cxx", ".hxx",
             ".swift", ".m", ".mm",
@@ -47,15 +115,23 @@ internal sealed class FileScanner
             ".sql", ".graphql", ".gql", ".proto",
             ".r", ".R", ".jl", ".lua", ".pl", ".pm", ".php",
             ".tf", ".hcl", ".dockerfile", ".makefile",
+            ".zig", ".nim", ".dart", ".ex", ".exs", ".erl", ".hrl",
+            ".clj", ".cljs", ".cljc", ".edn",
+            ".hs", ".lhs", ".elm", ".ml", ".mli", ".f90", ".f95",
+            // DevOps / Config files
             ".gitignore", ".gitattributes", ".editorconfig", ".prettierrc",
-            ".sln", ".slnx", ".csproj", ".fsproj", ".vbproj", ".props", ".targets",
-            ".razor", ".cshtml",
-            ".env", ".lock",
+            ".eslintrc", ".babelrc", ".npmrc",
+            ".dockerignore", ".helmignore",
         ], StringComparer.OrdinalIgnoreCase);
 
     private static readonly bool s_isWindows = OperatingSystem.IsWindows();
 
     public ScanStats Stats { get; private set; } = new();
+
+    /// <summary>
+    /// Approximate number of directories visited so far (thread-safe, for progress reporting).
+    /// </summary>
+    public long DirsVisited => Interlocked.Read(ref _dirsVisited);
 
     public FileScanner(
         IEnumerable<string>? includePatterns = null,
@@ -63,7 +139,8 @@ internal sealed class FileScanner
         long maxFileSize = 50 * 1024 * 1024,
         bool noDefaultExcludes = false,
         bool noGitignore = false,
-        bool followSymlinks = false)
+        bool followSymlinks = false,
+        bool trackStats = false)
     {
         _includePatterns = includePatterns?.ToList() ?? [];
         _excludePatterns = excludePatterns?.ToList() ?? [];
@@ -71,9 +148,10 @@ internal sealed class FileScanner
         _noDefaultExcludes = noDefaultExcludes;
         _noGitignore = noGitignore;
         _followSymlinks = followSymlinks;
+        _trackStats = trackStats;
     }
 
-    public IReadOnlyList<string> Scan(string rootPath)
+    public IReadOnlyList<string> Scan(string rootPath, CancellationToken cancellationToken = default)
     {
         rootPath = Path.GetFullPath(rootPath);
 
@@ -105,7 +183,7 @@ internal sealed class FileScanner
 
         var localStats = new ScanStats();
         var results = new List<string>();
-        ScanDirectory(rootPath, rootPath, rootPrefixLen, parentIgnores, anyParentHasFileRules, results, localStats, depth: 0);
+        ScanDirectory(rootPath, rootPath, rootPrefixLen, parentIgnores, anyParentHasFileRules, results, localStats, depth: 0, cancellationToken);
         results.Sort(StringComparer.OrdinalIgnoreCase);
         Stats = localStats;
         return results;
@@ -127,10 +205,14 @@ internal sealed class FileScanner
     {
         return new FileSystemEnumerable<DirEntry>(
             dirPath,
-            static (ref FileSystemEntry entry) => new DirEntry(
-                entry.ToFullPath(),
-                entry.IsDirectory,
-                entry.Attributes.HasFlag(FileAttributes.ReparsePoint)),
+            static (ref FileSystemEntry entry) =>
+            {
+                var isDir = entry.IsDirectory; // Free on Unix (uses d_type from readdir)
+                // Only access entry.Attributes for directories — this triggers fstatat()
+                // on Unix. For files we don't need symlink info, so skip the extra syscall.
+                var isSymlink = isDir && (entry.Attributes & FileAttributes.ReparsePoint) != 0;
+                return new DirEntry(entry.ToFullPath(), isDir, isSymlink);
+            },
             new EnumerationOptions
             {
                 IgnoreInaccessible = true,
@@ -153,8 +235,12 @@ internal sealed class FileScanner
         bool anyHasFileRules,
         List<string> results,
         ScanStats localStats,
-        int depth)
+        int depth,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        Interlocked.Increment(ref _dirsVisited);
+
         // Load .gitignore from this directory if it exists
         var localMatcher = _noGitignore ? null : LoadLocalGitignore(dirPath);
         List<(string Directory, GitignoreMatcher Matcher)> effectiveIgnores;
@@ -207,7 +293,7 @@ internal sealed class FileScanner
 
                     var dirName = Path.GetFileName(entry.FullPath);
 
-                    if (!_noDefaultExcludes && DefaultExcludedDirs.Contains(dirName))
+                    if (!_noDefaultExcludes && (DefaultExcludedDirs.Contains(dirName) || MacOsExcludedDirs.Contains(dirName)))
                     {
                         localStats.DirsDefaultExcluded++;
                         continue;
@@ -225,10 +311,10 @@ internal sealed class FileScanner
                             relDir = relDir.Replace('\\', '/');
                         }
 
-                        var t0 = Stopwatch.GetTimestamp();
+                        var t0 = _trackStats ? Stopwatch.GetTimestamp() : 0;
                         var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir + "/") ||
                             IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relDir);
-                        localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
+                        if (_trackStats) localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
 
                         if (ignored)
                         {
@@ -257,9 +343,9 @@ internal sealed class FileScanner
                     // in the effective set can match files (only directory-only rules exist).
                     if (effectiveHasFileRules)
                     {
-                        var t0 = Stopwatch.GetTimestamp();
+                        var t0 = _trackStats ? Stopwatch.GetTimestamp() : 0;
                         var ignored = IsIgnoredByGitignore(effectiveIgnores, rootPath, entry.FullPath, relativePath);
-                        localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
+                        if (_trackStats) localStats.TicksGitignoreMatch += Stopwatch.GetTimestamp() - t0;
                         if (ignored)
                         {
                             localStats.FilesGitignored++;
@@ -267,21 +353,20 @@ internal sealed class FileScanner
                         }
                     }
 
-                    if (_includePatterns.Count > 0 &&
-                        !_includePatterns.Any(p => MatchesPattern(relativePath, p)))
+                    if (_includePatterns.Count > 0 && !MatchesAnyPattern(relativePath, _includePatterns))
                     {
                         localStats.FilesFilteredOut++;
                         continue;
                     }
 
-                    if (_excludePatterns.Any(p => MatchesPattern(relativePath, p)))
+                    if (_excludePatterns.Count > 0 && MatchesAnyPattern(relativePath, _excludePatterns))
                     {
                         localStats.FilesFilteredOut++;
                         continue;
                     }
 
                     // Defer stat() until after gitignore/filter checks pass.
-                    var tStat = Stopwatch.GetTimestamp();
+                    var tStat = _trackStats ? Stopwatch.GetTimestamp() : 0;
                     long fileSize;
                     try
                     {
@@ -289,10 +374,10 @@ internal sealed class FileScanner
                     }
                     catch (IOException)
                     {
-                        localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
+                        if (_trackStats) localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
                         continue;
                     }
-                    localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
+                    if (_trackStats) localStats.TicksStatSize += Stopwatch.GetTimestamp() - tStat;
 
                     if (fileSize > _maxFileSize)
                     {
@@ -300,9 +385,9 @@ internal sealed class FileScanner
                         continue;
                     }
 
-                    var tBin = Stopwatch.GetTimestamp();
+                    var tBin = _trackStats ? Stopwatch.GetTimestamp() : 0;
                     var isBin = IsBinary(entry.FullPath, fileSize);
-                    localStats.TicksBinaryDetect += Stopwatch.GetTimestamp() - tBin;
+                    if (_trackStats) localStats.TicksBinaryDetect += Stopwatch.GetTimestamp() - tBin;
 
                     if (isBin)
                     {
@@ -326,20 +411,20 @@ internal sealed class FileScanner
             return;
         }
 
-        // Parallelize top-level and second-level subdirectories for throughput.
-        // Going deeper adds thread pool overhead that outweighs the benefit.
-        if (depth <= 1 && subDirs.Count > 1)
+        // Parallelize shallow subdirectories for throughput on large trees.
+        // depth <= 3 ensures heavy subtrees (e.g. ~/GitHub/<repo>/) are also parallelized.
+        if (depth <= 3 && subDirs.Count > 1)
         {
             var bags = new ConcurrentBag<(List<string> Results, ScanStats Stats)>();
             try
             {
-                Parallel.ForEach(subDirs, subDir =>
+                Parallel.ForEach(subDirs, new ParallelOptions { CancellationToken = cancellationToken }, subDir =>
                 {
                     var localResults = new List<string>();
                     var localSubStats = new ScanStats();
                     try
                     {
-                        ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, localResults, localSubStats, depth + 1);
+                        ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, localResults, localSubStats, depth + 1, cancellationToken);
                     }
                     catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
                     {
@@ -369,7 +454,7 @@ internal sealed class FileScanner
             {
                 try
                 {
-                    ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, results, localStats, depth + 1);
+                    ScanDirectory(subDir, rootPath, rootPrefixLen, effectiveIgnores, effectiveHasFileRules, results, localStats, depth + 1, cancellationToken);
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException)
                 {
@@ -550,6 +635,18 @@ internal sealed class FileScanner
             }
         }
 
+        return false;
+    }
+
+    private static bool MatchesAnyPattern(string relativePath, List<string> patterns)
+    {
+        foreach (var pattern in patterns)
+        {
+            if (MatchesPattern(relativePath, pattern))
+            {
+                return true;
+            }
+        }
         return false;
     }
 

@@ -223,8 +223,25 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     {
         if (Directory.Exists(path))
         {
-            var scanner = new FileScanner(include, exclude, maxFileSize, noDefaultExcludes, noGitignore, followSymlinks);
-            var files = scanner.Scan(path);
+            var scanner = new FileScanner(include, exclude, maxFileSize, noDefaultExcludes, noGitignore, followSymlinks, trackStats: stats);
+
+            Timer? progressTimer = null;
+            if (progress)
+            {
+                progressTimer = new Timer(_ =>
+                {
+                    Console.Error.Write($"\r  Scanning directories... {scanner.DirsVisited:N0}");
+                }, null, 200, 200);
+            }
+
+            var files = scanner.Scan(path, cancellationToken);
+
+            if (progressTimer != null)
+            {
+                await progressTimer.DisposeAsync().ConfigureAwait(false);
+                Console.Error.Write($"\r  Scanning directories... {scanner.DirsVisited:N0} done\n");
+            }
+
             lastScanner = scanner;
             var root = Path.GetFullPath(path);
             foreach (var file in files)
