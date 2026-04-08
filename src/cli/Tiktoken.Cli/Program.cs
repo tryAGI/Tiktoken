@@ -387,8 +387,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     return 0;
 });
 
-var config = new CommandLineConfiguration(rootCommand);
-return await config.InvokeAsync(args).ConfigureAwait(false);
+return await rootCommand.Parse(args).InvokeAsync().ConfigureAwait(false);
 
 static void HandleStdinMode(
     string input,
