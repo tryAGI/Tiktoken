@@ -15,7 +15,7 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.8" />
     <PackageVersion Include="Microsoft.ML.Tokenizers" Version="3.0.0-preview.26160.2" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.0" />
-    <PackageVersion Include="MSTest" Version="4.2.2" />
+    <PackageVersion Include="MSTest" Version="4.2.3" />
     <PackageVersion Include="PolySharp" Version="1.15.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
