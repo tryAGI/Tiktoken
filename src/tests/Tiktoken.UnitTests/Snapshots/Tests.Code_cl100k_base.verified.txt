@@ -3,13 +3,13 @@
     import,
      numpy,
      as,
-     np
+     np,
     
 ,
     from,
      typing,
      import,
-     Optional
+     Optional,
     
 
 ,
@@ -27,9 +27,8 @@
     ),
      ->,
      Optional,
-    [int
-    
-]:
+    [int,
+    ]:
 ,
        ,
      """,
@@ -41,15 +40,13 @@
      in,
      a,
      sorted,
-     array
-    
-.
+     array,
+    .
 
 ,
        ,
-     Args
-    
-:
+     Args,
+    :
 ,
            ,
      arr,
@@ -58,9 +55,8 @@
      sorted,
      list,
      of,
-     integers
-    
-.
+     integers,
+    .
 ,
            ,
      target,
@@ -69,15 +65,13 @@
      value,
      to,
      search,
-     for
-    
-.
+     for,
+    .
 
 ,
        ,
-     Returns
-    
-:
+     Returns,
+    :
 ,
            ,
      The,
@@ -88,15 +82,13 @@
      found,
     ,,
      None,
-     otherwise
-    
-.
+     otherwise,
+    .
 
 ,
        ,
-     Examples
-    
-:
+     Examples,
+    :
 ,
            ,
      >>>,
@@ -118,13 +110,12 @@
     9,
     ],,
      ,
-    5
-    
-)
+    5,
+    )
 ,
            ,
      ,
-    2
+    2,
     
 ,
            ,
@@ -147,17 +138,15 @@
     9,
     ],,
      ,
-    4
-    
-)
+    4,
+    )
 ,
            ,
-     None
+     None,
     
 ,
-       
-    
- """
+       ,
+     """
 ,
        ,
      left,
@@ -172,16 +161,15 @@
     ),
      -,
      ,
-    1
+    1,
     
 ,
        ,
      while,
      left,
      <=,
-     right
-    
-:
+     right,
+    :
 ,
            ,
      mid,
@@ -193,7 +181,7 @@
     ),
      //,
      ,
-    2
+    2,
     
 ,
            ,
@@ -202,13 +190,12 @@
     [mid,
     ],
      ==,
-     target
-    
-:
+     target,
+    :
 ,
                ,
      return,
-     mid
+     mid,
     
 ,
            ,
@@ -217,9 +204,8 @@
     [mid,
     ],
      <,
-     target
-    
-:
+     target,
+    :
 ,
                ,
      left,
@@ -227,13 +213,12 @@
      mid,
      +,
      ,
-    1
+    1,
     
 ,
            ,
-     else
-    
-:
+     else,
+    :
 ,
                ,
      right,
@@ -241,12 +226,12 @@
      mid,
      -,
      ,
-    1
+    1,
     
 ,
        ,
      return,
-     None
+     None,
     
 
 ,
@@ -263,7 +248,7 @@
     (,
     1,
     ),
-     space
+     space,
     
 ,
     result,
@@ -289,9 +274,8 @@
     12,
     ],,
      ,
-    8
-    
-)
+    8,
+    )
 ,
     print,
     (f,

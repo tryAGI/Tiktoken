@@ -2,7 +2,7 @@
   Item1: [
     1,
     .,
-     Introduction
+     Introduction,
     
 ,
     Commerce,
@@ -19,7 +19,7 @@
      financial,
      institutions,
      serving,
-     as
+     as,
     
 ,
     tr,
@@ -37,7 +37,7 @@
      works,
      well,
      enough,
-     for
+     for,
     
 ,
     most,
@@ -55,7 +55,7 @@
      trust,
      based,
      model,
-    .
+    .,
     
 ,
     Complete,
@@ -73,7 +73,7 @@
      since,
      financial,
      institutions,
-     cannot
+     cannot,
     
 ,
     avoid,
@@ -90,7 +90,7 @@
      costs,
     ,,
      limiting,
-     the
+     the,
     
 ,
     minimum,
@@ -106,7 +106,7 @@
      small,
      casual,
      transactions,
-    ,
+    ,,
     
 ,
     and,
@@ -146,7 +146,7 @@
      spreads,
     .,
      Merchants,
-     must
+     must,
     
 ,
     be,
@@ -167,7 +167,7 @@
      would,
      otherwise,
      need,
-    .
+    .,
     
 ,
     A,
@@ -184,7 +184,7 @@
      costs,
      and,
      payment,
-     uncertainties
+     uncertainties,
     
 ,
     can,
@@ -203,7 +203,7 @@
      exists,
      to,
      make,
-     payments
+     payments,
     
 ,
     over,
@@ -214,7 +214,7 @@
      a,
      trusted,
      party,
-    .
+    .,
     
 ,
     What,
@@ -232,7 +232,7 @@
      instead,
      of,
      trust,
-    ,
+    ,,
     
 ,
     all,
@@ -252,7 +252,7 @@
      need,
      for,
      a,
-     trusted
+     trusted,
     
 ,
     third,
@@ -268,7 +268,7 @@
      reverse,
      would,
      protect,
-     sellers
+     sellers,
     
 ,
     from,
@@ -287,7 +287,7 @@
      protect,
      buyers,
     .,
-     In
+     In,
     
 ,
     this,
@@ -311,7 +311,7 @@
     to,
     -,
     peer,
-     distributed
+     distributed,
     
 ,
     tim,
@@ -328,7 +328,7 @@
      of,
      transactions,
     .,
-     The
+     The,
     
 ,
     system,
@@ -345,7 +345,7 @@
      CPU,
      power,
      than,
-     any
+     any,
     
 ,
     co,
@@ -355,15 +355,15 @@
      of,
      attacker,
      nodes,
-    .
+    .,
     
 ,
-    1
+    1,
     
 ,
     2,
     .,
-     Transactions
+     Transactions,
     
 ,
     We,
@@ -384,7 +384,7 @@
      the,
      coin,
      to,
-     the
+     the,
     
 ,
     next,
@@ -404,7 +404,7 @@
      of,
      the,
      next,
-     owner
+     owner,
     
 ,
     and,
@@ -428,12 +428,12 @@
      verify,
      the,
      chain,
-     of
+     of,
     
 ,
     owners,
     hip,
-    .
+    .,
     
 ,
     The,
@@ -457,7 +457,7 @@
      double,
     -,
     sp,
-    end
+    end,
     
 ,
     the,
@@ -479,7 +479,7 @@
     ,,
      that,
      checks,
-     every
+     every,
     
 ,
     trans,
@@ -500,7 +500,7 @@
      to,
      the,
      mint,
-     to
+     to,
     
 ,
     issue,
@@ -525,7 +525,7 @@
     -,
     sp,
     ent,
-    .
+    .,
     
 ,
     The,
@@ -544,7 +544,7 @@
      system,
      depends,
      on,
-     the
+     the,
     
 ,
     company,
@@ -565,7 +565,7 @@
      like,
      a,
      bank,
-    .
+    .,
     
 ,
     We,
@@ -586,7 +586,7 @@
      not,
      sign,
      any,
-     earlier
+     earlier,
     
 ,
     trans,
@@ -609,7 +609,7 @@
      we,
      don,
     't,
-     care
+     care,
     
 ,
     about,
@@ -632,7 +632,7 @@
      a,
      transaction,
      is,
-     to
+     to,
     
 ,
     be,
@@ -654,7 +654,7 @@
      of,
      all,
      transactions,
-     and
+     and,
     
 ,
     dec,
@@ -673,7 +673,7 @@
     ,,
      transactions,
      must,
-     be
+     be,
     
 ,
     public,
@@ -696,7 +696,7 @@
      single,
      history,
      of,
-     the
+     the,
     
 ,
     order,
@@ -719,7 +719,7 @@
      each,
      transaction,
     ,,
-     the
+     the,
     
 ,
     majority,
@@ -731,14 +731,14 @@
      the,
      first,
      received,
-    .
+    .,
     
 ,
     3,
     .,
      Tim,
     estamp,
-     Server
+     Server,
     
 ,
     The,
@@ -757,7 +757,7 @@
      works,
      by,
      taking,
-     a
+     a,
     
 ,
     hash,
@@ -780,7 +780,7 @@
      such,
      as,
      in,
-     a
+     a,
     
 ,
     new,
@@ -806,7 +806,7 @@
      have,
      existed,
      at,
-     the
+     the,
     
 ,
     time,
@@ -827,7 +827,7 @@
      the,
      previous,
      timestamp,
-     in
+     in,
     
 ,
     its,
@@ -846,145 +846,145 @@
      ones,
      before,
      it,
-    .
+    .,
     
 ,
-    2
+    2,
     
 ,
-    Block
-    
-,
-    Item,
-     Item,
-     ...
-    
-,
-    Hash
-    
-,
-    Block
+    Block,
     
 ,
     Item,
      Item,
-     ...
+     ...,
     
 ,
-    Hash
+    Hash,
     
 ,
-    Transaction
+    Block,
+    
+,
+    Item,
+     Item,
+     ...,
+    
+,
+    Hash,
+    
+,
+    Transaction,
     
 ,
     Owner,
      1,
-    's
+    's,
     
 ,
     Public,
-     Key
+     Key,
     
 ,
     Owner,
      0,
-    's
+    's,
     
 ,
     Sign,
-    ature
+    ature,
     
 ,
-    Hash
+    Hash,
     
 ,
-    Transaction
+    Transaction,
     
 ,
     Owner,
      2,
-    's
+    's,
     
 ,
     Public,
-     Key
+     Key,
     
 ,
     Owner,
      1,
-    's
+    's,
     
 ,
     Sign,
-    ature
+    ature,
     
 ,
-    Hash
+    Hash,
     
 ,
     Ver,
-    ify
+    ify,
     
 ,
-    Transaction
+    Transaction,
     
 ,
     Owner,
      3,
-    's
+    's,
     
 ,
     Public,
-     Key
+     Key,
     
 ,
     Owner,
      2,
-    's
+    's,
     
 ,
     Sign,
-    ature
+    ature,
     
 ,
-    Hash
+    Hash,
     
 ,
     Ver,
-    ify
+    ify,
     
 ,
     Owner,
      2,
-    's
+    's,
     
 ,
     Private,
-     Key
+     Key,
     
 ,
     Owner,
      1,
-    's
+    's,
     
 ,
     Private,
-     Key
+     Key,
     
 ,
-    Sign
+    Sign,
     
 ,
-    Sign
+    Sign,
     
 ,
     Owner,
      3,
-    's
+    's,
     
 ,
     Private,
-     Key
+     Key,
     
 ,
     4,
@@ -993,7 +993,7 @@
     -,
     of,
     -,
-    Work
+    Work,
     
 ,
     To,
@@ -1040,7 +1040,7 @@
     en,
     et,
      posts,
-    .
+    .,
     
 ,
     The,
@@ -1066,7 +1066,7 @@
     -,
     256,
     ,,
-     the
+     the,
     
 ,
     hash,
@@ -1086,7 +1086,7 @@
      exponential,
      in,
      the,
-     number
+     number,
     
 ,
     of,
@@ -1102,7 +1102,7 @@
      a,
      single,
      hash,
-    .
+    .,
     
 ,
     For,
@@ -1125,7 +1125,7 @@
      non,
     ce,
      in,
-     the
+     the,
     
 ,
     block,
@@ -1147,7 +1147,7 @@
     .,
      Once,
      the,
-     CPU
+     CPU,
     
 ,
     eff,
@@ -1170,7 +1170,7 @@
      block,
      cannot,
      be,
-     changed
+     changed,
     
 ,
     without,
@@ -1192,7 +1192,7 @@
      to,
      change,
      the,
-     block
+     block,
     
 ,
     would,
@@ -1204,7 +1204,7 @@
      blocks,
      after,
      it,
-    .
+    .,
     
 ,
     The,
@@ -1222,7 +1222,7 @@
      representation,
      in,
      majority,
-     decision
+     decision,
     
 ,
     making,
@@ -1249,7 +1249,7 @@
      sub,
     verted,
      by,
-     anyone
+     anyone,
     
 ,
     able,
@@ -1275,7 +1275,7 @@
     vote,
     .,
      The,
-     majority
+     majority,
     
 ,
     dec,
@@ -1297,7 +1297,7 @@
     -,
     work,
      effort,
-     invested
+     invested,
     
 ,
     in,
@@ -1320,7 +1320,7 @@
      chain,
      will,
      grow,
-     the
+     the,
     
 ,
     fast,
@@ -1342,7 +1342,7 @@
      attacker,
      would,
      have,
-     to
+     to,
     
 ,
     redo,
@@ -1367,7 +1367,7 @@
      with,
      and,
      surpass,
-     the
+     the,
     
 ,
     work,
@@ -1388,7 +1388,7 @@
      slower,
      attacker,
      catching,
-     up
+     up,
     
 ,
     dim,
@@ -1400,7 +1400,7 @@
      blocks,
      are,
      added,
-    .
+    .,
     
 ,
     To,
@@ -1417,7 +1417,7 @@
      nodes,
      over,
      time,
-    ,
+    ,,
     
 ,
     the,
@@ -1437,7 +1437,7 @@
      an,
      average,
      number,
-     of
+     of,
     
 ,
     blocks,
@@ -1454,12 +1454,12 @@
      the,
      difficulty,
      increases,
-    .
+    .,
     
 ,
     5,
     .,
-     Network
+     Network,
     
 ,
     The,
@@ -1471,7 +1471,7 @@
      are,
      as,
      follows,
-    :
+    :,
     
 ,
     1,
@@ -1483,7 +1483,7 @@
      to,
      all,
      nodes,
-    .
+    .,
     
 ,
     2,
@@ -1496,7 +1496,7 @@
      into,
      a,
      block,
-    .
+    .,
     
 ,
     3,
@@ -1516,7 +1516,7 @@
      for,
      its,
      block,
-    .
+    .,
     
 ,
     4,
@@ -1539,7 +1539,7 @@
      to,
      all,
      nodes,
-    .
+    .,
     
 ,
     5,
@@ -1561,7 +1561,7 @@
      not,
      already,
      spent,
-    .
+    .,
     
 ,
     6,
@@ -1582,7 +1582,7 @@
      next,
      block,
      in,
-     the
+     the,
     
 ,
     chain,
@@ -1598,7 +1598,7 @@
      the,
      previous,
      hash,
-    .
+    .,
     
 ,
     N,
@@ -1617,7 +1617,7 @@
      will,
      keep,
      working,
-     on
+     on,
     
 ,
     ext,
@@ -1636,7 +1636,7 @@
      block,
      simultaneously,
     ,,
-     some
+     some,
     
 ,
     n,
@@ -1661,7 +1661,7 @@
      one,
      they,
      received,
-    ,
+    ,,
     
 ,
     but,
@@ -1702,7 +1702,7 @@
      working,
      on,
      the,
-     other
+     other,
     
 ,
     br,
@@ -1714,40 +1714,40 @@
      the,
      longer,
      one,
-    .
+    .,
     
 ,
-    3
+    3,
     
 ,
-    Block
-    
-,
-    Prev,
-     Hash,
-     Non,
-    ce
-    
-,
-    Tx,
-     T,
-    x,
-     ...
-    
-,
-    Block
+    Block,
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     Tx,
      T,
     x,
-     ...
+     ...,
+    
+,
+    Block,
+    
+,
+    Prev,
+     Hash,
+     Non,
+    ce,
+    
+,
+    Tx,
+     T,
+    x,
+     ...,
     
 ,
     New,
@@ -1766,7 +1766,7 @@
      long,
      as,
      they,
-     reach
+     reach,
     
 ,
     many,
@@ -1787,7 +1787,7 @@
      also,
      tolerant,
      of,
-     dropped
+     dropped,
     
 ,
     mess,
@@ -1812,7 +1812,7 @@
      the,
      next,
      block,
-     and
+     and,
     
 ,
     real,
@@ -1820,14 +1820,14 @@
      it,
      missed,
      one,
-    .
+    .,
     
 ,
     6,
     .,
      In,
     cent,
-    ive
+    ive,
     
 ,
     By,
@@ -1848,7 +1848,7 @@
      a,
      new,
      coin,
-     owned
+     owned,
     
 ,
     by,
@@ -1870,7 +1870,7 @@
      network,
     ,,
      and,
-     provides
+     provides,
     
 ,
     a,
@@ -1891,7 +1891,7 @@
      to,
      issue,
      them,
-    .
+    .,
     
 ,
     The,
@@ -1911,7 +1911,7 @@
      gold,
      miners,
      exp,
-    ending
+    ending,
     
 ,
     resources,
@@ -1934,7 +1934,7 @@
      that,
      is,
      expended,
-    .
+    .,
     
 ,
     The,
@@ -1954,7 +1954,7 @@
      of,
      a,
      transaction,
-     is
+     is,
     
 ,
     less,
@@ -1976,7 +1976,7 @@
      the,
      incentive,
      value,
-     of
+     of,
     
 ,
     the,
@@ -1992,7 +1992,7 @@
      of,
      coins,
      have,
-     entered
+     entered,
     
 ,
     circ,
@@ -2009,11 +2009,11 @@
      and,
      be,
      completely,
-     inflation
+     inflation,
     
 ,
     free,
-    .
+    .,
     
 ,
     The,
@@ -2032,7 +2032,7 @@
      attacker,
      is,
      able,
-     to
+     to,
     
 ,
     as,
@@ -2053,7 +2053,7 @@
      choose,
      between,
      using,
-     it
+     it,
     
 ,
     to,
@@ -2076,7 +2076,7 @@
     .,
      He,
      ought,
-     to
+     to,
     
 ,
     find,
@@ -2098,7 +2098,7 @@
      more,
      new,
      coins,
-     than
+     than,
     
 ,
     everyone,
@@ -2117,7 +2117,7 @@
      his,
      own,
      wealth,
-    .
+    .,
     
 ,
     7,
@@ -2126,7 +2126,7 @@
     claim,
     ing,
      Disk,
-     Space
+     Space,
     
 ,
     Once,
@@ -2145,7 +2145,7 @@
      the,
      spent,
      transactions,
-     before
+     before,
     
 ,
     it,
@@ -2166,7 +2166,7 @@
      block,
     's,
      hash,
-    ,
+    ,,
     
 ,
     trans,
@@ -2197,7 +2197,7 @@
      block,
     's,
      hash,
-    .
+    .,
     
 ,
     Old,
@@ -2219,7 +2219,7 @@
      The,
      interior,
      hashes,
-     do
+     do,
     
 ,
     not,
@@ -2227,7 +2227,7 @@
      to,
      be,
      stored,
-    .
+    .,
     
 ,
     A,
@@ -2246,7 +2246,7 @@
      we,
      suppose,
      blocks,
-     are
+     are,
     
 ,
     generated,
@@ -2272,7 +2272,7 @@
     .,
      With,
      computer,
-     systems
+     systems,
     
 ,
     typically,
@@ -2293,7 +2293,7 @@
      predicting,
      current,
      growth,
-     of
+     of,
     
 ,
     1,
@@ -2317,18 +2317,18 @@
      must,
      be,
      kept,
-     in
+     in,
     
 ,
     memory,
-    .
+    .,
     
 ,
-    4
+    4,
     
 ,
     Block,
-     Block
+     Block,
     
 ,
     Block,
@@ -2336,17 +2336,17 @@
      (,
     Block,
      Hash,
-    )
+    ),
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     Hash,
-    01
+    01,
     
 ,
     Hash,
@@ -2356,31 +2356,31 @@
      Hash,
     2,
      Hash,
-    3
+    3,
     
 ,
     Hash,
-    23
+    23,
     
 ,
     Root,
-     Hash
+     Hash,
     
 ,
     Hash,
-    01
+    01,
     
 ,
     Hash,
-    2
+    2,
     
 ,
     Tx,
-    3
+    3,
     
 ,
     Hash,
-    23
+    23,
     
 ,
     Block,
@@ -2388,11 +2388,11 @@
      (,
     Block,
      Hash,
-    )
+    ),
     
 ,
     Root,
-     Hash
+     Hash,
     
 ,
     Trans,
@@ -2415,17 +2415,17 @@
     2,
      from,
      the,
-     Block
+     Block,
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     Hash,
-    3
+    3,
     
 ,
     Tx,
@@ -2438,7 +2438,7 @@
     2,
      T,
     x,
-    3
+    3,
     
 ,
     8,
@@ -2447,7 +2447,7 @@
     ified,
      Payment,
      Ver,
-    ification
+    ification,
     
 ,
     It,
@@ -2468,7 +2468,7 @@
      only,
      needs,
      to,
-     keep
+     keep,
     
 ,
     a,
@@ -2493,7 +2493,7 @@
      get,
      by,
      quer,
-    ying
+    ying,
     
 ,
     network,
@@ -2514,7 +2514,7 @@
      Mer,
     k,
     le,
-     branch
+     branch,
     
 ,
     l,
@@ -2537,7 +2537,7 @@
      check,
      the,
      transaction,
-     for
+     for,
     
 ,
     him,
@@ -2564,7 +2564,7 @@
      has,
      accepted,
      it,
-    ,
+    ,,
     
 ,
     and,
@@ -2579,7 +2579,7 @@
      has,
      accepted,
      it,
-    .
+    .,
     
 ,
     As,
@@ -2600,7 +2600,7 @@
     ,,
      but,
      is,
-     more
+     more,
     
 ,
     v,
@@ -2618,7 +2618,7 @@
      network,
      nodes,
      can,
-     verify
+     verify,
     
 ,
     trans,
@@ -2636,7 +2636,7 @@
      an,
      attacker,
     's,
-     fabricated
+     fabricated,
     
 ,
     trans,
@@ -2656,7 +2656,7 @@
     .,
      One,
      strategy,
-     to
+     to,
     
 ,
     protect,
@@ -2674,7 +2674,7 @@
      they,
      detect,
      an,
-     invalid
+     invalid,
     
 ,
     block,
@@ -2692,7 +2692,7 @@
      and,
      alerted,
      transactions,
-     to
+     to,
     
 ,
     conf,
@@ -2710,7 +2710,7 @@
      probably,
      still,
      want,
-     to
+     to,
     
 ,
     run,
@@ -2724,7 +2724,7 @@
      and,
      quicker,
      verification,
-    .
+    .,
     
 ,
     9,
@@ -2734,7 +2734,7 @@
      and,
      Spl,
     itting,
-     Value
+     Value,
     
 ,
     Although,
@@ -2755,7 +2755,7 @@
     y,
      to,
      make,
-     a
+     a,
     
 ,
     separ,
@@ -2776,7 +2776,7 @@
      split,
      and,
      combined,
-    ,
+    ,,
     
 ,
     trans,
@@ -2794,7 +2794,7 @@
      either,
      a,
      single,
-     input
+     input,
     
 ,
     from,
@@ -2812,7 +2812,7 @@
      and,
      at,
      most,
-     two
+     two,
     
 ,
     output,
@@ -2836,7 +2836,7 @@
      to,
      the,
      sender,
-    .
+    .,
     
 ,
     It,
@@ -2857,7 +2857,7 @@
      transactions,
     ,,
      and,
-     those
+     those,
     
 ,
     trans,
@@ -2880,7 +2880,7 @@
      need,
      to,
      extract,
-     a
+     a,
     
 ,
     complete,
@@ -2891,88 +2891,88 @@
      transaction,
     's,
      history,
-    .
+    .,
     
 ,
-    5
+    5,
     
 ,
-    Transaction
-    
-,
-    In
-    
-,
-    ...
+    Transaction,
     
 ,
     In,
-     Out
     
 ,
-    ...
+    ...,
+    
+,
+    In,
+     Out,
+    
+,
+    ...,
     
 ,
     Hash,
-    01
+    01,
     
 ,
     Hash,
     2,
      Hash,
-    3
+    3,
     
 ,
     Hash,
-    23
+    23,
     
 ,
     Block,
-     Header
+     Header,
     
 ,
     M,
     erk,
     le,
-     Root
+     Root,
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     Block,
-     Header
+     Header,
     
 ,
     M,
     erk,
     le,
-     Root
+     Root,
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     Block,
-     Header
+     Header,
     
 ,
     M,
     erk,
     le,
-     Root
+     Root,
     
 ,
     Prev,
      Hash,
      Non,
-    ce
+    ce,
     
 ,
     M,
@@ -2982,7 +2982,7 @@
      for,
      T,
     x,
-    3
+    3,
     
 ,
     Long,
@@ -2992,16 +2992,16 @@
     of,
     -,
     Work,
-     Chain
+     Chain,
     
 ,
     Tx,
-    3
+    3,
     
 ,
     10,
     .,
-     Privacy
+     Privacy,
     
 ,
     The,
@@ -3019,7 +3019,7 @@
      to,
      information,
      to,
-     the
+     the,
     
 ,
     part,
@@ -3037,7 +3037,7 @@
      announce,
      all,
      transactions,
-     publicly
+     publicly,
     
 ,
     pre,
@@ -3057,7 +3057,7 @@
      flow,
      of,
      information,
-     in
+     in,
     
 ,
     another,
@@ -3076,7 +3076,7 @@
      that,
      someone,
      is,
-     sending
+     sending,
     
 ,
     an,
@@ -3095,7 +3095,7 @@
      anyone,
     .,
      This,
-     is
+     is,
     
 ,
     similar,
@@ -3114,7 +3114,7 @@
      time,
      and,
      size,
-     of
+     of,
     
 ,
     individual,
@@ -3136,7 +3136,7 @@
      the,
      parties,
      were,
-    .
+    .,
     
 ,
     As,
@@ -3156,7 +3156,7 @@
      transaction,
      to,
      keep,
-     them
+     them,
     
 ,
     from,
@@ -3175,7 +3175,7 @@
      with,
      multi,
     -,
-    input
+    input,
     
 ,
     trans,
@@ -3195,7 +3195,7 @@
      owner,
     .,
      The,
-     risk
+     risk,
     
 ,
     is,
@@ -3216,19 +3216,19 @@
      transactions,
      that,
      belonged,
-     to
+     to,
     
 ,
     the,
      same,
      owner,
-    .
+    .,
     
 ,
     11,
     .,
      Calcul,
-    ations
+    ations,
     
 ,
     We,
@@ -3247,7 +3247,7 @@
      faster,
      than,
      the,
-     honest
+     honest,
     
 ,
     chain,
@@ -3269,7 +3269,7 @@
      arbitrary,
      changes,
     ,,
-     such
+     such,
     
 ,
     as,
@@ -3291,7 +3291,7 @@
     .,
      N,
     odes,
-     are
+     are,
     
 ,
     not,
@@ -3311,7 +3311,7 @@
      never,
      accept,
      a,
-     block
+     block,
     
 ,
     containing,
@@ -3331,14 +3331,14 @@
      transactions,
      to,
      take,
-     back
+     back,
     
 ,
     money,
      he,
      recently,
      spent,
-    .
+    .,
     
 ,
     The,
@@ -3357,7 +3357,7 @@
      as,
      a,
      Bin,
-    omial
+    omial,
     
 ,
     Random,
@@ -3377,7 +3377,7 @@
      block,
     ,,
      increasing,
-     its
+     its,
     
 ,
     lead,
@@ -3401,14 +3401,14 @@
      block,
     ,,
      reducing,
-     the
+     the,
     
 ,
     gap,
      by,
      -,
     1,
-    .
+    .,
     
 ,
     The,
@@ -3428,7 +3428,7 @@
      a,
      Gamb,
     ler,
-    's
+    's,
     
 ,
     Ru,
@@ -3449,7 +3449,7 @@
      and,
      plays,
      potentially,
-     an
+     an,
     
 ,
     inf,
@@ -3471,7 +3471,7 @@
      the,
      probability,
      he,
-     ever
+     ever,
     
 ,
     re,
@@ -3496,7 +3496,7 @@
      follows,
      [,
     8,
-    ]:
+    ]:,
     
 ,
     p,
@@ -3508,7 +3508,7 @@
      finds,
      the,
      next,
-     block
+     block,
     
 ,
     q,
@@ -3519,7 +3519,7 @@
      finds,
      the,
      next,
-     block
+     block,
     
 ,
     q,
@@ -3535,40 +3535,40 @@
      from,
      z,
      blocks,
-     behind
+     behind,
     
 ,
-    6
+    6,
     
 ,
     Ident,
     ities,
      Transactions,
      Tr,
-    usted
+    usted,
     
 ,
     Third,
      Party,
      Counter,
     party,
-     Public
+     Public,
     
 ,
     Ident,
     ities,
      Transactions,
-     Public
+     Public,
     
 ,
     New,
      Privacy,
-     Model
+     Model,
     
 ,
     Traditional,
      Privacy,
-     Model
+     Model,
     
 ,
     Given,
@@ -3588,7 +3588,7 @@
      number,
      of,
      blocks,
-     the
+     the,
     
 ,
     att,
@@ -3612,7 +3612,7 @@
     't,
      make,
      a,
-     lucky
+     lucky,
     
 ,
     l,
@@ -3633,7 +3633,7 @@
      falls,
      further,
      behind,
-    .
+    .,
     
 ,
     We,
@@ -3651,7 +3651,7 @@
      to,
      wait,
      before,
-     being
+     being,
     
 ,
     sufficient,
@@ -3671,7 +3671,7 @@
      sender,
      is,
      an,
-     attacker
+     attacker,
     
 ,
     who,
@@ -3694,7 +3694,7 @@
      to,
      pay,
      back,
-     to
+     to,
     
 ,
     him,
@@ -3715,7 +3715,7 @@
      happens,
     ,,
      but,
-     the
+     the,
     
 ,
     s,
@@ -3726,7 +3726,7 @@
      be,
      too,
      late,
-    .
+    .,
     
 ,
     The,
@@ -3745,7 +3745,7 @@
      the,
      sender,
      shortly,
-     before
+     before,
     
 ,
     sign,
@@ -3766,7 +3766,7 @@
      time,
      by,
      working,
-     on
+     on,
     
 ,
     it,
@@ -3786,7 +3786,7 @@
      executing,
      the,
      transaction,
-     at
+     at,
     
 ,
     that,
@@ -3806,7 +3806,7 @@
      in,
      secret,
      on,
-     a
+     a,
     
 ,
     par,
@@ -3819,7 +3819,7 @@
      of,
      his,
      transaction,
-    .
+    .,
     
 ,
     The,
@@ -3838,7 +3838,7 @@
      z,
      blocks,
      have,
-     been
+     been,
     
 ,
     linked,
@@ -3859,7 +3859,7 @@
      has,
      made,
     ,,
-     but
+     but,
     
 ,
     assuming,
@@ -3877,7 +3877,7 @@
      the,
      attacker,
     's,
-     potential
+     potential,
     
 ,
     progress,
@@ -3890,7 +3890,7 @@
      with,
      expected,
      value,
-    :
+    :,
     
 ,
     To,
@@ -3911,7 +3911,7 @@
      Po,
     isson,
      density,
-     for
+     for,
     
 ,
     each,
@@ -3932,7 +3932,7 @@
      from,
      that,
      point,
-    :
+    :,
     
 ,
     R,
@@ -3948,7 +3948,7 @@
      of,
      the,
      distribution,
-    ...
+    ...,
     
 ,
     Con,
@@ -3956,7 +3956,7 @@
      to,
      C,
      code,
-    ...
+    ...,
     
 ,
     #,
@@ -3965,7 +3965,7 @@
     math,
     .,
     h,
-    >
+    >,
     
 ,
     double,
@@ -3981,10 +3981,10 @@
     ,,
      int,
      z,
-    )
+    ),
     
 ,
-    {
+    {,
     
 ,
      double,
@@ -3995,7 +3995,7 @@
     0,
      -,
      q,
-    ;
+    ;,
     
 ,
      double,
@@ -4007,7 +4007,7 @@
     q,
      /,
      p,
-    );
+    );,
     
 ,
      double,
@@ -4016,14 +4016,14 @@
      1,
     .,
     0,
-    ;
+    ;,
     
 ,
      int,
      i,
     ,,
      k,
-    ;
+    ;,
     
 ,
      for,
@@ -4037,10 +4037,10 @@
      z,
     ;,
      k,
-    ++)
+    ++),
     
 ,
-     {
+     {,
     
 ,
      double,
@@ -4050,7 +4050,7 @@
      exp,
     (-,
     lambda,
-    );
+    );,
     
 ,
      for,
@@ -4064,7 +4064,7 @@
      k,
     ;,
      i,
-    ++)
+    ++),
     
 ,
      po,
@@ -4074,7 +4074,7 @@
      lambda,
      /,
      i,
-    ;
+    ;,
     
 ,
      sum,
@@ -4094,21 +4094,21 @@
      z,
      -,
      k,
-    ));
+    ));,
     
 ,
-     }
+     },
     
 ,
      return,
      sum,
-    ;
+    ;,
     
 ,
-    }
+    },
     
 ,
-    7
+    7,
     
 ,
     Running,
@@ -4125,14 +4125,14 @@
      exponentially,
      with,
      z,
-    .
+    .,
     
 ,
     q,
     =,
     0,
     .,
-    1
+    1,
     
 ,
     z,
@@ -4142,7 +4142,7 @@
     =,
     1,
     .,
-    0000000
+    0000000,
     
 ,
     z,
@@ -4154,7 +4154,7 @@
     .,
     20,
     458,
-    73
+    73,
     
 ,
     z,
@@ -4166,7 +4166,7 @@
     .,
     050,
     9,
-    779
+    779,
     
 ,
     z,
@@ -4178,7 +4178,7 @@
     .,
     013,
     17,
-    22
+    22,
     
 ,
     z,
@@ -4190,7 +4190,7 @@
     .,
     003,
     45,
-    52
+    52,
     
 ,
     z,
@@ -4202,7 +4202,7 @@
     .,
     000,
     9,
-    137
+    137,
     
 ,
     z,
@@ -4214,7 +4214,7 @@
     .,
     000,
     24,
-    28
+    28,
     
 ,
     z,
@@ -4225,7 +4225,7 @@
     0,
     .,
     0000,
-    647
+    647,
     
 ,
     z,
@@ -4236,7 +4236,7 @@
     0,
     .,
     0000,
-    173
+    173,
     
 ,
     z,
@@ -4247,7 +4247,7 @@
     0,
     .,
     00000,
-    46
+    46,
     
 ,
     z,
@@ -4258,14 +4258,14 @@
     0,
     .,
     0000,
-    012
+    012,
     
 ,
     q,
     =,
     0,
     .,
-    3
+    3,
     
 ,
     z,
@@ -4275,7 +4275,7 @@
     =,
     1,
     .,
-    0000000
+    0000000,
     
 ,
     z,
@@ -4287,7 +4287,7 @@
     .,
     177,
     35,
-    23
+    23,
     
 ,
     z,
@@ -4299,7 +4299,7 @@
     .,
     04,
     16,
-    605
+    605,
     
 ,
     z,
@@ -4311,7 +4311,7 @@
     .,
     01,
     01,
-    008
+    008,
     
 ,
     z,
@@ -4323,7 +4323,7 @@
     .,
     00,
     24,
-    804
+    804,
     
 ,
     z,
@@ -4335,7 +4335,7 @@
     .,
     000,
     6,
-    132
+    132,
     
 ,
     z,
@@ -4346,7 +4346,7 @@
     0,
     .,
     0001,
-    522
+    522,
     
 ,
     z,
@@ -4357,7 +4357,7 @@
     0,
     .,
     0000,
-    379
+    379,
     
 ,
     z,
@@ -4368,7 +4368,7 @@
     0,
     .,
     00000,
-    95
+    95,
     
 ,
     z,
@@ -4379,7 +4379,7 @@
     0,
     .,
     00000,
-    24
+    24,
     
 ,
     z,
@@ -4390,7 +4390,7 @@
     0,
     .,
     000000,
-    6
+    6,
     
 ,
     S,
@@ -4403,14 +4403,14 @@
     .,
     1,
     %,
-    ...
+    ...,
     
 ,
     P,
      <,
      0,
     .,
-    001
+    001,
     
 ,
     q,
@@ -4420,7 +4420,7 @@
     10,
      z,
     =,
-    5
+    5,
     
 ,
     q,
@@ -4430,7 +4430,7 @@
     15,
      z,
     =,
-    8
+    8,
     
 ,
     q,
@@ -4440,7 +4440,7 @@
     20,
      z,
     =,
-    11
+    11,
     
 ,
     q,
@@ -4450,7 +4450,7 @@
     25,
      z,
     =,
-    15
+    15,
     
 ,
     q,
@@ -4460,7 +4460,7 @@
     30,
      z,
     =,
-    24
+    24,
     
 ,
     q,
@@ -4470,7 +4470,7 @@
     35,
      z,
     =,
-    41
+    41,
     
 ,
     q,
@@ -4480,7 +4480,7 @@
     40,
      z,
     =,
-    89
+    89,
     
 ,
     q,
@@ -4490,12 +4490,12 @@
     45,
      z,
     =,
-    340
+    340,
     
 ,
     12,
     .,
-     Conclusion
+     Conclusion,
     
 ,
     We,
@@ -4513,7 +4513,7 @@
     .,
      We,
      started,
-     with
+     with,
     
 ,
     the,
@@ -4530,7 +4530,7 @@
      provides,
      strong,
      control,
-     of
+     of,
     
 ,
     owners,
@@ -4553,7 +4553,7 @@
      solve,
      this,
     ,,
-     we
+     we,
     
 ,
     prop,
@@ -4577,7 +4577,7 @@
      public,
      history,
      of,
-     transactions
+     transactions,
     
 ,
     that,
@@ -4593,7 +4593,7 @@
      change,
      if,
      honest,
-     nodes
+     nodes,
     
 ,
     control,
@@ -4615,7 +4615,7 @@
      simplicity,
     .,
      N,
-    odes
+    odes,
     
 ,
     work,
@@ -4636,7 +4636,7 @@
     ,,
      since,
      messages,
-     are
+     are,
     
 ,
     not,
@@ -4659,7 +4659,7 @@
     .,
      N,
     odes,
-     can
+     can,
     
 ,
     leave,
@@ -4682,7 +4682,7 @@
      as,
      proof,
      of,
-     what
+     what,
     
 ,
     h,
@@ -4703,7 +4703,7 @@
      expressing,
      their,
      acceptance,
-     of
+     of,
     
 ,
     valid,
@@ -4721,7 +4721,7 @@
      refusing,
      to,
      work,
-     on
+     on,
     
 ,
     them,
@@ -4738,13 +4738,13 @@
      this,
      consensus,
      mechanism,
-    .
+    .,
     
 ,
-    8
+    8,
     
 ,
-    References
+    References,
     
 ,
     [,
@@ -4775,7 +4775,7 @@
     txt,
     ,,
      1998,
-    .
+    .,
     
 ,
     [,
@@ -4813,7 +4813,7 @@
     ing,
      service,
      with,
-     minimal
+     minimal,
     
 ,
     trust,
@@ -4835,7 +4835,7 @@
     ,,
      May,
      1999,
-    .
+    .,
     
 ,
     [,
@@ -4874,7 +4874,7 @@
      vol,
      3,
     ,,
-     no
+     no,
     
 ,
     2,
@@ -4885,7 +4885,7 @@
     111,
     ,,
      1991,
-    .
+    .,
     
 ,
     [,
@@ -4921,7 +4921,7 @@
     -,
     st,
     amping,
-    ,"
+    ,",
     
 ,
     In,
@@ -4944,7 +4944,7 @@
     334,
     ,,
      1993,
-    .
+    .,
     
 ,
     [,
@@ -4979,7 +4979,7 @@
     th,
      AC,
     M,
-     Conference
+     Conference,
     
 ,
     on,
@@ -4995,7 +4995,7 @@
     ,,
      April,
      1997,
-    .
+    .,
     
 ,
     [,
@@ -5017,7 +5017,7 @@
     -,
     me,
     asure,
-    ,"
+    ,",
     
 ,
     http,
@@ -5037,7 +5037,7 @@
     pdf,
     ,,
      2002,
-    .
+    .,
     
 ,
     [,
@@ -5071,7 +5071,7 @@
     posium,
      on,
      Security,
-     and
+     and,
     
 ,
     Privacy,
@@ -5087,7 +5087,7 @@
     ,,
      April,
      1980,
-    .
+    .,
     
 ,
     [,
