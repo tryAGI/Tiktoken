@@ -12,8 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="3.0.0-preview.26160.2" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="3.0.0-preview.26457.2" />
     <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="2.0.0" />
     <PackageVersion Include="MSTest" Version="4.4.0" />
     <PackageVersion Include="PolySharp" Version="1.16.0">
@@ -21,10 +21,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
     <PackageVersion Include="SharpToken" Version="2.0.6" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.11" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.12" />
     <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
     <PackageVersion Include="TiktokenSharp" Version="1.2.1" />
-    <PackageVersion Include="Verify.MSTest" Version="32.0.0" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.11" />
+    <PackageVersion Include="Verify.MSTest" Version="33.0.2" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.12" />
   </ItemGroup>
 </Project>
