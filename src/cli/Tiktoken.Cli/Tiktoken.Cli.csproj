@@ -11,6 +11,7 @@
         <ToolCommandName>ttok</ToolCommandName>
         <PackageId>Tiktoken.Cli</PackageId>
         <Description>CLI tool for counting, encoding, decoding, and exploring BPE tokens. Powered by the fastest .NET tokenizer.</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
