@@ -9,6 +9,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "Verify.MSTest"
+        update-types:
+          - "version-update:semver-major"
     groups:
       all:
         patterns:
