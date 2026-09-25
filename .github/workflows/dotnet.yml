@@ -6,6 +6,9 @@ on:
     tags:
       - v**
 
+permissions:
+  contents: write
+
 jobs:
   build-test-publish:
     name: Build, test and publish
@@ -16,5 +19,15 @@ jobs:
       conventional-commits-publish-conditions: false
       enable-caching: false
       additional-test-arguments: '--logger GitHubActions'
+    secrets:
+      nuget-key: ${{ secrets.NUGET_KEY }}
+
+  auto-stable-release:
+    needs: [build-test-publish]
+    if: github.ref == 'refs/heads/main'
+    uses: tryAGI/workflows/.github/workflows/auto-stable-release.yml@main
+    with:
+      project-path: Tiktoken.slnx
+      candidate-source: build
     secrets:
       nuget-key: ${{ secrets.NUGET_KEY }}
