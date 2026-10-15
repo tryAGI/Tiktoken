@@ -218,7 +218,8 @@ public class Encoder
     /// https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken
     /// <para>
     /// The default values (tokensPerMessage=3, tokensPerName=1) are correct for
-    /// gpt-4o, gpt-4, gpt-3.5-turbo, and all newer models.
+    /// selected gpt-4o, gpt-4 and gpt-3.5-turbo snapshots. They are estimates for
+    /// other models and must not be used as exact Harmony serialization accounting.
     /// </para>
     /// </remarks>
     /// <param name="messages">The chat messages to count tokens for.</param>

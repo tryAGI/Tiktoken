@@ -12,6 +12,7 @@ We will be happy to accept any PR.
 
 ### Implemented encodings
 - `o200k_base`
+- `o200k_harmony`
 - `cl100k_base`
 - `r50k_base`
 - `p50k_base`
@@ -104,6 +105,30 @@ new FunctionParameter("address", "object", "Mailing address", properties: new Li
     new("city", "string", "City name", isRequired: true),
 });
 ```
+
+### Harmony and special tokens
+
+`o200k_harmony` reuses the ordinary vocabulary of `o200k_base` and adds Harmony
+control/reserved tokens. `gpt-oss-...` selects Harmony; `gpt-5...` selects
+`o200k_base` (including dotted variants). No GPT-6 mapping is assumed.
+
+```csharp
+var harmony = TikTokenEncoder.CreateForEncoding("o200k_harmony");
+var serialized = "<|start|>user<|message|>Hello<|end|>";
+int literalCount = harmony.CountTokens(serialized); // markers are ordinary text
+var tokens = harmony.EncodeWithAllAllowedSpecial(serialized); // trusted serialization
+int serializedCount = tokens.Count;
+```
+
+`Encode` rejects special tokens by default. `EncodeWithAllowedSpecial` allows only
+listed markers and rejects the rest. Only allow control tokens in trusted input.
+The inherited `<|endofprompt|>` and `<|reserved_200018|>` spellings both encode to
+200018; decoding chooses a canonical spelling, so alias text need not round-trip.
+`CountMessageTokens` uses an overhead estimate, not exact Harmony serialization.
+For exact serialized counts, encode the actual serialization with an explicit policy.
+
+Compatibility fixtures use [official tiktoken 0.14.0](https://github.com/openai/tiktoken/tree/4e71bbe0c078468e00fefbf94b39849389f346e5).
+See [parity provenance and regeneration](src/tests/Tiktoken.UnitTests/Resources/HarmonyParity.md).
 
 ### Custom encodings
 
@@ -223,4 +248,4 @@ See the full [CLI documentation](src/cli/Tiktoken.Cli/README.md) for all options
 
 Priority place for bugs: https://github.com/tryAGI/LangChain/issues  
 Priority place for ideas and general questions: https://github.com/tryAGI/LangChain/discussions  
-Discord: https://discord.gg/Ca2xhfBf3v  
+Discord: https://discord.gg/Ca2xhfBf3v

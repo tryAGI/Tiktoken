@@ -115,6 +115,7 @@ ttok . --max-tokens 50000
 |--------|-------------|
 | `-m, --model` | Model name (default: `gpt-4o`) |
 | `-e, --encoding` | Encoding name (`cl100k_base`, `o200k_base`, etc.) |
+| `--allow-special` | Recognize all control tokens in trusted input for count/encode/truncate |
 | `--encode` | Output token IDs |
 | `--decode` | Decode token IDs to text |
 | `--explore` | Show token boundaries |
@@ -140,4 +141,25 @@ ttok . --max-tokens 50000
 
 All OpenAI models are supported via prefix matching: `gpt-4o`, `gpt-4.1`, `gpt-4`, `gpt-3.5-turbo`, `o1`, `o3`, `o4-mini`, and more.
 
-Direct encoding names: `o200k_base`, `cl100k_base`, `p50k_base`, `p50k_edit`, `r50k_base`.
+Direct encoding names: `o200k_base`, `o200k_harmony`, `cl100k_base`, `p50k_base`, `p50k_edit`, `r50k_base`.
+
+## Harmony and special-token counting
+
+Use `--encoding o200k_harmony` or `--model gpt-oss-20b` / `gpt-oss-120b`.
+GPT-5 names, including dotted variants, select `o200k_base`.
+
+By default, counting treats control marker spellings as literal text. Use
+`--allow-special` to recognize all special tokens in trusted serialized input:
+
+```sh
+printf '%s' '<|start|>user<|message|>Hello<|end|>' | ttok -e o200k_harmony --allow-special
+# 5
+printf '%s' '<|start|>user<|message|>Hello<|end|>' | ttok -e o200k_harmony --allow-special --encode
+# 200006 1428 200008 13225 200007
+```
+
+The flag also applies to file/directory counts and `--truncate`. Without it,
+`--encode` and `--truncate` reject special tokens; `--explore` already recognizes
+all special tokens for visualization. `--decode` decodes IDs, including control
+markers (aliases can canonicalize). These counts cover the supplied serialization;
+they do not add inferred chat-message overhead or promise server-side totals.

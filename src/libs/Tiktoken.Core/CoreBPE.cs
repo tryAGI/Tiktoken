@@ -111,8 +111,7 @@ public class CoreBpe
             capturedEncoder.ToDictionary(static x => x.Value, static x => x.Key).ToFrozenDictionary());
         var capturedSpecialTokensEncoder = specialTokensEncoder;
         _lazySpecialTokensDecoderBytes = new Lazy<FrozenDictionary<int, byte[]>>(() =>
-            capturedSpecialTokensEncoder.ToFrozenDictionary(
-                static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key)));
+            CreateSpecialTokensDecoder(capturedSpecialTokensEncoder).ToFrozenDictionary());
 #else
         Encoder = encoder;
 
@@ -153,9 +152,23 @@ public class CoreBpe
             capturedEncoder.ToDictionary(static x => x.Value, static x => x.Key));
         var capturedSpecialTokensEncoder = specialTokensEncoder;
         _lazySpecialTokensDecoderBytes = new Lazy<Dictionary<int, byte[]>>(() =>
-            capturedSpecialTokensEncoder.ToDictionary(
-                static x => x.Value, static x => System.Text.Encoding.UTF8.GetBytes(x.Key)));
+            CreateSpecialTokensDecoder(capturedSpecialTokensEncoder));
 #endif
+    }
+
+
+    private static Dictionary<int, byte[]> CreateSpecialTokensDecoder(IReadOnlyDictionary<string, int> tokens)
+    {
+        var decoder = new Dictionary<int, byte[]>();
+        foreach (var token in tokens)
+        {
+            // Preserve the first registered spelling when aliases share an ID.
+            if (!decoder.ContainsKey(token.Value))
+            {
+                decoder[token.Value] = System.Text.Encoding.UTF8.GetBytes(token.Key);
+            }
+        }
+        return decoder;
     }
 
 
@@ -426,7 +439,7 @@ public class CoreBpe
 #if NET9_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var fastKey = textSpan.Slice(match.Index, match.Length);
+                var fastKey = textSpan.Slice(start + match.Index, match.Length);
 
                 if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
                 {
@@ -460,7 +473,7 @@ public class CoreBpe
 #elif NET8_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var fastKey = textSpan.Slice(match.Index, match.Length);
+                var fastKey = textSpan.Slice(start + match.Index, match.Length);
 
                 if (IsAscii(fastKey) && Encoder.TryGetValueAscii(fastKey, out var asciiToken))
                 {
@@ -696,7 +709,7 @@ public class CoreBpe
 #if NET8_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchSpan = textSpan.Slice(match.Index, match.Length);
+                var matchSpan = textSpan.Slice(start + match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
                 if ((IsAscii(matchSpan) && Encoder.ContainsKeyAscii(matchSpan)) ||
@@ -810,7 +823,7 @@ public class CoreBpe
 #if NET8_0_OR_GREATER
             foreach (var match in Regex.EnumerateMatches(textSpan[start..specialStart]))
             {
-                var matchSpan = textSpan.Slice(match.Index, match.Length);
+                var matchSpan = textSpan.Slice(start + match.Index, match.Length);
                 var fastKey = new string(matchSpan);
 
                 if ((IsAscii(matchSpan) && Encoder.ContainsKeyAscii(matchSpan)) ||

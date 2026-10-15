@@ -9,10 +9,15 @@ public static class ModelToEncoding
 {
     // Lazy singletons — each encoding is loaded only once, on first access.
     private static readonly Lazy<Encoding> Cl100K = new(static () => new Cl100KBase());
+    private static readonly Lazy<Encoding> Harmony = new(static () => new O200KHarmony());
     private static readonly Lazy<Encoding> O200K = new(static () => new O200KBase());
 
     private static Dictionary<string, Lazy<Encoding>> Dictionary { get; } = new()
     {
+        // Verified upstream GPT-5 and GPT-OSS mappings.
+        { "gpt-5", O200K },
+        { "gpt-oss-", Harmony },
+
         // o-series reasoning models (o200k_base)
         { "o4", O200K },
         { "o3", O200K },
@@ -78,7 +83,7 @@ public static class ModelToEncoding
     /// <summary>
     /// Returns encoding by encoding name (e.g., "cl100k_base", "o200k_base").
     /// </summary>
-    /// <param name="encodingName">cl100k_base, o200k_base, p50k_base, p50k_edit, r50k_base</param>
+    /// <param name="encodingName">cl100k_base, o200k_base, o200k_harmony, p50k_base, p50k_edit, r50k_base</param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
     public static Encoding ForEncoding(string encodingName)
@@ -90,7 +95,7 @@ public static class ModelToEncoding
     /// <summary>
     /// Returns encoding by encoding name or null.
     /// </summary>
-    /// <param name="encodingName">cl100k_base, o200k_base, p50k_base, p50k_edit, r50k_base</param>
+    /// <param name="encodingName">cl100k_base, o200k_base, o200k_harmony, p50k_base, p50k_edit, r50k_base</param>
     /// <returns></returns>
     public static Encoding? TryForEncoding(string encodingName)
     {
@@ -98,6 +103,7 @@ public static class ModelToEncoding
         {
             "cl100k_base" => Cl100K.Value,
             "o200k_base" => O200K.Value,
+            "o200k_harmony" => Harmony.Value,
             "p50k_base" => new P50KBase(),
             "p50k_edit" => new P50KEdit(),
             "r50k_base" => new R50KBase(),

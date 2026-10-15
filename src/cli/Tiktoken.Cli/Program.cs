@@ -18,7 +18,12 @@ var modelOption = new Option<string>("--model", ["-m"])
 
 var encodingOption = new Option<string?>("--encoding", ["-e"])
 {
-    Description = "Encoding name (e.g. cl100k_base, o200k_base). Overrides --model.",
+    Description = "Encoding name (e.g. cl100k_base, o200k_base, o200k_harmony). Overrides --model.",
+};
+
+var allowSpecialOption = new Option<bool>("--allow-special")
+{
+    Description = "Recognize all encoding special tokens when counting, encoding or truncating trusted serialized input. Default counts literal text.",
 };
 
 var encodeOption = new Option<bool>("--encode")
@@ -126,6 +131,7 @@ var rootCommand = new RootCommand("Count, encode, decode, and explore BPE tokens
     modelOption,
     encodingOption,
     encodeOption,
+    allowSpecialOption,
     decodeOption,
     exploreOption,
     truncateOption,
@@ -151,6 +157,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     var paths = parseResult.GetValue(pathsArg) ?? [];
     var model = parseResult.GetValue(modelOption) ?? "gpt-4o";
     var encodingName = parseResult.GetValue(encodingOption);
+    var allowSpecial = parseResult.GetValue(allowSpecialOption);
     var encode = parseResult.GetValue(encodeOption);
     var decode = parseResult.GetValue(decodeOption);
     var explore = parseResult.GetValue(exploreOption);
@@ -206,7 +213,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
         if (Console.IsInputRedirected)
         {
             var input = await Console.In.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            HandleStdinMode(input, encoder, encode, decode, explore, truncate, writer);
+            HandleStdinMode(input, encoder, encode, decode, explore, truncate, writer, allowSpecial);
             return 0;
         }
 
@@ -266,7 +273,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
     if (allFiles.Count == 1 && (encode || explore || truncate.HasValue))
     {
         var text = await File.ReadAllTextAsync(allFiles[0].FullPath, cancellationToken).ConfigureAwait(false);
-        HandleStdinMode(text, encoder, encode, false, explore, truncate, writer);
+        HandleStdinMode(text, encoder, encode, false, explore, truncate, writer, allowSpecial);
         return 0;
     }
 
@@ -287,7 +294,7 @@ rootCommand.SetAction(async (ParseResult parseResult, CancellationToken cancella
             return; // File vanished between scan and read
         }
 
-        var tokens = encoder.CountTokens(text);
+        var tokens = allowSpecial ? encoder.EncodeWithAllAllowedSpecial(text).Count : encoder.CountTokens(text);
         results[i] = new FileTokenResult(allFiles[i].RelativePath, tokens);
 
         if (progress)
@@ -396,7 +403,8 @@ static void HandleStdinMode(
     bool decode,
     bool explore,
     int? truncate,
-    TextWriter writer)
+    TextWriter writer,
+    bool allowSpecial)
 {
     if (decode)
     {
@@ -409,7 +417,7 @@ static void HandleStdinMode(
 
     if (truncate.HasValue)
     {
-        var tokens = encoder.Encode(input);
+        var tokens = allowSpecial ? encoder.EncodeWithAllAllowedSpecial(input) : encoder.Encode(input);
         var truncated = tokens.Take(truncate.Value).ToArray();
         writer.Write(encoder.Decode(truncated));
         return;
@@ -417,7 +425,7 @@ static void HandleStdinMode(
 
     if (encode)
     {
-        var tokens = encoder.Encode(input);
+        var tokens = allowSpecial ? encoder.EncodeWithAllAllowedSpecial(input) : encoder.Encode(input);
         writer.WriteLine(string.Join(" ", tokens));
         return;
     }
@@ -436,7 +444,7 @@ static void HandleStdinMode(
     }
 
     // Default: count tokens
-    writer.WriteLine(encoder.CountTokens(input));
+    writer.WriteLine(allowSpecial ? encoder.EncodeWithAllAllowedSpecial(input).Count : encoder.CountTokens(input));
 }
 
 static long ParseSize(string sizeStr)
