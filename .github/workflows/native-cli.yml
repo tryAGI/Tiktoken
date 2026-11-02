@@ -149,6 +149,9 @@ jobs:
     name: Publish to NuGet
     needs: [pack-pointer, pack-native]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Download all nupkgs
         uses: actions/download-artifact@v8
@@ -157,16 +160,22 @@ jobs:
           merge-multiple: true
           path: nupkgs
 
+      - name: NuGet login (trusted publishing)
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: havendv
+
       - name: Push RID-specific packages first
         run: |
           for pkg in nupkgs/*linux* nupkgs/*osx* nupkgs/*win* nupkgs/*any*; do
-            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
+            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
           done
 
       - name: Push pointer package
         run: |
           for pkg in nupkgs/Tiktoken.Cli.[0-9]*.nupkg; do
-            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
+            [ -f "$pkg" ] && dotnet nuget push "$pkg" --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
           done
 
   # Create GitHub Release with standalone binaries (only on tags)
