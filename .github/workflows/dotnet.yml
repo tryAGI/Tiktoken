@@ -19,8 +19,6 @@ jobs:
       conventional-commits-publish-conditions: false
       enable-caching: false
       additional-test-arguments: '--logger GitHubActions'
-    secrets:
-      nuget-key: ${{ secrets.NUGET_KEY }}
 
   auto-stable-release:
     needs: [build-test-publish]
@@ -29,5 +27,17 @@ jobs:
     with:
       project-path: Tiktoken.slnx
       candidate-source: build
-    secrets:
-      nuget-key: ${{ secrets.NUGET_KEY }}
+
+  nuget-trusted-publish:
+    name: NuGet trusted publishing
+    needs: build-test-publish
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: tryAGI/workflows/.github/actions/nuget-publish@main
+        with:
+          user: havendv
+          artifact-pattern: nuget-packages-ubuntu-latest
